@@ -32,7 +32,7 @@ export default function OrdersMapPage() {
     loadOrdersAndLocation();
     
     // Get driver's real-time location
-    if (navigator.geolocation) {
+    if (typeof window !== 'undefined' && navigator.geolocation) {
       navigator.geolocation.watchPosition(
         (position) => {
           setDriverLocation({

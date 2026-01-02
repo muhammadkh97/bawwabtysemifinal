@@ -110,7 +110,7 @@ export default function DriverLocationPage() {
   };
 
   const startTracking = async () => {
-    if (!navigator.geolocation) {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
       toast.error('المتصفح لا يدعم خدمة الموقع');
       return;
     }
