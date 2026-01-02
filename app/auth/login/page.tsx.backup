@@ -1,0 +1,335 @@
+// This file has been removed
+import { signIn } from '@/lib/auth';
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [userType, setUserType] = useState<'customer' | 'vendor' | 'driver' | 'admin' | null>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // تسجيل دخول سريع بالحسابات التجريبية
+  const handleQuickLogin = async (role: 'admin' | 'vendor' | 'driver' | 'customer') => {
+    setLoading(true);
+    setError('');
+    try {
+      await quickLoginDemo(role);
+      
+      // توجيه حسب نوع المستخدم
+      const redirectPath = getRedirectPath(role);
+      router.push(redirectPath);
+      router.refresh();
+    } catch (error) {
+      setError('حدث خطأ في تسجيل الدخول');
+      setLoading(false);
+    }
+  };
+
+  // دالة لتحديد مسار التوجيه حسب دور المستخدم
+  const getRedirectPath = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return '/dashboard/admin';
+      case 'vendor':
+        return '/dashboard/vendor';
+      case 'driver':
+        return '/dashboard/driver';
+      case 'customer':
+      default:
+        return '/';
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      // التحقق من الحسابات التجريبية أولاً
+      const demoAccount = verifyDemoAccount(email, password);
+      
+      if (demoAccount) {
+        // تسجيل دخول تجريبي
+        await quickLoginDemo(demoAccount.role);
+        const redirectPath = getRedirectPath(demoAccount.role);
+        router.push(redirectPath);
+        router.refresh();
+        return;
+      }
+
+      // محاولة تسجيل الدخول عبر Supabase
+      const { data, error: authError } = await signIn(email, password);
+      
+      if (authError) {
+        setError(authError || 'البريد الإلكتروني أو كلمة المرور غير صحيحة');
+        setLoading(false);
+        return;
+      }
+
+      if (data && 'userData' in data && data.userData) {
+        // توجيه حسب دور المستخدم
+        const redirectPath = getRedirectPath(data.userData.role);
+        router.push(redirectPath);
+        router.refresh();
+      } else {
+        router.push('/');
+        router.refresh();
+      }
+    } catch (error: any) {
+      setError(error?.message || 'حدث خطأ في تسجيل الدخول');
+      setLoading(false);
+    }
+  };
+
+  if (!userType) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ background: 'linear-gradient(90deg, #6236FF 0%, #B621FE 50%, #FF219D 100%)' }}>
+        {/* خلفية متحركة */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-10 left-10 w-72 h-72 bg-white rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-yellow-300 rounded-full blur-3xl animate-pulse"></div>
+        </div>
+
+        <div className="max-w-5xl w-full relative z-10">
+          {/* Demo Accounts Quick Access */}
+          <div className="bg-white/10 backdrop-blur-lg border-2 border-white/30 text-white rounded-3xl shadow-2xl p-8 mb-8">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="text-5xl animate-bounce">🚀</span>
+              <div>
+                <h2 className="text-3xl font-bold">تجربة سريعة!</h2>
+                <p className="text-xl text-purple-100">اضغط على أي حساب للدخول مباشرة</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {DEMO_ACCOUNTS.map((account) => (
+                <button
+                  key={account.role}
+                  onClick={() => handleQuickLogin(account.role)}
+                  disabled={loading}
+                  className="bg-white text-gray-800 p-5 rounded-2xl hover:shadow-2xl transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-right"
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-4xl">
+                      {account.role === 'admin' && '👨‍💼'}
+                      {account.role === 'vendor' && '🏪'}
+                      {account.role === 'driver' && '🚗'}
+                      {account.role === 'customer' && '🛍️'}
+                    </span>
+                    <div className="flex-1">
+                      <p className="font-bold text-lg">{account.name}</p>
+                      <p className="text-xs text-gray-500">{account.email}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 leading-relaxed">{account.description}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="text-center mb-12">
+            <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg">
+              مرحباً بك في بوابتي 🛍️
+            </h1>
+            <p className="text-2xl text-purple-100">
+              اختر نوع حسابك للمتابعة
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Customer */}
+            <button
+              onClick={() => setUserType('customer')}
+              className="bg-white/95 backdrop-blur-lg rounded-3xl p-8 shadow-2xl hover:shadow-3xl transition-all transform hover:-translate-y-3 border-2 border-white/50 hover:border-white"
+            >
+              <div className="text-6xl mb-4">🛍️</div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">مشتري</h3>
+              <p className="text-gray-600">تسوق من آلاف المنتجات</p>
+            </button>
+
+            {/* Vendor */}
+            <button
+              onClick={() => setUserType('vendor')}
+              className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2 border-2 border-transparent hover:border-purple-500"
+            >
+              <div className="text-6xl mb-4">🏪</div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">بائع</h3>
+              <p className="text-gray-600">ابدأ متجرك الإلكتروني</p>
+            </button>
+
+            {/* Driver */}
+            <button
+              onClick={() => setUserType('driver')}
+              className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2 border-2 border-transparent hover:border-green-500"
+            >
+              <div className="text-6xl mb-4">🚗</div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">مندوب توصيل</h3>
+              <p className="text-gray-600">انضم لفريق التوصيل</p>
+            </button>
+
+            {/* Admin */}
+            <button
+              onClick={() => setUserType('admin')}
+              className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2 border-2 border-transparent hover:border-orange-500"
+            >
+              <div className="text-6xl mb-4">👨‍💼</div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">مدير</h3>
+              <p className="text-gray-600">لوحة التحكم الإدارية</p>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
+        {/* Back Button */}
+        <button
+          onClick={() => setUserType(null)}
+          className="mb-6 flex items-center gap-2 text-gray-600 hover:text-gray-800"
+        >
+          ← العودة لاختيار نوع الحساب
+        </button>
+
+        <div className="bg-white rounded-2xl shadow-2xl p-8">
+          {/* Icon */}
+          <div className="text-center mb-8">
+            <div className="text-7xl mb-4">
+              {userType === 'customer' && '🛍️'}
+              {userType === 'vendor' && '🏪'}
+              {userType === 'driver' && '🚗'}
+              {userType === 'admin' && '👨‍💼'}
+            </div>
+            <h2 className="text-3xl font-bold text-gray-800 mb-2">
+              تسجيل الدخول
+            </h2>
+            <p className="text-gray-600">
+              {userType === 'customer' && 'مرحباً بك عزيزي العميل'}
+              {userType === 'vendor' && 'مرحباً بك عزيزي البائع'}
+              {userType === 'driver' && 'مرحباً بك عزيزي المندوب'}
+              {userType === 'admin' && 'لوحة التحكم الإدارية'}
+            </p>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm text-center">
+              {error}
+            </div>
+          )}
+
+          {/* Demo Account Info */}
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+            <p className="font-bold text-blue-800 mb-2">للتجربة السريعة:</p>
+            <p className="text-blue-700">
+              {userType === 'admin' && 'البريد: admin@bawabty.com | كلمة المرور: admin123'}
+              {userType === 'vendor' && 'البريد: vendor@bawabty.com | كلمة المرور: vendor123'}
+              {userType === 'driver' && 'البريد: driver@bawabty.com | كلمة المرور: driver123'}
+              {userType === 'customer' && 'البريد: customer@bawabty.com | كلمة المرور: customer123'}
+            </p>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                البريد الإلكتروني
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError('');
+                }}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="example@email.com"
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                كلمة المرور
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError('');
+                }}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="••••••••"
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" className="w-4 h-4 text-indigo-600" />
+                <span className="text-gray-600">تذكرني</span>
+              </label>
+              <a href="#" className="text-indigo-600 hover:text-indigo-700">
+                نسيت كلمة المرور؟
+              </a>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              {loading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
+            </button>
+          </form>
+
+          {/* Signup Link */}
+          <div className="mt-6 text-center">
+            <p className="text-gray-600">
+              ليس لديك حساب؟{' '}
+              <Link 
+                href={`/auth/register?type=${userType}`}
+                className="text-indigo-600 hover:text-indigo-700 font-medium"
+              >
+                إنشاء حساب جديد
+              </Link>
+            </p>
+          </div>
+
+          {/* Social Login (Optional) */}
+          {userType === 'customer' && (
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">أو تسجيل الدخول عبر</span>
+                </div>
+              </div>
+
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                <button className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                  <span>🔵</span>
+                  <span className="text-sm font-medium text-gray-700">Facebook</span>
+                </button>
+                <button className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                  <span>🔴</span>
+                  <span className="text-sm font-medium text-gray-700">Google</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
