@@ -150,7 +150,7 @@ export default function VendorMessagesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen relative overflow-hidden flex items-center justify-center bg-gray-50 dark:bg-[#0A0515] transition-colors duration-300">
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center bg-[#0A0515] transition-colors duration-300">
         <div className="text-center">
           <Loader2 className="w-16 h-16 text-purple-400 animate-spin mx-auto mb-4" />
           <p className="text-gray-800 dark:text-white text-xl">جاري تحميل الرسائل...</p>
@@ -160,7 +160,7 @@ export default function VendorMessagesPage() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gray-50 dark:bg-[#0A0515] transition-colors duration-300">
+    <div className="min-h-screen relative overflow-hidden bg-[#0A0515] transition-colors duration-300">
       <FuturisticSidebar role="vendor" />
       
       <div className="md:mr-[280px] transition-all duration-300">

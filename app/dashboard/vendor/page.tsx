@@ -171,17 +171,17 @@ function VendorDashboardContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0A0515]">
+      <div className="min-h-screen flex items-center justify-center bg-[#0A0515]">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-700 dark:text-purple-300">جاري التحميل...</p>
+          <p className="text-purple-300">جاري التحميل...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gray-50 dark:bg-[#0A0515]">
+    <div className="min-h-screen relative overflow-hidden bg-[#0A0515]">
       {/* Animated background gradients */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div
