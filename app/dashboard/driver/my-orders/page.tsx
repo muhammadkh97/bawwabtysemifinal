@@ -26,6 +26,7 @@ export default function MyOrdersPage() {
 
   useEffect(() => {
     loadMyOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadMyOrders = async () => {
