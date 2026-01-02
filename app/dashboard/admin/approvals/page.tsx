@@ -50,11 +50,16 @@ export default function ApprovalsPage() {
             name,
             name_ar
           ),
-          vendors!products_vendor_id_fkey (
-            shop_name,
-            shop_name_ar,
+          stores!products_vendor_id_fkey (
+            id,
+            name,
+            name_ar,
             user_id,
-            users!vendors_user_id_fkey (name)
+            users (
+              id,
+              name,
+              full_name
+            )
           )
         `)
         .eq('status', 'pending')
@@ -67,7 +72,7 @@ export default function ApprovalsPage() {
         setPendingProducts(products.map((p: any) => ({
           id: p.id,
           name: p.name,
-          vendor_name: p.vendors?.shop_name_ar || p.vendors?.shop_name || p.vendors?.users?.name || 'بائع',
+          vendor_name: p.stores?.name_ar || p.stores?.name || p.stores?.users?.name || p.stores?.users?.full_name || 'بائع',
           price: p.price,
           category: p.categories?.name_ar || p.categories?.name || 'غير محدد',
           images: p.images || [],

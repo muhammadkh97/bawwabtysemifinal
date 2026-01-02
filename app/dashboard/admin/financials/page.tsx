@@ -39,9 +39,10 @@ export default function AdminFinancialsPage() {
           order_number,
           total_amount,
           created_at,
-          vendors!orders_vendor_id_fkey (
-            shop_name_ar,
-            shop_name,
+          stores!orders_vendor_id_fkey (
+            id,
+            name,
+            name_ar,
             commission_rate
           )
         `)
@@ -51,14 +52,14 @@ export default function AdminFinancialsPage() {
 
       // حساب العمولات
       const commissionsData = orders?.map(order => {
-        const vendor = order.vendors as any;
-        const commissionRate = vendor?.commission_rate || 10;
+        const store = order.stores as any;
+        const commissionRate = store?.commission_rate || 10;
         const commissionAmount = (order.total_amount * commissionRate) / 100;
         const vendorEarning = order.total_amount - commissionAmount;
         
         return {
           order_id: order.order_number || order.id.slice(0, 8),
-          vendor_name: vendor?.shop_name_ar || vendor?.shop_name || 'بائع',
+          vendor_name: store?.name_ar || store?.name || 'بائع',
           order_total: order.total_amount,
           commission_rate: commissionRate,
           commission_amount: commissionAmount,

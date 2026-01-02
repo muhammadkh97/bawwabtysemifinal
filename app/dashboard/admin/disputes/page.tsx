@@ -58,12 +58,15 @@ export default function AdminDisputesPage() {
           created_at,
           orders!disputes_order_id_fkey (
             order_number,
-            users!orders_user_id_fkey (
-              name
+            users (
+              id,
+              name,
+              full_name
             ),
-            vendors!orders_vendor_id_fkey (
-              shop_name,
-              shop_name_ar
+            stores!orders_vendor_id_fkey (
+              id,
+              name,
+              name_ar
             )
           )
         `)
@@ -72,13 +75,13 @@ export default function AdminDisputesPage() {
       const formattedDisputes: Dispute[] = disputesData?.map(d => {
         const order = d.orders as any;
         const customer = order?.users as any;
-        const vendor = order?.vendors as any;
+        const store = order?.stores as any;
         
         return {
           id: d.id,
           order_id: order?.order_number || d.order_id,
-          customer_name: customer?.name || 'عميل',
-          vendor_name: vendor?.shop_name_ar || vendor?.shop_name || 'بائع',
+          customer_name: customer?.name || customer?.full_name || 'عميل',
+          vendor_name: store?.name_ar || store?.name || 'بائع',
           type: d.type as any,
           description: d.description || 'لا يوجد وصف',
           status: d.status as any,
