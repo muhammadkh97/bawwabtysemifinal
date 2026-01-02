@@ -112,8 +112,8 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       let query = supabase.from('chats').select(`
         *,
-        customer:users!chats_customer_id_fkey(id, full_name, avatar_url),
-        vendor:vendors(id, store_name, logo_url, user_id, users:user_id(full_name, avatar_url))
+        customer:users!chats_customer_id_fkey(id, name, avatar_url),
+        vendor:vendors(id, store_name, logo_url, user_id, users:user_id(name, avatar_url))
       `).eq('is_active', true).order('last_message_at', { ascending: false, nullsFirst: false });
 
       if (userRole === 'customer') {
@@ -145,7 +145,7 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
         if (isDriverView || isAdminView) {
           return {
             ...chat,
-            other_user_name: `${chat.customer?.full_name} ↔ ${chat.vendor?.store_name}`,
+            other_user_name: `${chat.customer?.name} ↔ ${chat.vendor?.store_name}`,
             other_user_avatar: chat.customer?.avatar_url,
             other_user_role: 'customer',
             vendor_store_name: chat.vendor?.store_name,
@@ -155,7 +155,7 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
         
         return {
           ...chat,
-          other_user_name: isCustomerView ? chat.vendor?.store_name : chat.customer?.full_name,
+          other_user_name: isCustomerView ? chat.vendor?.store_name : chat.customer?.name,
           other_user_avatar: isCustomerView ? chat.vendor?.logo_url : chat.customer?.avatar_url,
           other_user_role: isCustomerView ? 'vendor' : 'customer',
           vendor_store_name: chat.vendor?.store_name,

@@ -61,7 +61,7 @@ export default function AvailableOrdersPage() {
           delivery_fee,
           delivery_address,
           created_at,
-          users!orders_user_id_fkey (name, phone)
+          users!orders_customer_id_fkey (name, phone)
         `)
         .eq('status', 'pending')
         .is('driver_id', null)
