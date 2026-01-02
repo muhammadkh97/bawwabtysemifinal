@@ -1,0 +1,472 @@
+import { supabase } from './supabase';
+
+// ============================================
+// Storage Helper Functions
+// وظائف مساعدة للتخزين والصور
+// ============================================
+
+export interface UploadOptions {
+  bucket: 'products' | 'profiles' | 'documents' | 'chat-attachments' | 'product-images' | 'avatars';
+  folder?: string;
+  filename?: string;
+  public?: boolean;
+}
+
+export interface ImageTransformOptions {
+  width?: number;
+  height?: number;
+  quality?: number;
+}
+
+/**
+ * Upload a single file to Supabase Storage
+ * رفع ملف واحد إلى Supabase
+ */
+export async function uploadFile(file: File, options: UploadOptions) {
+  const { bucket, folder, filename, public: isPublic = true } = options;
+
+  try {
+    // Validate file size based on bucket
+    const maxSizes = {
+      products: 5 * 1024 * 1024, // 5MB
+      'product-images': 5 * 1024 * 1024, // 5MB
+      profiles: 2 * 1024 * 1024, // 2MB
+      avatars: 2 * 1024 * 1024, // 2MB
+      documents: 10 * 1024 * 1024, // 10MB
+      'chat-attachments': 5 * 1024 * 1024, // 5MB
+    };
+
+    if (file.size > maxSizes[bucket]) {
+      throw new Error(`File size exceeds ${maxSizes[bucket] / 1024 / 1024}MB limit for ${bucket}`);
+    }
+
+    // Validate MIME type
+    const allowedTypes = {
+      products: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'],
+      'product-images': ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'],
+      profiles: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+      avatars: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+      documents: ['image/jpeg', 'image/jpg', 'image/png', 'image/pdf', 'application/pdf'],
+      'chat-attachments': ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'],
+    };
+
+    if (!allowedTypes[bucket].includes(file.type)) {
+      throw new Error(`File type ${file.type} not allowed for ${bucket}`);
+    }
+
+    // Generate unique filename if not provided
+    const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).substring(2, 9);
+    const ext = file.name.split('.').pop();
+    const finalFilename = filename || `${timestamp}_${randomStr}.${ext}`;
+    
+    // Build file path
+    const filePath = folder ? `${folder}/${finalFilename}` : finalFilename;
+
+    // Upload file
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (error) throw error;
+
+    // Get public URL
+    const publicUrl = getPublicUrl(bucket, data.path);
+
+    return {
+      success: true,
+      path: data.path,
+      url: publicUrl,
+      fullPath: filePath,
+    };
+  } catch (error: any) {
+    console.error('Upload error:', error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * Upload multiple files
+ */
+export async function uploadMultipleFiles(files: File[], options: UploadOptions) {
+  const uploadPromises = files.map((file) => uploadFile(file, options));
+  const results = await Promise.all(uploadPromises);
+  
+  const successful = results.filter((r) => r.success);
+  const failed = results.filter((r) => !r.success);
+
+  return {
+    successful,
+    failed,
+    totalUploaded: successful.length,
+    totalFailed: failed.length,
+  };
+}
+
+// ============================================
+// Get/Download Functions
+// ============================================
+
+/**
+ * Get public URL for a file
+ */
+export function getPublicUrl(bucket: string, path: string): string {
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+/**
+ * Get signed URL for private files (expires after given time)
+ */
+export async function getSignedUrl(
+  bucket: string,
+  path: string,
+  expiresIn: number = 3600 // 1 hour default
+) {
+  try {
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .createSignedUrl(path, expiresIn);
+
+    if (error) throw error;
+
+    return {
+      success: true,
+      url: data.signedUrl,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * Download a file
+ */
+export async function downloadFile(bucket: string, path: string) {
+  try {
+    const { data, error } = await supabase.storage.from(bucket).download(path);
+
+    if (error) throw error;
+
+    return {
+      success: true,
+      data,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
+// ============================================
+// Delete Functions
+// ============================================
+
+/**
+ * Delete a single file
+ */
+export async function deleteFile(bucket: string, path: string) {
+  try {
+    const { error } = await supabase.storage.from(bucket).remove([path]);
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * Delete multiple files
+ */
+export async function deleteMultipleFiles(bucket: string, paths: string[]) {
+  try {
+    const { error } = await supabase.storage.from(bucket).remove(paths);
+
+    if (error) throw error;
+
+    return { success: true, deletedCount: paths.length };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
+// ============================================
+// List Functions
+// ============================================
+
+/**
+ * List files in a folder
+ */
+export async function listFiles(bucket: string, folder?: string) {
+  try {
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .list(folder, {
+        limit: 100,
+        offset: 0,
+        sortBy: { column: 'created_at', order: 'desc' },
+      });
+
+    if (error) throw error;
+
+    return {
+      success: true,
+      files: data,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
+// ============================================
+// Image Transformation
+// تحجيم وتحويل الصور لتسريع الموقع
+// ============================================
+
+/**
+ * Get transformed image URL with specific dimensions and quality
+ * الحصول على صورة محولة بمقاسات وجودة محددة
+ * 
+ * @example
+ * // For product thumbnails (300x300)
+ * getTransformedImageUrl('products', 'vendor_id/product.jpg', { width: 300, height: 300 })
+ * 
+ * // For product detail page (600x600)
+ * getTransformedImageUrl('products', 'vendor_id/product.jpg', { width: 600 })
+ * 
+ * // For mobile optimized (responsive width)
+ * getTransformedImageUrl('products', 'vendor_id/product.jpg', { width: 400, quality: 75 })
+ */
+export function getTransformedImageUrl(
+  bucket: string,
+  path: string,
+  options?: ImageTransformOptions
+): string {
+  const baseUrl = getPublicUrl(bucket, path);
+  
+  if (!options) return baseUrl;
+
+  const params = new URLSearchParams();
+  
+  if (options.width) params.append('width', options.width.toString());
+  if (options.height) params.append('height', options.height.toString());
+  if (options.quality) params.append('quality', options.quality.toString());
+  
+  const queryString = params.toString();
+  return queryString ? `${baseUrl}?${queryString}` : baseUrl;
+}
+
+/**
+ * Predefined image sizes for common use cases
+ * أحجام صور معرفة مسبقاً للاستخدامات الشائعة
+ */
+export const IMAGE_SIZES = {
+  // Product images
+  PRODUCT_THUMBNAIL: { width: 300, height: 300, quality: 85 },
+  PRODUCT_CARD: { width: 400, height: 400, quality: 85 },
+  PRODUCT_DETAIL: { width: 800, height: 800, quality: 90 },
+  PRODUCT_ZOOM: { width: 1200, height: 1200, quality: 95 },
+  
+  // Profile images
+  PROFILE_AVATAR: { width: 150, height: 150, quality: 85 },
+  PROFILE_AVATAR_LARGE: { width: 300, height: 300, quality: 90 },
+  
+  // Mobile optimized
+  MOBILE_PRODUCT: { width: 400, quality: 75 },
+  MOBILE_BANNER: { width: 768, quality: 80 },
+  
+  // Chat attachments
+  CHAT_IMAGE_THUMBNAIL: { width: 200, height: 200, quality: 80 },
+  CHAT_IMAGE_PREVIEW: { width: 600, quality: 85 },
+};
+
+/**
+ * Get optimized product image URL
+ * الحصول على رابط صورة منتج محسّن
+ */
+export function getProductImageUrl(
+  path: string,
+  size: keyof typeof IMAGE_SIZES = 'PRODUCT_CARD'
+): string {
+  return getTransformedImageUrl('products', path, IMAGE_SIZES[size]);
+}
+
+/**
+ * Get optimized profile image URL
+ * الحصول على رابط صورة بروفايل محسّن
+ */
+export function getProfileImageUrl(
+  path: string,
+  large: boolean = false
+): string {
+  const size = large ? IMAGE_SIZES.PROFILE_AVATAR_LARGE : IMAGE_SIZES.PROFILE_AVATAR;
+  return getTransformedImageUrl('profiles', path, size);
+}
+
+// ============================================
+// Product Image Upload Helper
+// مساعد رفع صور المنتجات
+// ============================================
+
+/**
+ * Upload product images with vendor ID organization
+ * رفع صور المنتجات مع تنظيم حسب ID البائع
+ */
+export async function uploadProductImages(
+  vendorId: string,
+  productId: string,
+  files: File[]
+) {
+  const uploadPromises = files.map(async (file, index) => {
+    return uploadFile(file, {
+      bucket: 'products',
+      folder: vendorId,
+      filename: `${productId}_${index + 1}.${file.name.split('.').pop()}`,
+    });
+  });
+
+  const results = await Promise.all(uploadPromises);
+  
+  const successful = results.filter((r) => r.success);
+  const failed = results.filter((r) => !r.success);
+
+  return {
+    successful: successful.map(r => r.url),
+    failed,
+    totalUploaded: successful.length,
+    totalFailed: failed.length,
+  };
+}
+
+/**
+ * Upload profile avatar
+ * رفع صورة البروفايل
+ */
+export async function uploadProfileAvatar(
+  userId: string,
+  file: File
+) {
+  return uploadFile(file, {
+    bucket: 'profiles',
+    folder: userId,
+    filename: 'avatar.' + file.name.split('.').pop(),
+  });
+}
+
+/**
+ * Upload vendor documents
+ * رفع وثائق البائع
+ */
+export async function uploadVendorDocument(
+  vendorId: string,
+  documentType: 'id_card_front' | 'id_card_back' | 'commercial_register' | 'driving_license',
+  file: File
+) {
+  return uploadFile(file, {
+    bucket: 'documents',
+    folder: vendorId,
+    filename: `${documentType}.${file.name.split('.').pop()}`,
+  });
+}
+
+// ============================================
+// Utility Functions
+// وظائف مساعدة
+// ============================================
+
+/**
+ * Validate image file
+ * التحقق من صحة ملف الصورة
+ */
+export function validateImage(file: File, maxSize: number = 5242880): { valid: boolean; error?: string } {
+  // Check file type
+  const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+  if (!validTypes.includes(file.type)) {
+    return {
+      valid: false,
+      error: 'نوع الملف غير مدعوم. يرجى رفع صورة (JPG, PNG, WebP, GIF)',
+    };
+  }
+
+  // Check file size
+  if (file.size > maxSize) {
+    const maxMB = maxSize / 1024 / 1024;
+    return {
+      valid: false,
+      error: `حجم الملف كبير جداً. الحد الأقصى ${maxMB}MB`,
+    };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Generate unique filename
+ * توليد اسم ملف فريد
+ */
+export function generateUniqueFilename(originalName: string, prefix?: string): string {
+  const timestamp = Date.now();
+  const randomStr = Math.random().toString(36).substring(2, 9);
+  const ext = originalName.split('.').pop();
+  
+  if (prefix) {
+    return `${prefix}_${timestamp}_${randomStr}.${ext}`;
+  }
+  
+  return `${timestamp}_${randomStr}.${ext}`;
+}
+
+/**
+ * Extract vendor ID from product image path
+ * استخراج ID البائع من مسار صورة المنتج
+ */
+export function extractVendorIdFromPath(path: string): string | null {
+  const parts = path.split('/');
+  return parts.length > 0 ? parts[0] : null;
+}
+
+/**
+ * Generate thumbnail URL
+ */
+export function getThumbnailUrl(bucket: string, path: string): string {
+  return getTransformedImageUrl(bucket, path, {
+    width: 300,
+    height: 300,
+    quality: 80,
+  });
+}
+
+/**
+ * Generate responsive image URLs
+ */
+export function getResponsiveImageUrls(bucket: string, path: string) {
+  return {
+    thumbnail: getThumbnailUrl(bucket, path),
+    small: getTransformedImageUrl(bucket, path, { width: 640, quality: 80 }),
+    medium: getTransformedImageUrl(bucket, path, { width: 1024, quality: 85 }),
+    large: getTransformedImageUrl(bucket, path, { width: 1920, quality: 90 }),
+    original: getPublicUrl(bucket, path),
+  };
+}
