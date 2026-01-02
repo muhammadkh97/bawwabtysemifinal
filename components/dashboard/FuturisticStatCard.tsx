@@ -1,12 +1,12 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import type { LucideIcon } from 'lucide-react';
+import type { LucideProps } from 'lucide-react';
 
 interface FuturisticStatCardProps {
   title: string;
   value: string | number;
-  icon: LucideIcon;
+  icon: React.ComponentType<LucideProps>;
   trend?: {
     value: number;
     isPositive: boolean;

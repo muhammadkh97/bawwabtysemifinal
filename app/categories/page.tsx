@@ -5,7 +5,8 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Package, ChevronRight, ArrowLeft, Star, Zap, ShieldCheck, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
-import { motion, type Variants } from 'framer-motion';
+import { motion } from 'framer-motion';
+import type { Variant } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 
 interface Category {
@@ -65,7 +66,7 @@ export default function CategoriesPage() {
     fetchCategories();
   }, []);
 
-  const containerVariants: Variants = {
+  const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -73,7 +74,7 @@ export default function CategoriesPage() {
     }
   };
 
-  const itemVariants: Variants = {
+  const itemVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: {
       y: 0,
