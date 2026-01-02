@@ -265,7 +265,7 @@ export default function VendorOrdersPageImproved() {
 
   if (loading) {
     return (
-      <div className="min-h-screen relative overflow-hidden bg-gray-50 dark:bg-[#0A0515] transition-colors duration-300">
+      <div className="min-h-screen relative overflow-hidden bg-[#0A0515] transition-colors duration-300">
         <FuturisticSidebar role="vendor" />
         <div className="md:mr-[280px] flex items-center justify-center h-screen">
           <Loader2 className="w-12 h-12 text-purple-500 animate-spin" />
@@ -282,7 +282,7 @@ export default function VendorOrdersPageImproved() {
   ];
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gray-50 dark:bg-[#0A0515] transition-colors duration-300">
+    <div className="min-h-screen relative overflow-hidden bg-[#0A0515] transition-colors duration-300">
       <FuturisticSidebar role="vendor" />
       
       <div className="md:mr-[280px] transition-all duration-300">

@@ -14,7 +14,7 @@ export default function VendorLayout({
 }) {
   return (
     <ProtectedRoute allowedRoles={['vendor']}>
-      <div className="flex min-h-screen bg-gray-50">
+      <div className="flex min-h-screen bg-[#0A0515]">
         <VendorSidebar />
         <main className="flex-1 lg:mr-64">
           <div className="p-4 lg:p-8">
