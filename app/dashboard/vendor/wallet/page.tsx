@@ -233,7 +233,7 @@ export default function VendorWalletPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative overflow-hidden bg-white transition-colors duration-300">
+      <div className="min-h-screen relative overflow-hidden bg-[#0A0515] transition-colors duration-300">
         
         {/* Main Content Area */}
         <div className="md:mr-[280px] transition-all duration-300">
@@ -253,25 +253,25 @@ export default function VendorWalletPage() {
               <p className="text-4xl font-bold mb-2">{formatPrice(walletData.current_balance)}</p>
               <button
                 onClick={() => setShowPayoutModal(true)}
-                className="w-full bg-white text-green-600 py-2 px-4 rounded-lg font-bold hover:bg-green-50 transition-colors"
+                className="w-full bg-[#0A0515] text-green-600 py-2 px-4 rounded-lg font-bold hover:bg-green-50 transition-colors"
               >
                 💸 سحب الرصيد
               </button>
             </div>
 
-            <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-yellow-200">
+            <div className="bg-[#0A0515] p-6 rounded-2xl shadow-lg border-2 border-yellow-200">
               <p className="text-sm text-slate-600 mb-2">رصيد قيد المعالجة</p>
               <p className="text-4xl font-bold text-yellow-600">{formatPrice(walletData.pending_balance)}</p>
               <p className="text-xs text-slate-500 mt-2">سيضاف بعد تسليم الطلبات</p>
             </div>
 
-            <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-blue-200">
+            <div className="bg-[#0A0515] p-6 rounded-2xl shadow-lg border-2 border-blue-200">
               <p className="text-sm text-slate-600 mb-2">إجمالي الأرباح</p>
               <p className="text-4xl font-bold text-blue-600">{formatPrice(walletData.total_earned)}</p>
               <p className="text-xs text-slate-500 mt-2">منذ انضمامك</p>
             </div>
 
-            <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-purple-200">
+            <div className="bg-[#0A0515] p-6 rounded-2xl shadow-lg border-2 border-purple-200">
               <p className="text-sm text-slate-600 mb-2">إجمالي السحوبات</p>
               <p className="text-4xl font-bold text-purple-600">{formatPrice(walletData.total_withdrawn)}</p>
               <p className="text-xs text-slate-500 mt-2">آخر سحب: {walletData.last_payout}</p>
@@ -293,7 +293,7 @@ export default function VendorWalletPage() {
           </div>
 
           {/* Tabs */}
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="bg-[#0A0515] rounded-2xl shadow-lg overflow-hidden">
             <div className="flex border-b border-slate-200">
               <button
                 onClick={() => setActiveTab('overview')}
@@ -488,7 +488,7 @@ export default function VendorWalletPage() {
           {/* Payout Modal */}
           {showPayoutModal && (
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+              <div className="bg-[#0A0515] rounded-2xl max-w-md w-full p-6 shadow-2xl">
                 <h3 className="text-2xl font-bold text-slate-800 mb-4">💸 طلب سحب رصيد</h3>
 
                 <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-6">

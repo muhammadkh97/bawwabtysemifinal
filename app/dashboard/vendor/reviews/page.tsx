@@ -160,7 +160,7 @@ export default function VendorReviewsPage() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-white transition-colors duration-300">
+    <div className="min-h-screen relative overflow-hidden bg-[#0A0515] transition-colors duration-300">
       
       <div className="md:mr-[280px] transition-all duration-300">
         

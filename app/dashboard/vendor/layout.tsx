@@ -1,7 +1,8 @@
 'use client';
 
 import ProtectedRoute from '@/components/ProtectedRoute';
-import VendorSidebar from '@/components/VendorSidebar';
+import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
+import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 
 /**
  * Layout لحماية جميع صفحات لوحة تحكم البائع
@@ -14,13 +15,14 @@ export default function VendorLayout({
 }) {
   return (
     <ProtectedRoute allowedRoles={['vendor']}>
-      <div className="flex min-h-screen bg-gray-50">
-        <VendorSidebar />
-        <main className="flex-1 lg:mr-64">
-          <div className="p-4 lg:p-8">
+      <div className="min-h-screen bg-[#0A0515]">
+        <FuturisticSidebar role="vendor" />
+        <div className="md:mr-[280px] transition-all duration-300">
+          <FuturisticNavbar userRole="بائع" />
+          <main className="pt-24 px-4 md:px-8 lg:px-10 pb-10">
             {children}
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
     </ProtectedRoute>
   );

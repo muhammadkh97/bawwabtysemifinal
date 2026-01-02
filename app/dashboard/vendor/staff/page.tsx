@@ -103,7 +103,7 @@ export default function VendorStaffPage() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-white transition-colors duration-300">
+    <div className="min-h-screen relative overflow-hidden bg-[#0A0515] transition-colors duration-300">
       
       <div className="md:mr-[280px] transition-all duration-300">
         
@@ -137,7 +137,7 @@ export default function VendorStaffPage() {
                 <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
               </div>
             ) : staff.length === 0 ? (
-              <div className="text-center py-20 rounded-2xl bg-white/5 border border-purple-500/20">
+              <div className="text-center py-20 rounded-2xl bg-[#0A0515]/5 border border-purple-500/20">
                 <Users className="w-16 h-16 mx-auto mb-4 text-purple-400/50" />
                 <h3 className="text-xl font-bold text-white">لا يوجد حسابات مساعدة حالياً</h3>
                 <p className="text-purple-300">ابدأ بإضافة أول مساعد لمتجرك</p>
@@ -229,7 +229,7 @@ export default function VendorStaffPage() {
                       required
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
-                      className="w-full pr-12 pl-4 py-3 rounded-xl bg-white/5 border border-purple-500/30 text-white focus:border-purple-500 outline-none"
+                      className="w-full pr-12 pl-4 py-3 rounded-xl bg-[#0A0515]/5 border border-purple-500/30 text-white focus:border-purple-500 outline-none"
                       placeholder="أدخل اسم المساعد"
                     />
                   </div>
@@ -243,7 +243,7 @@ export default function VendorStaffPage() {
                       required
                       value={newEmail}
                       onChange={(e) => setNewEmail(e.target.value)}
-                      className="w-full pr-12 pl-4 py-3 rounded-xl bg-white/5 border border-purple-500/30 text-white focus:border-purple-500 outline-none"
+                      className="w-full pr-12 pl-4 py-3 rounded-xl bg-[#0A0515]/5 border border-purple-500/30 text-white focus:border-purple-500 outline-none"
                       placeholder="email@example.com"
                     />
                   </div>
@@ -259,7 +259,7 @@ export default function VendorStaffPage() {
                     required
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full pr-12 pl-4 py-3 rounded-xl bg-white/5 border border-purple-500/30 text-white focus:border-purple-500 outline-none"
+                    className="w-full pr-12 pl-4 py-3 rounded-xl bg-[#0A0515]/5 border border-purple-500/30 text-white focus:border-purple-500 outline-none"
                     placeholder="••••••••"
                   />
                 </div>
@@ -275,7 +275,7 @@ export default function VendorStaffPage() {
                       className={`p-4 rounded-2xl border cursor-pointer transition-all ${
                         selectedPermissions.includes(perm.id)
                           ? 'bg-purple-500/20 border-purple-500 shadow-[0_0_15px_rgba(98,54,255,0.2)]'
-                          : 'bg-white/5 border-purple-500/20 hover:border-purple-500/40'
+                          : 'bg-[#0A0515]/5 border-purple-500/20 hover:border-purple-500/40'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
