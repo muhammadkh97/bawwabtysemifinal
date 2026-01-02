@@ -415,6 +415,30 @@ FROM stores;
 -- FUNCTIONS & TRIGGERS
 -- ==========================================
 
+-- Function to automatically create user profile on signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.users (id, email, full_name, name, role, user_role, created_at, updated_at)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
+    COALESCE((NEW.raw_user_meta_data->>'role')::user_role, 'customer'),
+    COALESCE(NEW.raw_user_meta_data->>'role', 'customer'),
+    NOW(),
+    NOW()
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger to create user profile automatically on auth signup
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -687,6 +711,18 @@ INSERT INTO categories (name, name_ar, slug, icon, requires_approval) VALUES
   ('Books', 'كتب', 'books', '📚', false),
   ('Toys', 'ألعاب', 'toys', '🧸', false);
 
+-- Sync existing auth users to users table (for migrations)
+INSERT INTO users (id, email, full_name, name, role, user_role)
+SELECT 
+  au.id,
+  au.email,
+  COALESCE(au.raw_user_meta_data->>'full_name', au.email),
+  COALESCE(au.raw_user_meta_data->>'full_name', au.email),
+  COALESCE((au.raw_user_meta_data->>'role')::user_role, 'customer'),
+  COALESCE(au.raw_user_meta_data->>'role', 'customer')
+FROM auth.users au
+WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = au.id);
+
 -- ==========================================
 -- GRANT PERMISSIONS
 -- ==========================================
@@ -707,7 +743,9 @@ BEGIN
   RAISE NOTICE '�️  View created: vendors (maps to stores table for backwards compatibility)';
   RAISE NOTICE '🔒 RLS policies applied';
   RAISE NOTICE '🌱 Initial categories seeded';
-  RAISE NOTICE '⚡ Functions created: get_current_user, get_latest_exchange_rates, update_exchange_rates, get_unread_count';
+  RAISE NOTICE '⚡ Functions created: get_current_user, get_latest_exchange_rates, update_exchange_rates, get_unread_count, handle_new_user';
   RAISE NOTICE '🔄 Alias columns auto-synced via triggers: users.name, users.user_role, stores.store_name, stores.shop_name, stores.latitude, stores.longitude, stores.shop_logo';
-  RAISE NOTICE '⚠️  Next steps: Run Supabase type generation with: npx supabase gen types typescript --local > types/supabase.ts';
+  RAISE NOTICE '👤 Auth trigger: Automatically creates user profile on signup';
+  RAISE NOTICE '♻️  Existing auth users synced to users table';
+  RAISE NOTICE '⚠️  Next steps: Reload website - all 406 errors should be resolved';
 END $$;
