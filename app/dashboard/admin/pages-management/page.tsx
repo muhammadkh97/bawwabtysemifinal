@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar'
+import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar'
 import { FileText, PlusCircle, Edit, Trash2, Eye, EyeOff, Save, X } from 'lucide-react'
 
 interface Page {
@@ -170,139 +172,92 @@ export default function PagesManagementPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <FuturisticSidebar />
+        <div className="lg:mr-64">
+          <FuturisticNavbar />
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">إدارة المحتوى</h1>
-        <p className="text-gray-600">تحكم في محتوى الصفحات وأقسام Hero</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <FuturisticSidebar />
+      <div className="lg:mr-64">
+        <FuturisticNavbar />
+        <div className="p-4 lg:p-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2 text-white">إدارة المحتوى</h1>
+            <p className="text-gray-300">تحكم في محتوى الصفحات وأقسام Hero</p>
+          </div>
 
-      {/* Tabs */}
-      <div className="flex gap-4 mb-6 border-b">
-        <button
-          onClick={() => setActiveTab('pages')}
-          className={`pb-3 px-4 font-semibold transition ${
-            activeTab === 'pages'
-              ? 'border-b-2 border-primary-600 text-primary-600'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          <FileText className="w-5 h-5 inline-block ml-2" />
-          الصفحات ({pages.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('heroes')}
-          className={`pb-3 px-4 font-semibold transition ${
-            activeTab === 'heroes'
-              ? 'border-b-2 border-primary-600 text-primary-600'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          <PlusCircle className="w-5 h-5 inline-block ml-2" />
-          أقسام Hero ({heroes.length})
-        </button>
-      </div>
-
-      {/* Pages Tab */}
-      {activeTab === 'pages' && (
-        <div className="grid gap-4">
-          {pages.map((page) => (
-            <div
-              key={page.id}
-              className="bg-white rounded-lg shadow p-6 flex items-center justify-between"
+          {/* Tabs */}
+          <div className="flex gap-4 mb-6 border-b border-purple-500/30">
+            <button
+              onClick={() => setActiveTab('pages')}
+              className={`pb-3 px-4 font-semibold transition ${
+                activeTab === 'pages'
+                  ? 'border-b-2 border-purple-500 text-purple-400'
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
             >
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h3 className="text-xl font-bold">{page.title_ar}</h3>
-                  <span className="text-sm text-gray-500">/{page.slug}</span>
-                  {page.is_active ? (
-                    <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">نشط</span>
-                  ) : (
-                    <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">غير نشط</span>
-                  )}
-                </div>
-                <p className="text-gray-600 text-sm">{page.meta_description_ar}</p>
-                <p className="text-xs text-gray-400 mt-2">
-                  آخر تحديث: {new Date(page.updated_at).toLocaleDateString('ar')}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => togglePageStatus(page)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition"
-                  title={page.is_active ? 'إخفاء' : 'إظهار'}
-                >
-                  {page.is_active ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
-                </button>
-                <button
-                  onClick={() => {
-                    setEditingPage(page)
-                    setShowModal(true)
-                  }}
-                  className="p-2 hover:bg-primary-50 text-primary-600 rounded-lg transition"
-                  title="تعديل"
-                >
-                  <Edit className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+              <FileText className="w-5 h-5 inline-block ml-2" />
+              الصفحات ({pages.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('heroes')}
+              className={`pb-3 px-4 font-semibold transition ${
+                activeTab === 'heroes'
+                  ? 'border-b-2 border-purple-500 text-purple-400'
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              <PlusCircle className="w-5 h-5 inline-block ml-2" />
+              أقسام Hero ({heroes.length})
+            </button>
+          </div>
 
-      {/* Heroes Tab */}
-      {activeTab === 'heroes' && (
-        <div className="space-y-6">
-          {/* Full Heroes Section */}
-          <div>
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <span className="text-2xl">🎨</span>
-              Full Hero Sections (الرئيسي)
-            </h2>
+          {/* Pages Tab */}
+          {activeTab === 'pages' && (
             <div className="grid gap-4">
-              {heroes.filter(h => h.hero_type === 'full').map((hero) => (
+              {pages.map((page) => (
                 <div
-                  key={hero.id}
-                  className="bg-white rounded-lg shadow p-6 flex items-center justify-between"
+                  key={page.id}
+                  className="bg-white/10 backdrop-blur-lg rounded-lg border border-purple-500/20 p-6 flex items-center justify-between hover:bg-white/15 transition"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-xl font-bold">{hero.title_ar}</h3>
-                      <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
-                        {hero.page_location}
-                      </span>
-                      <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">
-                        ترتيب: {hero.display_order}
-                      </span>
-                      {hero.is_active ? (
-                        <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">نشط</span>
+                      <h3 className="text-xl font-bold text-white">{page.title_ar}</h3>
+                      <span className="text-sm text-gray-400">/{page.slug}</span>
+                      {page.is_active ? (
+                        <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">نشط</span>
                       ) : (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">غير نشط</span>
+                        <span className="px-2 py-1 bg-gray-500/20 text-gray-400 rounded text-xs">غير نشط</span>
                       )}
                     </div>
-                    <p className="text-gray-600 text-sm">{hero.subtitle_ar}</p>
-                    <p className="text-gray-500 text-xs mt-1">{hero.description_ar}</p>
+                    <p className="text-gray-300 text-sm">{page.meta_description_ar}</p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      آخر تحديث: {new Date(page.updated_at).toLocaleDateString('ar')}
+                    </p>
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => toggleHeroStatus(hero)}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition"
-                      title={hero.is_active ? 'إخفاء' : 'إظهار'}
+                      onClick={() => togglePageStatus(page)}
+                      className="p-2 hover:bg-white/10 rounded-lg transition text-gray-300 hover:text-white"
+                      title={page.is_active ? 'إخفاء' : 'إظهار'}
                     >
-                      {hero.is_active ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                      {page.is_active ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
                     </button>
                     <button
                       onClick={() => {
-                        setEditingHero(hero)
+                        setEditingPage(page)
                         setShowModal(true)
                       }}
-                      className="p-2 hover:bg-primary-50 text-primary-600 rounded-lg transition"
+                      className="p-2 hover:bg-purple-500/20 text-purple-400 rounded-lg transition"
                       title="تعديل"
                     >
                       <Edit className="w-5 h-5" />
@@ -311,59 +266,116 @@ export default function PagesManagementPage() {
                 </div>
               ))}
             </div>
-          </div>
+          )}
 
-          {/* Mini Heroes Section */}
-          <div>
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <span className="text-2xl">📄</span>
-              Mini Hero Sections (رأس الصفحة)
-            </h2>
-            <div className="grid gap-4">
-              {heroes.filter(h => h.hero_type === 'mini').map((hero) => (
-                <div
-                  key={hero.id}
-                  className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg shadow p-6 flex items-center justify-between"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-xl font-bold">{hero.title_ar}</h3>
-                      <span className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-xs">
-                        {hero.page_location}
-                      </span>
-                      {hero.is_active ? (
-                        <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">نشط</span>
-                      ) : (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">غير نشط</span>
-                      )}
+          {/* Heroes Tab */}
+          {activeTab === 'heroes' && (
+            <div className="space-y-6">
+              {/* Full Heroes Section */}
+              <div>
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-white">
+                  <span className="text-2xl">🎨</span>
+                  Full Hero Sections (الرئيسي)
+                </h2>
+                <div className="grid gap-4">
+                  {heroes.filter(h => h.hero_type === 'full').map((hero) => (
+                    <div
+                      key={hero.id}
+                      className="bg-white/10 backdrop-blur-lg rounded-lg border border-purple-500/20 p-6 flex items-center justify-between hover:bg-white/15 transition"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-xl font-bold text-white">{hero.title_ar}</h3>
+                          <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs">
+                            {hero.page_location}
+                          </span>
+                          <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">
+                            ترتيب: {hero.display_order}
+                          </span>
+                          {hero.is_active ? (
+                            <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">نشط</span>
+                          ) : (
+                            <span className="px-2 py-1 bg-gray-500/20 text-gray-400 rounded text-xs">غير نشط</span>
+                          )}
+                        </div>
+                        <p className="text-gray-300 text-sm">{hero.subtitle_ar}</p>
+                        <p className="text-gray-400 text-xs mt-1">{hero.description_ar}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => toggleHeroStatus(hero)}
+                          className="p-2 hover:bg-white/10 rounded-lg transition text-gray-300 hover:text-white"
+                          title={hero.is_active ? 'إخفاء' : 'إظهار'}
+                        >
+                          {hero.is_active ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingHero(hero)
+                            setShowModal(true)
+                          }}
+                          className="p-2 hover:bg-purple-500/20 text-purple-400 rounded-lg transition"
+                          title="تعديل"
+                        >
+                          <Edit className="w-5 h-5" />
+                        </button>
+                      </div>
                     </div>
-                    <p className="text-gray-600 text-sm">{hero.subtitle_ar}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => toggleHeroStatus(hero)}
-                      className="p-2 hover:bg-white rounded-lg transition"
-                      title={hero.is_active ? 'إخفاء' : 'إظهار'}
-                    >
-                      {hero.is_active ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setEditingHero(hero)
-                        setShowModal(true)
-                      }}
-                      className="p-2 hover:bg-white text-primary-600 rounded-lg transition"
-                      title="تعديل"
-                    >
-                      <Edit className="w-5 h-5" />
-                    </button>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+
+              {/* Mini Heroes Section */}
+              <div>
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-white">
+                  <span className="text-2xl">📄</span>
+                  Mini Hero Sections (رأس الصفحة)
+                </h2>
+                <div className="grid gap-4">
+                  {heroes.filter(h => h.hero_type === 'mini').map((hero) => (
+                    <div
+                      key={hero.id}
+                      className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 backdrop-blur-lg rounded-lg border border-indigo-500/20 p-6 flex items-center justify-between hover:from-indigo-500/15 hover:to-purple-500/15 transition"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-xl font-bold text-white">{hero.title_ar}</h3>
+                          <span className="px-2 py-1 bg-indigo-500/20 text-indigo-400 rounded text-xs">
+                            {hero.page_location}
+                          </span>
+                          {hero.is_active ? (
+                            <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">نشط</span>
+                          ) : (
+                            <span className="px-2 py-1 bg-gray-500/20 text-gray-400 rounded text-xs">غير نشط</span>
+                          )}
+                        </div>
+                        <p className="text-gray-300 text-sm">{hero.subtitle_ar}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => toggleHeroStatus(hero)}
+                          className="p-2 hover:bg-white/10 rounded-lg transition text-gray-300 hover:text-white"
+                          title={hero.is_active ? 'إخفاء' : 'إظهار'}
+                        >
+                          {hero.is_active ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingHero(hero)
+                            setShowModal(true)
+                          }}
+                          className="p-2 hover:bg-white/10 text-purple-400 rounded-lg transition"
+                          title="تعديل"
+                        >
+                          <Edit className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
       {/* Edit Modal */}
       {showModal && (editingPage || editingHero) && (
@@ -637,6 +649,8 @@ export default function PagesManagementPage() {
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   )
 }
