@@ -185,8 +185,8 @@ export async function getCurrentUser(): Promise<{ user: any | null; error: strin
     // الحصول على بيانات المستخدم من Supabase Auth
     // في Supabase v2.45، لا توجد طريقة مباشرة getUser، نستخدم onAuthStateChange
     return new Promise((resolve) => {
-      const unsubscribe = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
-        unsubscribe();
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
+        subscription.unsubscribe();
         
         if (!session?.user) {
           resolve({ user: null, error: 'لم يتم تسجيل الدخول' });
