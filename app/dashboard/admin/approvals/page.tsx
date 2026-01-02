@@ -592,7 +592,7 @@ export default function ApprovalsPage() {
               animate={{ scale: 1 }}
               exit={{ scale: 0.8 }}
               className="relative max-w-4xl w-full"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
             >
               <button
                 onClick={() => setSelectedImage(null)}

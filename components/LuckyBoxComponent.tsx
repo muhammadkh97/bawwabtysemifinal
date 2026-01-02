@@ -263,7 +263,7 @@ export default function LuckyBoxComponent() {
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.5, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
               className="bg-gradient-to-br from-purple-900 to-pink-900 rounded-3xl p-12 max-w-lg w-full mx-4 border-4 border-yellow-400 relative overflow-hidden"
             >
               {!result && opening && (

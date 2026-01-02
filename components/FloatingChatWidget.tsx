@@ -185,7 +185,7 @@ export default function FloatingChatWidget() {
           right: 0,
         }}
         onDragStart={() => setIsDragging(true)}
-        onDragEnd={(event, info) => {
+        onDragEnd={(event: any, info: any) => {
           setIsDragging(false);
           // Save position to localStorage
           const newPosition = { x: info.point.x, y: info.point.y };

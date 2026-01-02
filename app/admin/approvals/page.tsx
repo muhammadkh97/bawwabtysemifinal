@@ -421,7 +421,7 @@ export default function ApprovalsPage() {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               className="bg-gradient-to-br from-purple-900 to-indigo-900 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
             >
               <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-3">
                 {selectedUser.role === 'vendor' ? (

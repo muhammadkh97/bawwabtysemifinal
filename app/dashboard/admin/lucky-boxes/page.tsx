@@ -564,7 +564,7 @@ export default function AdminLuckyBoxesPage() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
               className="bg-[#0F0A1E] rounded-3xl p-8 max-w-3xl w-full border border-purple-500/30 max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-6">
@@ -773,7 +773,7 @@ export default function AdminLuckyBoxesPage() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
               className="bg-[#0F0A1E] rounded-3xl p-8 max-w-4xl w-full border border-purple-500/30 max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-6">

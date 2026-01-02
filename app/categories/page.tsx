@@ -5,7 +5,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Package, ChevronRight, ArrowLeft, Star, Zap, ShieldCheck, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
-import { motion, Variants } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 
 interface Category {
