@@ -134,7 +134,18 @@ function AdminDashboardContent() {
       // أفضل المنتجات حسب المبيعات من order_items + products بالأعمدة الجديدة
       const { data: orderItemsData } = await supabase
         .from('order_items')
-        .select('product_id, quantity, item_total, products(id, name, price, stock_quantity, category_id)');
+        .select(`
+          product_id,
+          quantity,
+          item_total,
+          products (
+            id,
+            name,
+            price,
+            stock,
+            category_id
+          )
+        `);
 
       if (orderItemsData) {
         const productSalesMap: { [key: string]: { product: any; sales: number; revenue: number } } = {};
@@ -157,7 +168,7 @@ function AdminDashboardContent() {
             name: product.name,
             price: product.price,
             category: product.category_id || 'عام',
-            stock: product.stock_quantity,
+            stock: product.stock,
             sales,
             revenue,
           }));
