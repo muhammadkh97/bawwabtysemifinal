@@ -364,7 +364,7 @@ export default function TicketsPage() {
                 backdropFilter: 'blur(20px)',
                 border: '1px solid rgba(98, 54, 255, 0.3)',
               }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
             >
               <div className="flex items-start justify-between mb-6">
                 <div>

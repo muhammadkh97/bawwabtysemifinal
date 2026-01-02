@@ -524,7 +524,7 @@ export default function VendorPromotionsPage() {
               border: '2px solid rgba(139, 92, 246, 0.5)',
               boxShadow: '0 0 60px rgba(139, 92, 246, 0.3)',
             }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-8">

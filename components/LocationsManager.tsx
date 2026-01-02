@@ -325,7 +325,7 @@ export default function LocationsManager({ userId }: LocationsManagerProps) {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               className="bg-white rounded-3xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
             >
               <h3 className="text-2xl font-bold mb-6">
                 {editingLocation ? 'تعديل الموقع' : 'إضافة موقع جديد'}
