@@ -173,7 +173,7 @@ export default function PagesManagementPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-        <FuturisticSidebar />
+        <FuturisticSidebar role="admin" />
         <div className="lg:mr-64">
           <FuturisticNavbar />
           <div className="flex items-center justify-center min-h-screen">
@@ -186,7 +186,7 @@ export default function PagesManagementPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      <FuturisticSidebar />
+      <FuturisticSidebar role="admin" />
       <div className="lg:mr-64">
         <FuturisticNavbar />
         <div className="p-4 lg:p-8">
