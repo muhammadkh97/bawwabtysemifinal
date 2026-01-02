@@ -599,7 +599,7 @@ export default function AdminDisputesPage() {
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
               className="rounded-3xl max-w-2xl w-full p-8 shadow-2xl"
               style={{
                 background: 'rgba(15, 10, 30, 0.95)',
