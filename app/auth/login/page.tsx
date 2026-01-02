@@ -54,32 +54,6 @@ function LoginForm() {
     checkAuth();
   }, [checkAuth]);
 
-  const redirectUserByRole = (role: string) => {
-    const redirectPath = searchParams.get('redirect');
-    
-    if (redirectPath) {
-      router.push(redirectPath);
-      return;
-    }
-
-    switch (role) {
-      case 'admin':
-        router.push('/dashboard/admin');
-        break;
-      case 'vendor':
-        router.push('/dashboard/vendor');
-        break;
-      case 'restaurant':
-        router.push('/dashboard/restaurant');
-        break;
-      case 'driver':
-        router.push('/dashboard/driver');
-        break;
-      default:
-        router.push('/');
-    }
-  };
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
