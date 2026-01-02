@@ -320,7 +320,7 @@ export default function DriverLocationPage() {
   };
 
   const openInGoogleMaps = () => {
-    if (location) {
+    if (typeof window !== 'undefined' && location) {
       const mapsUrl = `https://maps.google.com/?q=${location.lat},${location.lng}`;
       window.open(mapsUrl, '_blank');
     }
