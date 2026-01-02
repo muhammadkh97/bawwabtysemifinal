@@ -43,6 +43,7 @@ CREATE TABLE users (
   avatar_url TEXT,
   is_active BOOLEAN DEFAULT true,
   vendor_id UUID,
+  loyalty_points INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -365,6 +366,50 @@ CREATE TABLE exchange_rates (
 
 CREATE INDEX idx_exchange_rates_updated ON exchange_rates(updated_at DESC);
 
+-- Addresses Table (User delivery addresses)
+CREATE TABLE addresses (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  title TEXT NOT NULL,
+  address TEXT NOT NULL,
+  city TEXT,
+  area TEXT,
+  building TEXT,
+  floor TEXT,
+  apartment TEXT,
+  lat FLOAT8,
+  lng FLOAT8,
+  location GEOGRAPHY(POINT, 4326),
+  phone TEXT,
+  instructions TEXT,
+  is_default BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_addresses_user ON addresses(user_id);
+CREATE INDEX idx_addresses_default ON addresses(is_default);
+CREATE INDEX idx_addresses_location ON addresses USING GIST(location);
+
+-- User Locations Table (Saved favorite locations)
+CREATE TABLE user_locations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  name TEXT NOT NULL,
+  address TEXT NOT NULL,
+  lat FLOAT8 NOT NULL,
+  lng FLOAT8 NOT NULL,
+  location GEOGRAPHY(POINT, 4326),
+  type TEXT DEFAULT 'other',
+  is_default BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_user_locations_user ON user_locations(user_id);
+CREATE INDEX idx_user_locations_default ON user_locations(is_default);
+CREATE INDEX idx_user_locations_location ON user_locations USING GIST(location);
+
 -- Create vendors view for backwards compatibility
 CREATE VIEW vendors AS
 SELECT 
@@ -519,6 +564,13 @@ CREATE TRIGGER sync_drivers_location BEFORE INSERT OR UPDATE ON drivers
   FOR EACH ROW WHEN (NEW.current_lat IS NOT NULL AND NEW.current_lng IS NOT NULL)
   EXECUTE FUNCTION sync_location_geography();
 
+CREATE TRIGGER sync_addresses_location BEFORE INSERT OR UPDATE ON addresses
+  FOR EACH ROW WHEN (NEW.lat IS NOT NULL AND NEW.lng IS NOT NULL)
+  EXECUTE FUNCTION sync_location_geography();
+
+CREATE TRIGGER sync_user_locations_location BEFORE INSERT OR UPDATE ON user_locations
+  FOR EACH ROW EXECUTE FUNCTION sync_location_geography();
+
 -- Function to generate order number
 CREATE OR REPLACE FUNCTION generate_order_number()
 RETURNS TRIGGER AS $$
@@ -612,6 +664,8 @@ ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cart_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE wishlists ENABLE ROW LEVEL SECURITY;
 ALTER TABLE store_followers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE addresses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_locations ENABLE ROW LEVEL SECURITY;
 
 -- Users policies
 CREATE POLICY "Users can view all profiles" ON users FOR SELECT USING (true);
@@ -696,6 +750,18 @@ CREATE POLICY "Users can view own follows" ON store_followers FOR SELECT
 CREATE POLICY "Users can manage own follows" ON store_followers FOR ALL 
   USING (user_id = auth.uid());
 
+-- Addresses policies
+CREATE POLICY "Users can view own addresses" ON addresses FOR SELECT 
+  USING (user_id = auth.uid());
+CREATE POLICY "Users can manage own addresses" ON addresses FOR ALL 
+  USING (user_id = auth.uid());
+
+-- User locations policies
+CREATE POLICY "Users can view own locations" ON user_locations FOR SELECT 
+  USING (user_id = auth.uid());
+CREATE POLICY "Users can manage own locations" ON user_locations FOR ALL 
+  USING (user_id = auth.uid());
+
 -- ==========================================
 -- INITIAL DATA SEEDS
 -- ==========================================
@@ -739,13 +805,15 @@ GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 DO $$
 BEGIN
   RAISE NOTICE '✅ Database rebuild completed successfully!';
-  RAISE NOTICE '📊 Tables created: users, stores, products, orders, drivers, reviews, notifications, chats, messages, cart_items, wishlists, store_followers, exchange_rates';
-  RAISE NOTICE '�️  View created: vendors (maps to stores table for backwards compatibility)';
+  RAISE NOTICE '📊 Tables created: users, stores, products, orders, drivers, reviews, notifications, chats, messages, cart_items, wishlists, store_followers, exchange_rates, addresses, user_locations';
+  RAISE NOTICE '🗂️  View created: vendors (maps to stores table for backwards compatibility)';
   RAISE NOTICE '🔒 RLS policies applied';
   RAISE NOTICE '🌱 Initial categories seeded';
   RAISE NOTICE '⚡ Functions created: get_current_user, get_latest_exchange_rates, update_exchange_rates, get_unread_count, handle_new_user';
   RAISE NOTICE '🔄 Alias columns auto-synced via triggers: users.name, users.user_role, stores.store_name, stores.shop_name, stores.latitude, stores.longitude, stores.shop_logo';
   RAISE NOTICE '👤 Auth trigger: Automatically creates user profile on signup';
   RAISE NOTICE '♻️  Existing auth users synced to users table';
-  RAISE NOTICE '⚠️  Next steps: Reload website - all 406 errors should be resolved';
+  RAISE NOTICE '🎁 loyalty_points column added to users table';
+  RAISE NOTICE '📍 addresses and user_locations tables added';
+  RAISE NOTICE '⚠️  Next steps: Reload website - all 404/400 errors should be resolved';
 END $$;
