@@ -4,96 +4,93 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
-import { ArrowRight, Upload, X, Plus, Trash2 } from 'lucide-react';
+import { 
+  ArrowRight, 
+  Upload, 
+  X, 
+  Plus, 
+  Trash2,
+  Utensils,
+  DollarSign,
+  Package,
+  Image as ImageIcon,
+  Clock,
+  Save,
+  FileText
+} from 'lucide-react';
 
 interface ProductVariant {
   id: string;
   name: string;
-  sku: string;
   price: number;
   stock: number;
-  attributes: Record<string, string>;
 }
 
 export default function NewMealPage() {
   const router = useRouter();
-  // Using supabase from lib/supabase
-  
-  // User & Vendor State
-  const [userId, setUserId] = useState<string | null>(null);
-  const [vendorId, setVendorId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  
-  // Product Basic Info
+  const [vendorId, setVendorId] = useState<string | null>(null);
+
+  // Basic info
   const [mealName, setMealName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [oldPrice, setOldPrice] = useState('');
-  const [stock, setStock] = useState('100'); // Meals usually have high stock
-  const [preparationTime, setPreparationTime] = useState(''); // in minutes
-  
+  const [stock, setStock] = useState('100');
+  const [preparationTime, setPreparationTime] = useState('');
+  const [category, setCategory] = useState('');
+
   // Images
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  
-  // Meal-specific fields
-  const [isVegetarian, setIsVegetarian] = useState(false);
-  const [isSpicy, setIsSpicy] = useState(false);
-  const [calories, setCalories] = useState('');
-  const [ingredients, setIngredients] = useState<string[]>([]);
-  const [ingredientInput, setIngredientInput] = useState('');
-  
-  // Variants (sizes)
+
+  // Variants
   const [hasVariants, setHasVariants] = useState(false);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
 
-  // Load user and vendor data
+  // Load vendor data
   useEffect(() => {
-    const loadUserData = async () => {
+    const loadVendorData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      
       if (!user) {
-        toast.error('يرجى تسجيل الدخول أولاً');
-        router.push('/login');
+        router.push('/auth/login');
         return;
       }
-      
-      setUserId(user.id);
-      
-      // Get vendor ID (restaurant)
-      const { data: vendorData, error } = await supabase
-        .from('vendors')
-        .select('id, vendor_type')
-        .eq('user_id', user.id)
-        .eq('vendor_type', 'restaurant')
+
+      // Get vendor_id from user's metadata
+      const { data: profile } = await supabase
+        .from('users')
+        .select('vendor_id')
+        .eq('id', user.id)
         .single();
-      
-      if (error || !vendorData) {
-        toast.error('⚠️ يجب أن تكون مطعماً لإضافة وجبات');
-        router.push('/dashboard/restaurant');
-        return;
+
+      if (profile?.vendor_id) {
+        setVendorId(profile.vendor_id);
+      } else {
+        toast.error('لم يتم العثور على معرف المطعم');
       }
-      
-      setVendorId(vendorData.id);
     };
-    
-    loadUserData();
-  }, [supabase, router]);
+
+    loadVendorData();
+  }, [router]);
 
   // Handle image selection
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    if (files.length + imageFiles.length > 5) {
-      toast.error('يمكنك رفع 5 صور كحد أقصى');
-      return;
+    const remainingSlots = 5 - imageFiles.length;
+    const filesToAdd = files.slice(0, remainingSlots);
+
+    if (files.length > remainingSlots) {
+      toast.error(`يمكنك رفع ${remainingSlots} صور فقط`);
     }
-    
-    setImageFiles(prev => [...prev, ...files]);
-    
-    // Create previews
-    files.forEach(file => {
+
+    setImageFiles([...imageFiles, ...filesToAdd]);
+
+    filesToAdd.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreviews(prev => [...prev, reader.result as string]);
+        setImagePreviews((prev) => [...prev, reader.result as string]);
       };
       reader.readAsDataURL(file);
     });
@@ -101,49 +98,32 @@ export default function NewMealPage() {
 
   // Remove image
   const removeImage = (index: number) => {
-    setImageFiles(prev => prev.filter((_, i) => i !== index));
-    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    setImageFiles(imageFiles.filter((_, i) => i !== index));
+    setImagePreviews(imagePreviews.filter((_, i) => i !== index));
   };
 
-  // Add variant (size)
+  // Variant management
   const addVariant = () => {
     const newVariant: ProductVariant = {
-      id: `temp-${Date.now()}`,
+      id: Date.now().toString(),
       name: '',
-      sku: '',
-      price: parseFloat(price) || 0,
-      stock: 100,
-      attributes: {}
+      price: 0,
+      stock: 100
     };
     setVariants([...variants, newVariant]);
   };
 
-  // Remove variant
   const removeVariant = (index: number) => {
     setVariants(variants.filter((_, i) => i !== index));
   };
 
-  // Update variant
   const updateVariant = (index: number, field: keyof ProductVariant, value: any) => {
     const updated = [...variants];
     updated[index] = { ...updated[index], [field]: value };
     setVariants(updated);
   };
 
-  // Add ingredient
-  const addIngredient = () => {
-    if (ingredientInput.trim() && !ingredients.includes(ingredientInput.trim())) {
-      setIngredients([...ingredients, ingredientInput.trim()]);
-      setIngredientInput('');
-    }
-  };
-
-  // Remove ingredient
-  const removeIngredient = (ingredient: string) => {
-    setIngredients(ingredients.filter(i => i !== ingredient));
-  };
-
-  // Upload image to Supabase Storage
+  // Upload image to Supabase storage
   const uploadImage = async (file: File): Promise<string | null> => {
     try {
       const fileExt = file.name.split('.').pop();
@@ -225,20 +205,16 @@ export default function NewMealPage() {
       // Determine product status
       const productStatus = saveAs === 'draft' ? 'draft' : 'approved';
       
-      // Prepare meal attributes
+      // Prepare meal attributes (only preparation time now)
       const mealAttributes: any = {};
-      if (isVegetarian) mealAttributes.vegetarian = true;
-      if (isSpicy) mealAttributes.spicy = true;
-      if (calories) mealAttributes.calories = parseInt(calories);
       if (preparationTime) mealAttributes.preparation_time = parseInt(preparationTime);
-      if (ingredients.length > 0) mealAttributes.ingredients = ingredients;
       
       // Prepare product data
       const productData = {
         vendor_id: vendorId,
         name: mealName.trim(),
         description: description.trim() || null,
-        category_id: 'f4514891-ce20-4f9b-9da0-103d13006797', // Grocery & Food category
+        category_id: category || 'f4514891-ce20-4f9b-9da0-103d13006797', // Grocery & Food category
         price: parseFloat(price),
         old_price: oldPrice ? parseFloat(oldPrice) : null,
         stock: hasVariants ? variants.reduce((sum, v) => sum + v.stock, 0) : parseInt(stock),
@@ -284,44 +260,55 @@ export default function NewMealPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Modern Header with Gradient */}
+        <div className="bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl shadow-xl p-8 mb-8 text-white">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
+            className="flex items-center gap-2 text-white/90 hover:text-white mb-4 transition-colors"
           >
             <ArrowRight className="w-5 h-5" />
-            <span>رجوع</span>
+            <span className="font-medium">رجوع</span>
           </button>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            إضافة وجبة جديدة
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            أضف وجبة جديدة إلى قائمة مطعمك
-          </p>
+          <div className="flex items-center gap-4">
+            <div className="bg-white/20 backdrop-blur-sm p-4 rounded-xl">
+              <Utensils className="w-8 h-8" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold mb-2">
+                إضافة وجبة جديدة
+              </h1>
+              <p className="text-white/90 text-lg">
+                أضف وجبة جديدة إلى قائمة مطعمك
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Form */}
         <form onSubmit={(e) => handleSubmit(e, 'publish')} className="space-y-6">
-          {/* Basic Info Card */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              المعلومات الأساسية
-            </h2>
+          {/* Basic Info Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-4">
+              <div className="flex items-center gap-3 text-white">
+                <FileText className="w-6 h-6" />
+                <h2 className="text-xl font-semibold">المعلومات الأساسية</h2>
+              </div>
+            </div>
             
-            <div className="space-y-4">
+            <div className="p-6 space-y-6">
               {/* Meal Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <Utensils className="w-4 h-4" />
                   اسم الوجبة *
                 </label>
                 <input
                   type="text"
                   value={mealName}
                   onChange={(e) => setMealName(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all"
                   placeholder="مثال: برجر لحم مع بطاطس"
                   required
                 />
@@ -329,22 +316,50 @@ export default function NewMealPage() {
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FileText className="w-4 h-4" />
                   الوصف
                 </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all"
                   placeholder="وصف تفصيلي للوجبة..."
                 />
               </div>
 
-              {/* Price & Old Price */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Preparation Time */}
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <Clock className="w-4 h-4" />
+                  وقت التحضير (دقيقة)
+                </label>
+                <input
+                  type="number"
+                  value={preparationTime}
+                  onChange={(e) => setPreparationTime(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all"
+                  placeholder="15"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Pricing Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4">
+              <div className="flex items-center gap-3 text-white">
+                <DollarSign className="w-6 h-6" />
+                <h2 className="text-xl font-semibold">الأسعار</h2>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <DollarSign className="w-4 h-4" />
                     السعر (ريال) *
                   </label>
                   <input
@@ -352,13 +367,14 @@ export default function NewMealPage() {
                     step="0.01"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all"
                     placeholder="0.00"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <DollarSign className="w-4 h-4" />
                     السعر القديم (اختياري)
                   </label>
                   <input
@@ -366,118 +382,24 @@ export default function NewMealPage() {
                     step="0.01"
                     value={oldPrice}
                     onChange={(e) => setOldPrice(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all"
                     placeholder="0.00"
                   />
                 </div>
               </div>
-
-              {/* Preparation Time & Calories */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    وقت التحضير (دقيقة)
-                  </label>
-                  <input
-                    type="number"
-                    value={preparationTime}
-                    onChange={(e) => setPreparationTime(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                    placeholder="15"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    السعرات الحرارية
-                  </label>
-                  <input
-                    type="number"
-                    value={calories}
-                    onChange={(e) => setCalories(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                    placeholder="500"
-                  />
-                </div>
-              </div>
-
-              {/* Meal Properties */}
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={isVegetarian}
-                    onChange={(e) => setIsVegetarian(e.target.checked)}
-                    className="rounded"
-                  />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
-                    نباتي
-                  </span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={isSpicy}
-                    onChange={(e) => setIsSpicy(e.target.checked)}
-                    className="rounded"
-                  />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
-                    حار
-                  </span>
-                </label>
-              </div>
-
-              {/* Ingredients */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  المكونات
-                </label>
-                <div className="flex gap-2 mb-2">
-                  <input
-                    type="text"
-                    value={ingredientInput}
-                    onChange={(e) => setIngredientInput(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addIngredient())}
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                    placeholder="أضف مكون واضغط Enter"
-                  />
-                  <button
-                    type="button"
-                    onClick={addIngredient}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                  >
-                    إضافة
-                  </button>
-                </div>
-                {ingredients.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {ingredients.map((ingredient) => (
-                      <span
-                        key={ingredient}
-                        className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm"
-                      >
-                        {ingredient}
-                        <button
-                          type="button"
-                          onClick={() => removeIngredient(ingredient)}
-                          className="text-gray-500 hover:text-red-500"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
             </div>
           </div>
 
-          {/* Images Card */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              صور الوجبة *
-            </h2>
+          {/* Images Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-500 to-pink-600 px-6 py-4">
+              <div className="flex items-center gap-3 text-white">
+                <ImageIcon className="w-6 h-6" />
+                <h2 className="text-xl font-semibold">صور الوجبة *</h2>
+              </div>
+            </div>
             
-            <div className="space-y-4">
+            <div className="p-6 space-y-4">
               {/* Image Previews */}
               {imagePreviews.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -486,17 +408,17 @@ export default function NewMealPage() {
                       <img
                         src={preview}
                         alt={`Preview ${index + 1}`}
-                        className="w-full h-32 object-cover rounded-lg"
+                        className="w-full h-32 object-cover rounded-lg shadow-md"
                       />
                       <button
                         type="button"
                         onClick={() => removeImage(index)}
-                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
                       >
                         <X className="w-4 h-4" />
                       </button>
                       {index === 0 && (
-                        <span className="absolute bottom-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                        <span className="absolute bottom-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-md shadow">
                           الصورة الرئيسية
                         </span>
                       )}
@@ -507,10 +429,13 @@ export default function NewMealPage() {
 
               {/* Upload Button */}
               {imageFiles.length < 5 && (
-                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
-                  <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
+                  <Upload className="w-10 h-10 text-gray-400 mb-2" />
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                     انقر لرفع الصور ({imageFiles.length}/5)
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    JPG, PNG (الحد الأقصى 5 صور)
                   </span>
                   <input
                     type="file"
@@ -524,90 +449,143 @@ export default function NewMealPage() {
             </div>
           </div>
 
-          {/* Sizes/Variants Card */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                الأحجام (اختياري)
-              </h2>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={hasVariants}
-                  onChange={(e) => setHasVariants(e.target.checked)}
-                  className="rounded"
-                />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+          {/* Stock & Variants Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-gradient-to-r from-yellow-500 to-orange-600 px-6 py-4">
+              <div className="flex items-center gap-3 text-white">
+                <Package className="w-6 h-6" />
+                <h2 className="text-xl font-semibold">المخزون والأحجام</h2>
+              </div>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Has Variants Toggle */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   الوجبة لها أحجام مختلفة
                 </span>
-              </label>
-            </div>
-
-            {hasVariants && (
-              <div className="space-y-4">
-                {variants.map((variant, index) => (
-                  <div key={variant.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="font-medium text-gray-900 dark:text-white">
-                        حجم #{index + 1}
-                      </h3>
-                      <button
-                        type="button"
-                        onClick={() => removeVariant(index)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <input
-                        type="text"
-                        value={variant.name}
-                        onChange={(e) => updateVariant(index, 'name', e.target.value)}
-                        placeholder="اسم الحجم (صغير، وسط، كبير)"
-                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-                      />
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={variant.price}
-                        onChange={(e) => updateVariant(index, 'price', parseFloat(e.target.value))}
-                        placeholder="السعر"
-                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-                      />
-                    </div>
-                  </div>
-                ))}
-                
-                <button
-                  type="button"
-                  onClick={addVariant}
-                  className="flex items-center gap-2 text-blue-500 hover:text-blue-700"
-                >
-                  <Plus className="w-5 h-5" />
-                  <span>إضافة حجم</span>
-                </button>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={hasVariants}
+                    onChange={(e) => setHasVariants(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                </label>
               </div>
-            )}
+
+              {/* Stock (if no variants) */}
+              {!hasVariants && (
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <Package className="w-4 h-4" />
+                    الكمية المتوفرة
+                  </label>
+                  <input
+                    type="number"
+                    value={stock}
+                    onChange={(e) => setStock(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all"
+                    placeholder="100"
+                  />
+                </div>
+              )}
+
+              {/* Variants */}
+              {hasVariants && (
+                <div className="space-y-4">
+                  {variants.map((variant, index) => (
+                    <div key={variant.id} className="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-medium text-gray-900 dark:text-white">
+                          حجم #{index + 1}
+                        </h3>
+                        <button
+                          type="button"
+                          onClick={() => removeVariant(index)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-all"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input
+                          type="text"
+                          value={variant.name}
+                          onChange={(e) => updateVariant(index, 'name', e.target.value)}
+                          placeholder="اسم الحجم (صغير، وسط، كبير)"
+                          className="px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        />
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={variant.price}
+                          onChange={(e) => updateVariant(index, 'price', parseFloat(e.target.value))}
+                          placeholder="السعر"
+                          className="px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        />
+                        <input
+                          type="number"
+                          value={variant.stock}
+                          onChange={(e) => updateVariant(index, 'stock', parseInt(e.target.value))}
+                          placeholder="الكمية"
+                          className="px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <button
+                    type="button"
+                    onClick={addVariant}
+                    className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20 px-4 py-2 rounded-lg transition-all"
+                  >
+                    <Plus className="w-5 h-5" />
+                    <span>إضافة حجم</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
             >
-              {loading ? 'جاري الحفظ...' : 'نشر الوجبة'}
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  جاري النشر...
+                </>
+              ) : (
+                <>
+                  <Save className="w-5 h-5" />
+                  نشر الوجبة
+                </>
+              )}
             </button>
             <button
               type="button"
               onClick={(e: any) => handleSubmit(e, 'draft')}
               disabled={loading}
-              className="flex-1 bg-gray-500 text-white py-3 rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              className="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 text-white py-4 rounded-xl hover:from-gray-600 hover:to-gray-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
             >
-              حفظ كمسودة
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  جاري الحفظ...
+                </>
+              ) : (
+                <>
+                  <FileText className="w-5 h-5" />
+                  حفظ كمسودة
+                </>
+              )}
             </button>
           </div>
         </form>
