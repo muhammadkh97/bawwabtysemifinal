@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
@@ -276,14 +277,16 @@ export default function VendorProductsPage() {
                   >
                     {/* Product Image */}
                     <div
-                      className="aspect-square flex items-center justify-center overflow-hidden"
+                      className="aspect-square flex items-center justify-center overflow-hidden relative"
                       style={{ background: 'linear-gradient(135deg, rgba(98, 54, 255, 0.2), rgba(255, 33, 157, 0.2))' }}
                     >
                       {productImage ? (
-                        <img
+                        <Image
                           src={productImage}
                           alt={product.name}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />
                       ) : (
                         <Package className="w-20 h-20 text-purple-300" />

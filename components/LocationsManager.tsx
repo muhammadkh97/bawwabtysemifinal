@@ -50,6 +50,7 @@ export default function LocationsManager({ userId }: LocationsManagerProps) {
 
   useEffect(() => {
     fetchLocations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const fetchLocations = async () => {

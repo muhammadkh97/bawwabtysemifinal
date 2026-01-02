@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useParams } from 'next/navigation';
@@ -73,6 +74,7 @@ export default function EditRestaurantProductPage() {
 
   useEffect(() => {
     checkAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkAuth = async () => {
@@ -384,10 +386,12 @@ export default function EditRestaurantProductPage() {
                     animate={{ opacity: 1, scale: 1 }}
                     className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100"
                   >
-                    <img
+                    <Image
                       src={image}
                       alt={`Existing ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 50vw, 200px"
                     />
                     <button
                       type="button"
@@ -407,10 +411,12 @@ export default function EditRestaurantProductPage() {
                     animate={{ opacity: 1, scale: 1 }}
                     className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100"
                   >
-                    <img
+                    <Image
                       src={preview}
                       alt={`New ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 50vw, 200px"
                     />
                     <button
                       type="button"

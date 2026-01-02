@@ -87,6 +87,7 @@ export default function LocationPicker({
         map.current = null
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Update marker position

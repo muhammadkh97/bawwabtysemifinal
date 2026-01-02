@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import { supabase } from '@/lib/supabase';
@@ -271,7 +272,9 @@ export default function AdminAnalyticsPage() {
                   <div key={product.id || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div className="flex items-center gap-3">
                       {product.image ? (
-                        <img src={product.image} alt={product.name} className="w-12 h-12 object-cover rounded-lg" />
+                        <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                          <Image src={product.image} alt={product.name} fill className="object-cover" sizes="48px" />
+                        </div>
                       ) : (
                         <span className="text-2xl">📦</span>
                       )}

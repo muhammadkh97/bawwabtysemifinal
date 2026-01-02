@@ -57,6 +57,7 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     fetchProduct();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId]);
 
   // التعامل مع مفاتيح الأسهم

@@ -51,6 +51,7 @@ export default function ApprovalsPage() {
   useEffect(() => {
     checkAuth();
     fetchPendingUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkAuth = async () => {

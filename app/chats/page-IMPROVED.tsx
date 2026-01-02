@@ -17,6 +17,7 @@
  */
 
 import { useEffect, useState, useRef } from 'react';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { Send, ArrowRight, User, Circle } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -371,12 +372,14 @@ export default function ChatsPage() {
                 >
                   <div className="flex items-center gap-3">
                     {/* Avatar */}
-                    <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 relative overflow-hidden">
                       {otherUser?.avatar_url ? (
-                        <img
+                        <Image
                           src={otherUser.avatar_url}
                           alt={otherUser.full_name}
-                          className="w-full h-full rounded-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="48px"
                         />
                       ) : (
                         <User className="w-6 h-6 text-purple-600" />

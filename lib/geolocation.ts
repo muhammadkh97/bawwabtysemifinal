@@ -443,7 +443,7 @@ export function formatDistance(distanceKm: number): string {
 // التصدير
 // ============================================
 
-export default {
+const geolocationService = {
   getCurrentLocation,
   watchLocation,
   stopWatchingLocation,
@@ -463,3 +463,5 @@ export default {
   formatCoordinates,
   formatDistance,
 };
+
+export default geolocationService;

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
 import { ArrowRight, Upload, X, Plus, Trash2 } from 'lucide-react';
@@ -77,7 +78,8 @@ export default function NewMealPage() {
     };
     
     loadUserData();
-  }, [supabase, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Handle image selection
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -482,11 +484,13 @@ export default function NewMealPage() {
               {imagePreviews.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   {imagePreviews.map((preview, index) => (
-                    <div key={index} className="relative group">
-                      <img
+                    <div key={index} className="relative group h-32">
+                      <Image
                         src={preview}
                         alt={`Preview ${index + 1}`}
-                        className="w-full h-32 object-cover rounded-lg"
+                        fill
+                        className="object-cover rounded-lg"
+                        sizes="(max-width: 768px) 50vw, 200px"
                       />
                       <button
                         type="button"

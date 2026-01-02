@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import NextImage from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
@@ -283,14 +284,16 @@ export default function RestaurantSettingsPage() {
                   <div className="relative">
                     {coverImage ? (
                       <div className="relative aspect-[21/9] rounded-2xl overflow-hidden">
-                        <img
+                        <NextImage
                           src={coverImage}
                           alt="Cover"
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, 1200px"
                         />
                         <button
                           onClick={() => setCoverImage('')}
-                          className="absolute top-4 right-4 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
+                          className="absolute top-4 right-4 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition z-10"
                         >
                           <X className="w-5 h-5" />
                         </button>
@@ -328,10 +331,12 @@ export default function RestaurantSettingsPage() {
                   <div className="relative">
                     {logoImage ? (
                       <div className="relative w-48 h-48 rounded-2xl overflow-hidden">
-                        <img
+                        <NextImage
                           src={logoImage}
                           alt="Logo"
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="192px"
                         />
                         <button
                           onClick={() => setLogoImage('')}
@@ -371,10 +376,12 @@ export default function RestaurantSettingsPage() {
                     {/* Existing Gallery Images */}
                     {galleryImages.map((image, index) => (
                       <div key={index} className="relative aspect-square rounded-xl overflow-hidden">
-                        <img
+                        <NextImage
                           src={image}
                           alt={`Gallery ${index + 1}`}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
                         />
                         <button
                           onClick={() => removeGalleryImage(index)}

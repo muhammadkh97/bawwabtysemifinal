@@ -94,6 +94,7 @@ export default function FloatingChatWidget() {
     if (isOpen && currentChatId && !showChatList) {
       markAsRead(currentChatId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, currentChatId, showChatList]);
 
   // Play sound when new unread message arrives

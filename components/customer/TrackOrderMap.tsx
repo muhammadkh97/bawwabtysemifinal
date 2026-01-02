@@ -95,6 +95,7 @@ export default function TrackOrderMap({
       const interval = setInterval(fetchTrackingData, refreshInterval * 1000);
       return () => clearInterval(interval);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId, autoRefresh, refreshInterval]);
 
   // ==========================================

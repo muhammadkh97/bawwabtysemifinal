@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
@@ -333,14 +334,16 @@ export default function ApprovalsPage() {
                     }}
                   >
                     {/* صورة المنتج */}
-                    <div className="aspect-video rounded-xl mb-4 overflow-hidden flex items-center justify-center"
+                    <div className="aspect-video rounded-xl mb-4 overflow-hidden flex items-center justify-center relative"
                       style={{ background: 'rgba(98, 54, 255, 0.1)' }}>
                       {product.images && product.images.length > 0 ? (
-                        <img 
+                        <Image 
                           src={product.images[0]} 
                           alt={product.name}
-                          className="w-full h-full object-cover cursor-pointer hover:scale-105 transition"
+                          fill
+                          className="object-cover cursor-pointer hover:scale-105 transition"
                           onClick={() => openImage(product.images[0])}
+                          sizes="(max-width: 768px) 100vw, 400px"
                         />
                       ) : (
                         <span className="text-7xl">📦</span>
@@ -351,13 +354,20 @@ export default function ApprovalsPage() {
                     {product.images && product.images.length > 1 && (
                       <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
                         {product.images.slice(1, 5).map((img: string, idx: number) => (
-                          <img
+                          <div
                             key={idx}
-                            src={img}
-                            alt={`${product.name} ${idx + 2}`}
-                            className="w-16 h-16 rounded-lg object-cover cursor-pointer hover:scale-110 transition"
+                            className="relative w-16 h-16 rounded-lg overflow-hidden cursor-pointer hover:scale-110 transition flex-shrink-0"
                             style={{ border: '2px solid rgba(98, 54, 255, 0.3)' }}
                             onClick={() => openImage(img)}
+                          >
+                            <Image
+                              src={img}
+                              alt={`${product.name} ${idx + 2}`}
+                              fill
+                              className="object-cover"
+                              sizes="64px"
+                            />
+                          </div>
                           />
                         ))}
                         {product.images.length > 5 && (
@@ -596,13 +606,24 @@ export default function ApprovalsPage() {
                 <XCircle className="w-8 h-8" />
                 <span className="text-lg">إغلاق</span>
               </button>
-              <img
-                src={selectedImage}
-                alt="Document"
-                className="w-full h-auto rounded-2xl"
-                style={{
+              <div className="relative w-full" style={{ minHeight: '400px' }}>
+                <Image
+                  src={selectedImage}
+                  alt="Document"
+                  width={1200}
+                  height={800}
+                  className="w-full h-auto rounded-2xl"
+                  style={{
+                    border: '2px solid rgba(98, 54, 255, 0.5)',
+                    boxShadow: '0 0 50px rgba(98, 54, 255, 0.3)'
+                  }}
+                  sizes="100vw"
+                />
+              </div>
+              <div style={{
                   border: '2px solid rgba(98, 54, 255, 0.5)',
-                  boxShadow: '0 0 50px rgba(98, 54, 255, 0.3)'
+                  boxShadow: '0 0 50px rgba(98, 54, 255, 0.3)',
+                  display: 'none'
                 }}
               />
             </motion.div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import NextImage from 'next/image';
 import { motion } from 'framer-motion';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
@@ -388,14 +389,16 @@ export default function VendorMyStorePage() {
                     />
                     {logoPreview ? (
                       <div className="relative w-full aspect-video rounded-xl overflow-hidden group">
-                        <img
+                        <NextImage
                           src={logoPreview}
                           alt="Logo preview"
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, 500px"
                         />
                         <button
                           onClick={removeLogo}
-                          className="absolute top-2 right-2 p-2 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute top-2 right-2 p-2 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -429,10 +432,12 @@ export default function VendorMyStorePage() {
                     />
                     {bannerPreview ? (
                       <div className="relative w-full aspect-[3/1] rounded-xl overflow-hidden group">
-                        <img
+                        <NextImage
                           src={bannerPreview}
                           alt="Banner preview"
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, 1200px"
                         />
                         <button
                           onClick={removeBanner}

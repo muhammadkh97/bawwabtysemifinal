@@ -103,6 +103,7 @@ export default function DeliveryMapbox({
     return () => {
       map.current?.remove();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ==========================================
@@ -212,6 +213,7 @@ export default function DeliveryMapbox({
         )
         .addTo(map.current);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapLoaded, driverLocation, storeLocation, customerLocation]);
 
   // ==========================================
@@ -309,6 +311,7 @@ export default function DeliveryMapbox({
     if (tripStage === 'heading_to_customer') {
       drawRoute(storeLocation, customerLocation, '#4facfe'); // أزرق
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tripStage, mapLoaded]);
 
   // ==========================================
