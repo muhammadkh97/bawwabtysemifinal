@@ -120,7 +120,7 @@ export default function PremiumCategorySelect({
   const selectedColorIndex = selectedCategory ? Math.abs(selectedCategory.id.charCodeAt(0) % categoryColors.length) : 0;
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative z-50" ref={dropdownRef}>
       {/* Label */}
       {label && (
         <label className="block text-purple-300 text-sm font-medium mb-2">
