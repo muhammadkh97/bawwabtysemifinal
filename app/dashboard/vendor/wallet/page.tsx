@@ -59,6 +59,7 @@ export default function VendorWalletPage() {
     if (userId) {
       fetchWalletData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const fetchWalletData = async () => {

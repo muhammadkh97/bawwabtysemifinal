@@ -57,6 +57,7 @@ export default function VendorSettingsPage() {
     if (user) {
       fetchVendorData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchVendorData = async () => {

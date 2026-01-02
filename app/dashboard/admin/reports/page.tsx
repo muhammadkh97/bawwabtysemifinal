@@ -26,6 +26,7 @@ export default function AdminReportsPage() {
 
   useEffect(() => {
     fetchReportData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [period]);
 
   const fetchReportData = async () => {

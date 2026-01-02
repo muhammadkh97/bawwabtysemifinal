@@ -52,6 +52,7 @@ export default function ChatComponent({ vendorId, vendorName, vendorAvatar }: Ch
       }
     };
     getUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vendorId]);
 
   // تهيئة الدردشة
@@ -317,11 +318,11 @@ export default function ChatComponent({ vendorId, vendorName, vendorAvatar }: Ch
             {/* Image Preview */}
             {imagePreview && (
               <div className="px-4 py-2">
-                <div className="relative inline-block">
-                  <img src={imagePreview} alt="preview" className="w-20 h-20 rounded-xl object-cover" />
+                <div className="relative inline-block w-20 h-20">
+                  <Image src={imagePreview} alt="preview" fill sizes="80px" className="rounded-xl object-cover" />
                   <button
                     onClick={() => setImagePreview(null)}
-                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center"
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center z-10"
                   >
                     <X className="w-4 h-4 text-white" />
                   </button>

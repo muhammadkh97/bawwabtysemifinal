@@ -74,6 +74,7 @@ function ChatsContent() {
         });
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vendorIdParam, chats]);
 
   useEffect(() => {
@@ -81,6 +82,7 @@ function ChatsContent() {
     if (currentChatId) {
       markAsRead(currentChatId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentChatId]);
 
   useEffect(() => {

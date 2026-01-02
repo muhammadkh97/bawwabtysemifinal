@@ -34,6 +34,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       fetchProductData();
       fetchCategories();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, params.id]);
 
   const fetchProductData = async () => {
