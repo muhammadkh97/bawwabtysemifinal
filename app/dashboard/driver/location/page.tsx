@@ -33,6 +33,18 @@ interface LocationData {
   address?: string;
 }
 
+declare global {
+  interface Navigator {
+    geolocation: Geolocation;
+    clipboard: Clipboard;
+    share?: (data: ShareData) => Promise<void>;
+    permissions: Permissions;
+  }
+  interface Window {
+    open: (url: string, target: string) => void;
+  }
+}
+
 interface DriverStats {
   driverId: string;
   isOnline: boolean;
