@@ -75,6 +75,7 @@ export default function FuturisticSidebar({ role }: FuturisticSidebarProps) {
         fetchDriverNotifications();
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, role]);
 
   const fetchCounts = async () => {

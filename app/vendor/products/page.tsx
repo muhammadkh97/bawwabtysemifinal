@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Plus, Search, Edit, Trash2, Eye, Package } from 'lucide-react'
+import Image from 'next/image'
 
 export default function VendorProductsPage() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -126,11 +127,15 @@ export default function VendorProductsPage() {
                     <tr key={product.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className="w-12 h-12 rounded-lg object-cover"
-                          />
+                          <div className="relative w-12 h-12 rounded-lg overflow-hidden">
+                            <Image
+                              src={product.image}
+                              alt={product.name}
+                              fill
+                              sizes="48px"
+                              className="object-cover"
+                            />
+                          </div>
                           <div>
                             <p className="font-semibold text-gray-900">{product.name}</p>
                             <p className="text-sm text-gray-600">{product.category}</p>

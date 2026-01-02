@@ -85,6 +85,7 @@ export default function CountryPhoneInput({
         setPhoneNumber(value.replace(matchingCountry.dialCode, ''))
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleCountrySelect = (country: CountryCode) => {

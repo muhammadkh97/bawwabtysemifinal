@@ -8,6 +8,7 @@ import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import { Package, Plus, Edit, Trash2, Eye, EyeOff, Search, ChefHat } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface Product {
   id: string;
@@ -178,10 +179,12 @@ export default function RestaurantProductsPage() {
                   {/* Product Image */}
                   <div className="relative h-48 overflow-hidden bg-gradient-to-br from-orange-100 to-red-100">
                     {product.images && product.images.length > 0 ? (
-                      <img
+                      <Image
                         src={product.images[0]}
                         alt={product.name_ar || product.name}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">

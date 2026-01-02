@@ -30,6 +30,7 @@ export default function DealsPage() {
   // جلب العروض من قاعدة البيانات
   useEffect(() => {
     fetchDeals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchDeals = async () => {

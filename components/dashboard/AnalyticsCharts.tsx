@@ -19,6 +19,7 @@ export function SalesChart() {
 
   useEffect(() => {
     fetchSalesData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [period]);
 
   const fetchSalesData = async () => {

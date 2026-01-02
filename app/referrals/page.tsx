@@ -50,6 +50,7 @@ export default function ReferralPage() {
     } else {
       router.push('/login');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authUser]);
 
   const loadData = async (currentUser: any) => {

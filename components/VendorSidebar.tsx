@@ -77,6 +77,7 @@ export default function VendorSidebar() {
         ordersSubscription.unsubscribe()
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId])
 
   const fetchOrdersCount = async () => {

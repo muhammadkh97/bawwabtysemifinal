@@ -24,6 +24,7 @@ export default function CategoryPage() {
 
   useEffect(() => {
     loadCategoryData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
   async function loadCategoryData() {

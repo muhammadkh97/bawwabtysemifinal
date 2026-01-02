@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { 
@@ -879,11 +880,15 @@ export default function CheckoutPage() {
                         <div className="space-y-3 max-h-64 overflow-y-auto">
                           {cartItems.filter(item => item.product).map((item) => (
                             <div key={item.product!.id} className="flex gap-3 p-3 bg-white/5 rounded-xl">
-                              <img
-                                src={item.product!.images?.[0] || ''}
-                                alt={item.product!.name}
-                                className="w-16 h-16 object-cover rounded-lg"
-                              />
+                              <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                                <Image
+                                  src={item.product!.images?.[0] || ''}
+                                  alt={item.product!.name}
+                                  fill
+                                  className="object-cover"
+                                  sizes="64px"
+                                />
+                              </div>
                               <div className="flex-1">
                                 <h4 className="text-white font-medium text-sm">{item.product!.name}</h4>
                                 <p className="text-gray-400 text-xs">الكمية: {item.quantity}</p>

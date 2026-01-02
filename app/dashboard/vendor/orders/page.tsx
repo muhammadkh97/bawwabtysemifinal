@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
@@ -440,10 +441,13 @@ export default function VendorOrdersPageImproved() {
                               <div className="bg-black/30 p-4 rounded-xl">
                                 <p className="text-xs text-orange-300 mb-2">رمز QR:</p>
                                 <div className="bg-white p-2 rounded-lg inline-block">
-                                  <img 
+                                  <Image 
                                     src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${order.pickup_qr_code}`}
                                     alt="QR Code"
+                                    width={96}
+                                    height={96}
                                     className="w-24 h-24"
+                                    unoptimized
                                   />
                                 </div>
                                 <p className="text-xs text-orange-300/60 mt-2">امسح هذا الرمز</p>

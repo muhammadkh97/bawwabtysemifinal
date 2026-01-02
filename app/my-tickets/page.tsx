@@ -55,6 +55,7 @@ export default function MyTicketsPage() {
 
   useEffect(() => {
     checkAuthAndFetchTickets();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
   const checkAuthAndFetchTickets = async () => {

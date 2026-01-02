@@ -2,6 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
 import { 
@@ -297,12 +298,14 @@ function ProductReviewCard({ product, onView }: any) {
     >
       <div className="flex flex-col md:flex-row gap-6">
         {/* Product Image */}
-        <div className="w-full md:w-32 h-32 rounded-xl overflow-hidden bg-white/5 flex-shrink-0">
+        <div className="w-full md:w-32 h-32 rounded-xl overflow-hidden bg-white/5 flex-shrink-0 relative">
           {product.images && product.images.length > 0 ? (
-            <img
+            <Image
               src={product.images[0]}
               alt={product.name_ar}
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 128px"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
