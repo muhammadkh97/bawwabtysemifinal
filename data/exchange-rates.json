@@ -1,0 +1,127 @@
+{
+  "base_currency": "SAR",
+  "last_updated": "2024-01-15T00:00:00Z",
+  "currencies": {
+    "SAR": {
+      "code": "SAR",
+      "name": "Saudi Riyal",
+      "name_ar": "ريال سعودي",
+      "symbol": "ر.س",
+      "flag": "🇸🇦",
+      "rate": 1.0,
+      "decimal_places": 2
+    },
+    "USD": {
+      "code": "USD",
+      "name": "US Dollar",
+      "name_ar": "دولار أمريكي",
+      "symbol": "$",
+      "flag": "🇺🇸",
+      "rate": 0.27,
+      "decimal_places": 2
+    },
+    "ILS": {
+      "code": "ILS",
+      "name": "Israeli Shekel",
+      "name_ar": "شيكل إسرائيلي",
+      "symbol": "₪",
+      "flag": "🇮🇱",
+      "rate": 0.95,
+      "decimal_places": 2
+    },
+    "EUR": {
+      "code": "EUR",
+      "name": "Euro",
+      "name_ar": "يورو",
+      "symbol": "€",
+      "flag": "🇪🇺",
+      "rate": 0.24,
+      "decimal_places": 2
+    },
+    "GBP": {
+      "code": "GBP",
+      "name": "British Pound",
+      "name_ar": "جنيه إسترليني",
+      "symbol": "£",
+      "flag": "🇬🇧",
+      "rate": 0.21,
+      "decimal_places": 2
+    },
+    "AED": {
+      "code": "AED",
+      "name": "UAE Dirham",
+      "name_ar": "درهم إماراتي",
+      "symbol": "د.إ",
+      "flag": "🇦🇪",
+      "rate": 0.98,
+      "decimal_places": 2
+    },
+    "EGP": {
+      "code": "EGP",
+      "name": "Egyptian Pound",
+      "name_ar": "جنيه مصري",
+      "symbol": "ج.م",
+      "flag": "🇪🇬",
+      "rate": 13.2,
+      "decimal_places": 2
+    },
+    "JOD": {
+      "code": "JOD",
+      "name": "Jordanian Dinar",
+      "name_ar": "دينار أردني",
+      "symbol": "د.أ",
+      "flag": "🇯🇴",
+      "rate": 0.19,
+      "decimal_places": 3
+    },
+    "KWD": {
+      "code": "KWD",
+      "name": "Kuwaiti Dinar",
+      "name_ar": "دينار كويتي",
+      "symbol": "د.ك",
+      "flag": "🇰🇼",
+      "rate": 0.08,
+      "decimal_places": 3
+    },
+    "QAR": {
+      "code": "QAR",
+      "name": "Qatari Riyal",
+      "name_ar": "ريال قطري",
+      "symbol": "ر.ق",
+      "flag": "🇶🇦",
+      "rate": 0.97,
+      "decimal_places": 2
+    },
+    "OMR": {
+      "code": "OMR",
+      "name": "Omani Rial",
+      "name_ar": "ريال عماني",
+      "symbol": "ر.ع",
+      "flag": "🇴🇲",
+      "rate": 0.10,
+      "decimal_places": 3
+    },
+    "BHD": {
+      "code": "BHD",
+      "name": "Bahraini Dinar",
+      "name_ar": "دينار بحريني",
+      "symbol": "د.ب",
+      "flag": "🇧🇭",
+      "rate": 0.10,
+      "decimal_places": 3
+    }
+  },
+  "sources": [
+    "https://www.exchangerate-api.com/",
+    "https://fixer.io/",
+    "Manual entry - Last checked: 2024-01-15"
+  ],
+  "notes": {
+    "en": "Exchange rates are approximate and should be updated regularly. Rates are relative to SAR (Saudi Riyal) as the base currency.",
+    "ar": "أسعار الصرف تقريبية ويجب تحديثها بانتظام. الأسعار بالنسبة للريال السعودي (SAR) كعملة أساسية."
+  },
+  "update_instructions": {
+    "manual": "Edit this file and update the 'rate' values, then update 'last_updated' timestamp.",
+    "automatic": "Use an API like ExchangeRate-API or Fixer.io to fetch latest rates and update this file via a scheduled task or Edge Function."
+  }
+}
