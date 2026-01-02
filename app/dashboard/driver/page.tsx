@@ -342,7 +342,7 @@ export default function DriverDashboard() {
                         
                         <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 mb-2">
                           <MapPin className="w-3 h-3" />
-                          <span className="truncate">{order.delivery_address?.address || 'غير متوفر'}</span>
+                          <span className="truncate">{order.delivery_address || 'غير متوفر'}</span>
                         </div>
 
                         <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-600">
@@ -350,7 +350,7 @@ export default function DriverDashboard() {
                             {order.total.toFixed(2)} ر.س
                           </span>
                           <span className="text-xs font-semibold text-green-600 dark:text-green-400">
-                            +{order.delivery_fee.toFixed(2)} ر.س
+                            +{(order.delivery_fee || 0).toFixed(2)} ر.س
                           </span>
                         </div>
                       </div>
