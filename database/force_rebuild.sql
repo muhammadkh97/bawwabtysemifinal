@@ -19,8 +19,9 @@ CREATE EXTENSION IF NOT EXISTS "postgis";
 -- ==========================================
 
 CREATE TYPE user_role AS ENUM ('customer', 'vendor', 'driver', 'admin');
+CREATE TYPE approval_status AS ENUM ('pending', 'approved', 'rejected');
 CREATE TYPE business_type AS ENUM ('retail', 'restaurant');
-CREATE TYPE order_status AS ENUM ('pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery', 'delivered', 'cancelled');
+CREATE TYPE order_status AS ENUM ('pending', 'confirmed', 'processing', 'preparing', 'ready', 'shipped', 'out_for_delivery', 'delivered', 'cancelled');
 CREATE TYPE payment_status AS ENUM ('pending', 'paid', 'failed', 'refunded');
 CREATE TYPE payment_method AS ENUM ('cash', 'card', 'wallet');
 CREATE TYPE product_status AS ENUM ('draft', 'pending', 'approved', 'rejected');
@@ -38,6 +39,7 @@ CREATE TABLE users (
   phone TEXT,
   role user_role NOT NULL DEFAULT 'customer',
   avatar_url TEXT,
+  is_active BOOLEAN DEFAULT true,
   vendor_id UUID,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -61,12 +63,19 @@ CREATE TABLE stores (
   opening_hours JSONB DEFAULT '{"monday": "9:00-22:00", "tuesday": "9:00-22:00", "wednesday": "9:00-22:00", "thursday": "9:00-22:00", "friday": "9:00-22:00", "saturday": "9:00-22:00", "sunday": "9:00-22:00"}',
   is_online BOOLEAN DEFAULT true,
   is_active BOOLEAN DEFAULT true,
+  approval_status approval_status DEFAULT 'pending',
+  commission_rate DECIMAL(4,2) DEFAULT 10.00,
+  documents TEXT[] DEFAULT '{}',
+  wallet_balance DECIMAL(10,2) DEFAULT 0,
+  bank_account JSONB,
   theme_preference TEXT DEFAULT 'white',
   logo_url TEXT,
   banner_url TEXT,
   rating DECIMAL(2,1) DEFAULT 0,
   total_reviews INTEGER DEFAULT 0,
   total_orders INTEGER DEFAULT 0,
+  total_sales DECIMAL(10,2) DEFAULT 0,
+  total_products INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   
@@ -197,6 +206,8 @@ CREATE TABLE drivers (
   vehicle_type TEXT,
   vehicle_number TEXT,
   license_number TEXT,
+  license_image TEXT,
+  approval_status approval_status DEFAULT 'pending',
   status delivery_status DEFAULT 'idle',
   current_lat FLOAT8,
   current_lng FLOAT8,
@@ -205,6 +216,7 @@ CREATE TABLE drivers (
   is_active BOOLEAN DEFAULT true,
   rating DECIMAL(2,1) DEFAULT 0,
   total_deliveries INTEGER DEFAULT 0,
+  wallet_balance DECIMAL(10,2) DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
