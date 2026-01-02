@@ -44,6 +44,10 @@ export default function NewMealPage() {
   const [ingredients, setIngredients] = useState<string[]>([]);
   const [ingredientInput, setIngredientInput] = useState('');
   
+  // Category
+  const [categoryId, setCategoryId] = useState('');
+  const [categories, setCategories] = useState<any[]>([]);
+  
   // Variants (sizes)
   const [hasVariants, setHasVariants] = useState(false);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
@@ -78,8 +82,26 @@ export default function NewMealPage() {
     };
     
     loadUserData();
+    loadCategories();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  
+  // Load categories
+  const loadCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name, name_ar')
+        .eq('is_active', true)
+        .order('name_ar');
+      
+      if (!error && data) {
+        setCategories(data);
+      }
+    } catch (error) {
+      console.error('Error loading categories:', error);
+    }
+  };
 
   // Handle image selection
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -240,7 +262,7 @@ export default function NewMealPage() {
         vendor_id: vendorId,
         name: mealName.trim(),
         description: description.trim() || null,
-        category_id: 'f4514891-ce20-4f9b-9da0-103d13006797', // Grocery & Food category
+        category_id: categoryId && categoryId.trim() !== '' ? categoryId : null,
         price: parseFloat(price),
         old_price: oldPrice ? parseFloat(oldPrice) : null,
         stock: hasVariants ? variants.reduce((sum, v) => sum + v.stock, 0) : parseInt(stock),
@@ -372,6 +394,25 @@ export default function NewMealPage() {
                     placeholder="0.00"
                   />
                 </div>
+              </div>
+              
+              {/* Category */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  التصنيف (اختياري)
+                </label>
+                <select
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">-- اختر التصنيف --</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name_ar || cat.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Preparation Time & Calories */}
