@@ -362,4 +362,4 @@ export interface DriverOrder extends Order {
 }
 
 // Export everything for convenience
-export type * from './supabase';
+// export type * from './supabase'; // Commented out - supabase types not yet generated

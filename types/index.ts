@@ -166,7 +166,7 @@ export interface Order {
   platform_commission: number;
   total: number;
   status: OrderStatus;
-  delivery_address: Address;
+  delivery_address: Address | string;
   driver_id?: string;
   driver_name?: string;
   payment_method: 'cash' | 'card' | 'wallet';
@@ -177,6 +177,19 @@ export interface Order {
   updated_at?: string;
   delivered_at?: string;
   estimated_delivery: string;
+  // Extended properties for driver orders map
+  customer?: {
+    id: string;
+    name: string;
+    phone?: string;
+  };
+  vendor?: {
+    id: string;
+    store_name: string;
+    store_latitude?: number;
+    store_longitude?: number;
+    store_address?: string;
+  };
 }
 
 // ============ Address Interface ============
@@ -391,4 +404,33 @@ export interface CartItem {
   product: Product;
   quantity: number;
   variant_id?: string;
+}
+
+// ============ Driver Types ============
+export interface DriverOrder {
+  id: string;
+  order_number: string;
+  status: string;
+  total: number;
+  created_at?: string;
+  delivery_latitude?: number;
+  delivery_longitude?: number;
+  delivery_address?: string;
+  customer: {
+    id: string;
+    name: string;
+    phone?: string;
+  };
+  vendor: {
+    id: string;
+    store_name: string;
+    store_latitude?: number;
+    store_longitude?: number;
+    store_address?: string;
+  };
+}
+
+export interface DriverLocation {
+  lat: number;
+  lng: number;
 }
