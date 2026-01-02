@@ -70,11 +70,12 @@ export default function DriverLocationPage() {
 
   const initializeDriver = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
         router.push('/login');
         return;
       }
+      const user = session.user;
 
       const { data: driverData } = await supabase
         .from('drivers')
@@ -196,8 +197,9 @@ export default function DriverLocationPage() {
   const saveLocationToDatabase = async (loc: LocationData) => {
     try {
       // Get active order if exists
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+      const user = session.user;
 
       const { data: driverData } = await supabase
         .from('drivers')
@@ -249,8 +251,9 @@ export default function DriverLocationPage() {
 
   const updateDriverStatus = async (isOnline: boolean) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+      const user = session.user;
 
       const { data: driverData } = await supabase
         .from('drivers')
