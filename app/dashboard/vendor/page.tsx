@@ -203,7 +203,53 @@ function VendorDashboardContent() {
             ease: 'easeInOut',
           }}
           className="absolute top-1/2 -left-40 w-96 h-96 rounded-full blur-3xl"
-          style={{ backgro"relative group"
+          style={{ background: 'radial-gradient(circle, #FF219D 0%, transparent 70%)' }}
+        />
+        <motion.div
+          animate={{
+            scale: [1, 1.1, 1],
+            y: [0, 50, 0],
+            opacity: [0.2, 0.3, 0.2],
+          }}
+          transition={{
+            duration: 15,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+          className="absolute bottom-20 right-1/3 w-96 h-96 rounded-full blur-3xl"
+          style={{ background: 'radial-gradient(circle, #B621FE 0%, transparent 70%)' }}
+        />
+      </div>
+
+      <main className="relative z-10 max-w-[1800px] mx-auto">
+        {/* Welcome Section */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="text-4xl font-bold text-white mb-2">
+            مرحباً بك في متجرك! 🏪
+          </h1>
+          <p className="text-purple-200">إدارة منتجاتك وطلباتك وأرباحك</p>
+        </motion.div>
+
+        {/* Stats Grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+        >
+          {statsCards.map((card, index) => {
+            const Icon = card.icon;
+            return (
+              <motion.div
+                key={card.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + index * 0.1 }}
+                className="relative group"
               >
                 <div
                   className="relative backdrop-blur-xl bg-white/5 border border-purple-500/20 rounded-2xl p-6 hover:border-purple-500/40 transition-all duration-300 overflow-hidden"
@@ -233,7 +279,38 @@ function VendorDashboardContent() {
                           }`}
                         >
                           {card.trend.isPositive ? (
-                        ackdrop-blur-xl bg-orange-500/10 border border-orange-500/30 rounded-2xl p-6 mb-8"
+                            <ArrowUp className="w-4 h-4" />
+                          ) : (
+                            <ArrowDown className="w-4 h-4" />
+                          )}
+                          <span>{card.trend.value}%</span>
+                        </div>
+                      )}
+                    </div>
+                    <h3 className="text-purple-300 text-sm mb-2">{card.title}</h3>
+                    <p className="text-3xl font-bold text-white">{card.value}</p>
+                  </div>
+
+                  {/* Shine Effect */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                    initial={{ x: '-100%' }}
+                    whileHover={{ x: '100%' }}
+                    transition={{ duration: 0.6 }}
+                  />
+                </div>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+
+        {/* Low Stock Alert */}
+        {lowStockProducts.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="backdrop-blur-xl bg-orange-500/10 border border-orange-500/30 rounded-2xl p-6 mb-8"
           >
             <div className="flex items-start gap-4">
               <div className="bg-gradient-to-br from-orange-500 to-red-500 p-3 rounded-xl shadow-lg">
@@ -300,84 +377,7 @@ function VendorDashboardContent() {
                   </div>
                   <div className="flex items-center justify-between text-sm mt-2">
                     <span className="text-purple-300">المخزون:</span>
-                    <span className={`font-semibold ${product.stock < 10 ? 'text-red-400' : 'text-emerald-4
-          })}
-        </motion.div>
-
-        {/* Low Stock Alert */}
-        {lowStockProducts.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-orange-50 border border-orange-200 rounded-2xl p-6 mb-8"
-          >
-            <div className="flex items-start gap-4">
-              <div className="bg-orange-100 p-3 rounded-xl">
-                <AlertTriangle className="w-6 h-6 text-orange-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">تنبيه: منتجات قريبة من النفاذ</h3>
-                <p className="text-gray-700 mb-4">لديك {lowStockProducts.length} منتج بكمية قليلة في المخزون</p>
-                <Link 
-                  href="/dashboard/vendor/products"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
-                >
-                  <Package className="w-4 h-4" />
-                  عرض المنتجات
-                </Link>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Recent Products */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="bg-[#0A0515] border border-gray-100 rounded-2xl p-6 shadow-sm"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">أحدث المنتجات</h2>
-            <Link 
-              href="/dashboard/vendor/products"
-              className="text-pink-500 hover:text-pink-600 font-semibold text-sm transition-colors"
-            >
-              عرض الكل ←
-            </Link>
-          </div>
-
-          {products.length === 0 ? (
-            <div className="text-center py-12">
-              <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-600 mb-4">لا توجد منتجات بعد</p>
-              <Link
-                href="/dashboard/vendor/products/new"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-lg hover:shadow-lg transition-all duration-300"
-              >
-                <Package className="w-5 h-5" />
-                إضافة منتج جديد
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {products.slice(0, 6).map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.7 + index * 0.1 }}
-                  className="bg-[#0A0515] border border-gray-100 rounded-xl p-4 hover:shadow-md transition-all duration-300"
-                >
-                  <h3 className="font-semibold text-gray-900 mb-2 truncate">{product.name}</h3>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">السعر:</span>
-                    <span className="font-bold text-gray-900">{formatPrice(product.price)}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm mt-2">
-                    <span className="text-gray-600">المخزون:</span>
-                    <span className={`font-semibold ${product.stock < 10 ? 'text-red-600' : 'text-emerald-600'}`}>
+                    <span className={`font-semibold ${product.stock < 10 ? 'text-red-400' : 'text-emerald-400'}`}>
                       {product.stock}
                     </span>
                   </div>
