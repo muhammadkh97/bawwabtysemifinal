@@ -410,6 +410,68 @@ CREATE INDEX idx_user_locations_user ON user_locations(user_id);
 CREATE INDEX idx_user_locations_default ON user_locations(is_default);
 CREATE INDEX idx_user_locations_location ON user_locations USING GIST(location);
 
+-- Deals Table (Daily deals and promotions)
+CREATE TABLE deals (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  vendor_id UUID REFERENCES stores(id) ON DELETE CASCADE NOT NULL,
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  title_ar TEXT,
+  description TEXT,
+  description_ar TEXT,
+  image_url TEXT,
+  original_price DECIMAL(10,2) NOT NULL,
+  deal_price DECIMAL(10,2) NOT NULL,
+  discount_percentage INTEGER,
+  quantity INTEGER DEFAULT 0,
+  sold_count INTEGER DEFAULT 0,
+  start_date TIMESTAMPTZ NOT NULL,
+  end_date TIMESTAMPTZ NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  terms TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  CONSTRAINT positive_prices CHECK (original_price >= deal_price AND deal_price > 0),
+  CONSTRAINT valid_dates CHECK (end_date > start_date)
+);
+
+CREATE INDEX idx_deals_vendor ON deals(vendor_id);
+CREATE INDEX idx_deals_product ON deals(product_id);
+CREATE INDEX idx_deals_active ON deals(is_active);
+CREATE INDEX idx_deals_dates ON deals(start_date, end_date);
+
+-- Lucky Boxes Table (Mystery boxes/surprise deals)
+CREATE TABLE lucky_boxes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  vendor_id UUID REFERENCES stores(id) ON DELETE CASCADE NOT NULL,
+  title TEXT NOT NULL,
+  title_ar TEXT,
+  description TEXT,
+  description_ar TEXT,
+  image_url TEXT,
+  price DECIMAL(10,2) NOT NULL,
+  original_value DECIMAL(10,2) NOT NULL,
+  quantity INTEGER DEFAULT 0,
+  sold_count INTEGER DEFAULT 0,
+  min_items INTEGER DEFAULT 1,
+  max_items INTEGER DEFAULT 5,
+  possible_items JSONB DEFAULT '[]',
+  start_date TIMESTAMPTZ NOT NULL,
+  end_date TIMESTAMPTZ NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  terms TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  CONSTRAINT positive_price CHECK (price > 0),
+  CONSTRAINT valid_lucky_dates CHECK (end_date > start_date)
+);
+
+CREATE INDEX idx_lucky_boxes_vendor ON lucky_boxes(vendor_id);
+CREATE INDEX idx_lucky_boxes_active ON lucky_boxes(is_active);
+CREATE INDEX idx_lucky_boxes_dates ON lucky_boxes(start_date, end_date);
+
 -- Create vendors view for backwards compatibility
 CREATE VIEW vendors AS
 SELECT 
@@ -666,6 +728,8 @@ ALTER TABLE wishlists ENABLE ROW LEVEL SECURITY;
 ALTER TABLE store_followers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE addresses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_locations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE deals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE lucky_boxes ENABLE ROW LEVEL SECURITY;
 
 -- Users policies
 CREATE POLICY "Users can view all profiles" ON users FOR SELECT USING (true);
@@ -762,6 +826,18 @@ CREATE POLICY "Users can view own locations" ON user_locations FOR SELECT
 CREATE POLICY "Users can manage own locations" ON user_locations FOR ALL 
   USING (user_id = auth.uid());
 
+-- Deals policies
+CREATE POLICY "Anyone can view active deals" ON deals FOR SELECT 
+  USING (is_active = true AND end_date >= NOW());
+CREATE POLICY "Vendors can manage own deals" ON deals FOR ALL 
+  USING (vendor_id IN (SELECT id FROM stores WHERE user_id = auth.uid()));
+
+-- Lucky boxes policies
+CREATE POLICY "Anyone can view active lucky boxes" ON lucky_boxes FOR SELECT 
+  USING (is_active = true AND end_date >= NOW() AND start_date <= NOW());
+CREATE POLICY "Vendors can manage own lucky boxes" ON lucky_boxes FOR ALL 
+  USING (vendor_id IN (SELECT id FROM stores WHERE user_id = auth.uid()));
+
 -- ==========================================
 -- INITIAL DATA SEEDS
 -- ==========================================
@@ -805,7 +881,7 @@ GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 DO $$
 BEGIN
   RAISE NOTICE '✅ Database rebuild completed successfully!';
-  RAISE NOTICE '📊 Tables created: users, stores, products, orders, drivers, reviews, notifications, chats, messages, cart_items, wishlists, store_followers, exchange_rates, addresses, user_locations';
+  RAISE NOTICE '📊 Tables created: users, stores, products, orders, drivers, reviews, notifications, chats, messages, cart_items, wishlists, store_followers, exchange_rates, addresses, user_locations, deals, lucky_boxes';
   RAISE NOTICE '🗂️  View created: vendors (maps to stores table for backwards compatibility)';
   RAISE NOTICE '🔒 RLS policies applied';
   RAISE NOTICE '🌱 Initial categories seeded';
@@ -815,5 +891,6 @@ BEGIN
   RAISE NOTICE '♻️  Existing auth users synced to users table';
   RAISE NOTICE '🎁 loyalty_points column added to users table';
   RAISE NOTICE '📍 addresses and user_locations tables added';
-  RAISE NOTICE '⚠️  Next steps: Reload website - all 404/400 errors should be resolved';
+  RAISE NOTICE '🎯 deals and lucky_boxes tables added for promotions';
+  RAISE NOTICE '⚠️  Next steps: Reload website - all 404 errors should be resolved';
 END $$;
