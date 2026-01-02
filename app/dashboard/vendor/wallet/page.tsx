@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
-import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FloatingAddButton from '@/components/dashboard/FloatingAddButton';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -235,12 +233,10 @@ export default function VendorWalletPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative overflow-hidden bg-[#0A0515] transition-colors duration-300">
-        <FuturisticSidebar role="vendor" />
+      <div className="min-h-screen relative overflow-hidden bg-white transition-colors duration-300">
         
         {/* Main Content Area */}
         <div className="md:mr-[280px] transition-all duration-300">
-          <FuturisticNavbar userName="" userRole="بائع" />
 
           {loading ? (
             <div className="flex items-center justify-center h-screen">

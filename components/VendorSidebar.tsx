@@ -202,10 +202,12 @@ export default function VendorSidebar() {
   }
 
   return (
-    <aside className="fixed right-0 top-0 z-40 h-screen w-64 bg-white border-l border-gray-200">
+    <aside className="fixed right-0 top-0 z-40 h-screen w-64 bg-white border-l border-gray-100 shadow-sm">
       {/* Header */}
-      <div className="h-16 flex items-center justify-center border-b border-gray-200">
-        <h1 className="text-xl font-bold text-green-600">لوحة البائع</h1>
+      <div className="h-16 flex items-center justify-center border-b border-gray-100">
+        <h1 className="text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
+          لوحة البائع
+        </h1>
       </div>
 
       {/* Navigation */}
@@ -220,19 +222,19 @@ export default function VendorSidebar() {
                 <Link
                   href={item.href}
                   className={`
-                    flex items-center justify-between px-4 py-3 rounded-lg transition-colors
+                    flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200
                     ${isActive 
-                      ? 'bg-green-50 text-green-600 font-semibold' 
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-gray-100 text-gray-900 font-semibold shadow-sm' 
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }
                   `}
                 >
                   <div className="flex items-center gap-3">
-                    <Icon className="w-5 h-5" />
+                    <Icon className={`w-5 h-5 ${isActive ? 'text-pink-500' : ''}`} />
                     <span>{item.title}</span>
                   </div>
                   {item.badge !== undefined && item.badge > 0 && (
-                    <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                    <span className="bg-pink-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
                       {item.badge}
                     </span>
                   )}
