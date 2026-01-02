@@ -2,9 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
-import { Package, DollarSign, Clock, TrendingUp, MapPin } from 'lucide-react';
+import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
+import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
+import FuturisticStatCard from '@/components/dashboard/FuturisticStatCard';
+import { Package, DollarSign, Clock, TrendingUp, MapPin, Star, Truck, CheckCircle } from 'lucide-react';
 
 interface DashboardStats {
   total_deliveries: number;
@@ -17,7 +21,6 @@ interface DashboardStats {
 
 export default function DriverDashboard() {
   const router = useRouter();
-  // Using supabase from lib/supabase
   
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats>({
@@ -29,6 +32,7 @@ export default function DriverDashboard() {
     average_rating: 0
   });
   const [driverId, setDriverId] = useState<string | null>(null);
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
     loadDashboardData();
@@ -40,8 +44,19 @@ export default function DriverDashboard() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast.error('يرجى تسجيل الدخول أولاً');
-        router.push('/login');
+        router.push('/auth/login');
         return;
+      }
+
+      // Get user details
+      const { data: userData } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', user.id)
+        .single();
+      
+      if (userData) {
+        setUserName(userData.name || 'مندوب التوصيل');
       }
 
       // Get driver ID
@@ -78,184 +93,169 @@ export default function DriverDashboard() {
     }
   };
 
+  const statsCards = [
+    {
+      title: 'إجمالي التوصيلات',
+      value: stats.total_deliveries.toLocaleString('ar-SA'),
+      icon: Package,
+      gradient: 'from-blue-500 to-cyan-500',
+    },
+    {
+      title: 'التوصيلات المعلقة',
+      value: stats.pending_deliveries.toLocaleString('ar-SA'),
+      icon: Clock,
+      gradient: 'from-yellow-500 to-orange-500',
+    },
+    {
+      title: 'المكتملة اليوم',
+      value: stats.completed_today.toLocaleString('ar-SA'),
+      icon: CheckCircle,
+      gradient: 'from-green-500 to-emerald-500',
+    },
+    {
+      title: 'إجمالي الأرباح',
+      value: `${stats.total_earnings.toFixed(2)} ر.س`,
+      icon: DollarSign,
+      gradient: 'from-purple-500 to-pink-500',
+    },
+    {
+      title: 'أرباح اليوم',
+      value: `${stats.today_earnings.toFixed(2)} ر.س`,
+      icon: TrendingUp,
+      gradient: 'from-indigo-500 to-purple-500',
+    },
+    {
+      title: 'متوسط التقييم',
+      value: `${stats.average_rating.toFixed(1)} ⭐`,
+      icon: Star,
+      gradient: 'from-amber-500 to-orange-500',
+    },
+  ];
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen relative overflow-hidden bg-gray-50 dark:bg-[#0A0515]">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            لوحة التحكم
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            مرحباً بك في لوحة تحكم مندوب التوصيل
-          </p>
-        </div>
+    <div className="min-h-screen relative overflow-hidden bg-gray-50 dark:bg-[#0A0515] transition-colors duration-300">
+      <FuturisticSidebar role="driver" />
+      
+      <div className="md:mr-[280px] transition-all duration-300">
+        <FuturisticNavbar userName={userName} userRole="مندوب توصيل" />
+        
+        <main className="pt-24 px-4 md:px-8 lg:px-10 pb-10 relative z-10 max-w-[1800px] mx-auto">
+          {/* Welcome Section */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <h1 className="text-4xl font-bold text-white mb-2">لوحة التحكم</h1>
+            <p className="text-purple-300 text-lg">مرحباً بك في لوحة تحكم مندوب التوصيل</p>
+          </motion.div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {/* Total Deliveries */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  إجمالي التوصيلات
-                </p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {stats.total_deliveries}
-                </p>
-              </div>
-              <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-full">
-                <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              </div>
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
+            {statsCards.map((stat, index) => (
+              <FuturisticStatCard
+                key={stat.title}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                gradient={stat.gradient}
+                delay={index * 0.1}
+              />
+            ))}
+          </div>
+
+          {/* Quick Actions */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="rounded-2xl sm:rounded-3xl p-6 sm:p-8"
+            style={{
+              background: 'rgba(15, 10, 30, 0.6)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(98, 54, 255, 0.3)',
+            }}
+          >
+            <h2 className="text-2xl font-bold text-white mb-6">إجراءات سريعة</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <motion.button
+                whileHover={{ scale: 1.02, y: -4 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => router.push('/dashboard/driver/available')}
+                className="group relative overflow-hidden rounded-xl p-6 transition-all duration-300"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%)',
+                  border: '1px solid rgba(59, 130, 246, 0.2)',
+                }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="relative flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                    <Package className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-right flex-1">
+                    <p className="font-bold text-white text-lg mb-1">الطلبات المتاحة</p>
+                    <p className="text-sm text-purple-300">عرض الطلبات الجديدة</p>
+                  </div>
+                </div>
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.02, y: -4 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => router.push('/dashboard/driver/my-orders')}
+                className="group relative overflow-hidden rounded-xl p-6 transition-all duration-300"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(22, 163, 74, 0.05) 100%)',
+                  border: '1px solid rgba(34, 197, 94, 0.2)',
+                }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="relative flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                    <Truck className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-right flex-1">
+                    <p className="font-bold text-white text-lg mb-1">طلباتي</p>
+                    <p className="text-sm text-purple-300">عرض طلباتي الحالية</p>
+                  </div>
+                </div>
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.02, y: -4 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => router.push('/dashboard/driver/earnings')}
+                className="group relative overflow-hidden rounded-xl p-6 transition-all duration-300"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(147, 51, 234, 0.05) 100%)',
+                  border: '1px solid rgba(168, 85, 247, 0.2)',
+                }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="relative flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <DollarSign className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-right flex-1">
+                    <p className="font-bold text-white text-lg mb-1">الأرباح</p>
+                    <p className="text-sm text-purple-300">عرض تفاصيل الأرباح</p>
+                  </div>
+                </div>
+              </motion.button>
             </div>
-          </div>
-
-          {/* Pending Deliveries */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  التوصيلات المعلقة
-                </p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {stats.pending_deliveries}
-                </p>
-              </div>
-              <div className="bg-yellow-100 dark:bg-yellow-900 p-3 rounded-full">
-                <Clock className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
-              </div>
-            </div>
-          </div>
-
-          {/* Completed Today */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  المكتملة اليوم
-                </p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {stats.completed_today}
-                </p>
-              </div>
-              <div className="bg-green-100 dark:bg-green-900 p-3 rounded-full">
-                <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
-              </div>
-            </div>
-          </div>
-
-          {/* Total Earnings */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  إجمالي الأرباح
-                </p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {stats.total_earnings.toFixed(2)} ر.س
-                </p>
-              </div>
-              <div className="bg-purple-100 dark:bg-purple-900 p-3 rounded-full">
-                <DollarSign className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              </div>
-            </div>
-          </div>
-
-          {/* Today Earnings */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  أرباح اليوم
-                </p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {stats.today_earnings.toFixed(2)} ر.س
-                </p>
-              </div>
-              <div className="bg-indigo-100 dark:bg-indigo-900 p-3 rounded-full">
-                <DollarSign className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-              </div>
-            </div>
-          </div>
-
-          {/* Average Rating */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  متوسط التقييم
-                </p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {stats.average_rating.toFixed(1)} ⭐
-                </p>
-              </div>
-              <div className="bg-orange-100 dark:bg-orange-900 p-3 rounded-full">
-                <TrendingUp className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-            إجراءات سريعة
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button
-              onClick={() => router.push('/dashboard/driver/available')}
-              className="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
-            >
-              <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              <div className="text-right">
-                <p className="font-medium text-gray-900 dark:text-white">
-                  الطلبات المتاحة
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  عرض الطلبات الجديدة
-                </p>
-              </div>
-            </button>
-
-            <button
-              onClick={() => router.push('/dashboard/driver/my-orders')}
-              className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
-            >
-              <Clock className="w-6 h-6 text-green-600 dark:text-green-400" />
-              <div className="text-right">
-                <p className="font-medium text-gray-900 dark:text-white">
-                  طلباتي
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  عرض طلباتي الحالية
-                </p>
-              </div>
-            </button>
-
-            <button
-              onClick={() => router.push('/dashboard/driver/earnings')}
-              className="flex items-center gap-3 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
-            >
-              <DollarSign className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              <div className="text-right">
-                <p className="font-medium text-gray-900 dark:text-white">
-                  الأرباح
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  عرض تفاصيل الأرباح
-                </p>
-              </div>
-            </button>
-          </div>
-        </div>
+          </motion.div>
+        </main>
       </div>
     </div>
   );
