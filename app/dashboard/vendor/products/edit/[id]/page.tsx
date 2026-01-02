@@ -152,7 +152,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
           description,
           price: parseFloat(price),
           old_price: oldPrice ? parseFloat(oldPrice) : null,
-          category_id: categoryId,
+          category_id: categoryId && categoryId.trim() !== '' ? categoryId : null,
           stock: parseInt(stock),
           low_stock_threshold: parseInt(lowStockThreshold),
           images: allImages,

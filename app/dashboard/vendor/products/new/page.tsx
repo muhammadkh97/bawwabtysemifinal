@@ -180,7 +180,7 @@ export default function NewProductPage() {
         price: hasVariants ? variants[0].price : parseFloat(price),
         old_price: oldPrice ? parseFloat(oldPrice) : null,
         original_currency: originalCurrency,
-        category_id: categoryId || null,
+        category_id: categoryId && categoryId.trim() !== '' ? categoryId : null,
         stock: hasVariants ? variants.reduce((sum, v) => sum + v.stock, 0) : parseInt(stock),
         low_stock_threshold: parseInt(lowStockThreshold),
         images: uploadedUrls,
