@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { getCurrentUser } from '@/lib/auth';
 import { toast } from 'react-hot-toast';
 import {
   MapPin,
@@ -70,17 +71,19 @@ export default function DriverLocationPage() {
 
   const initializeDriver = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
+      // Get current user using our auth helper
+      const result = await getCurrentUser();
+      const authUser = result.user;
+      
+      if (!authUser) {
         router.push('/login');
         return;
       }
-      const user = session.user;
 
       const { data: driverData } = await supabase
         .from('drivers')
         .select('id, is_available, current_location, updated_at')
-        .eq('user_id', user.id)
+        .eq('user_id', authUser.id)
         .single();
 
       if (!driverData) {
@@ -197,14 +200,14 @@ export default function DriverLocationPage() {
   const saveLocationToDatabase = async (loc: LocationData) => {
     try {
       // Get active order if exists
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return;
-      const user = session.user;
+      const result = await getCurrentUser();
+      const authUser = result.user;
+      if (!authUser) return;
 
       const { data: driverData } = await supabase
         .from('drivers')
         .select('id')
-        .eq('user_id', user.id)
+        .eq('user_id', authUser.id)
         .single();
 
       if (!driverData) return;
@@ -251,14 +254,15 @@ export default function DriverLocationPage() {
 
   const updateDriverStatus = async (isOnline: boolean) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return;
-      const user = session.user;
+      // Get current user using our auth helper
+      const result = await getCurrentUser();
+      const authUser = result.user;
+      if (!authUser) return;
 
       const { data: driverData } = await supabase
         .from('drivers')
         .select('id')
-        .eq('user_id', user.id)
+        .eq('user_id', authUser.id)
         .single();
 
       if (driverData) {

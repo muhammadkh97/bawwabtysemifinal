@@ -1043,6 +1043,38 @@ CREATE POLICY "Admins can do everything with pages" ON pages FOR ALL TO authenti
 );
 CREATE TRIGGER update_pages_updated_at BEFORE UPDATE ON pages FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+-- HERO SECTIONS TABLE (Homepage hero/banner management)
+CREATE TABLE IF NOT EXISTS hero_sections (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title TEXT NOT NULL,
+    title_ar TEXT,
+    subtitle TEXT,
+    subtitle_ar TEXT,
+    image_url TEXT,
+    mobile_image_url TEXT,
+    button_text TEXT,
+    button_text_ar TEXT,
+    button_link TEXT,
+    background_color TEXT DEFAULT '#FF6B35',
+    text_color TEXT DEFAULT '#FFFFFF',
+    is_active BOOLEAN DEFAULT true,
+    display_order INTEGER DEFAULT 0,
+    start_date TIMESTAMPTZ,
+    end_date TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_hero_sections_is_active ON hero_sections(is_active);
+CREATE INDEX idx_hero_sections_display_order ON hero_sections(display_order);
+
+ALTER TABLE hero_sections ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view active hero sections" ON hero_sections FOR SELECT USING (is_active = true);
+CREATE POLICY "Admins can manage hero sections" ON hero_sections FOR ALL TO authenticated USING (
+    EXISTS (SELECT 1 FROM users WHERE users.id = auth.uid() AND users.role = 'admin')
+);
+CREATE TRIGGER update_hero_sections_updated_at BEFORE UPDATE ON hero_sections FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- LOYALTY SETTINGS TABLE
 CREATE TABLE IF NOT EXISTS loyalty_settings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -1073,6 +1105,7 @@ CREATE TABLE IF NOT EXISTS loyalty_transactions (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     points INTEGER NOT NULL,
     transaction_type TEXT NOT NULL CHECK (transaction_type IN ('earned', 'redeemed', 'expired', 'adjusted', 'referral_bonus')),
+    type TEXT NOT NULL CHECK (type IN ('earned', 'redeemed', 'expired', 'adjusted', 'referral_bonus')),
     reference_type TEXT CHECK (reference_type IN ('order', 'referral', 'admin_adjustment', 'signup_bonus')),
     reference_id UUID,
     description TEXT,
@@ -1091,6 +1124,18 @@ CREATE POLICY "Admins can do everything with loyalty_transactions" ON loyalty_tr
 CREATE POLICY "Users can view their own loyalty transactions" ON loyalty_transactions FOR SELECT TO authenticated USING (
     user_id = auth.uid()
 );
+
+-- Trigger to sync type and transaction_type
+CREATE OR REPLACE FUNCTION sync_loyalty_transaction_type()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.type = NEW.transaction_type;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER sync_loyalty_type BEFORE INSERT OR UPDATE ON loyalty_transactions
+  FOR EACH ROW EXECUTE FUNCTION sync_loyalty_transaction_type();
 
 -- REFERRALS TABLE
 CREATE TABLE IF NOT EXISTS referrals (
@@ -1126,7 +1171,9 @@ CREATE TABLE IF NOT EXISTS payouts (
     payment_method TEXT CHECK (payment_method IN ('bank_transfer', 'paypal', 'stripe', 'cash')),
     bank_name TEXT,
     account_number TEXT,
+    bank_account_number TEXT,
     account_holder TEXT,
+    bank_account_holder TEXT,
     transaction_id TEXT,
     notes TEXT,
     requested_at TIMESTAMPTZ DEFAULT NOW(),
@@ -1151,6 +1198,19 @@ CREATE POLICY "Vendors can create payout requests" ON payouts FOR INSERT TO auth
     user_id = auth.uid()
 );
 CREATE TRIGGER update_payouts_updated_at BEFORE UPDATE ON payouts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Trigger to sync payout account fields
+CREATE OR REPLACE FUNCTION sync_payout_fields()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.bank_account_number = NEW.account_number;
+  NEW.bank_account_holder = NEW.account_holder;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER sync_payout_aliases BEFORE INSERT OR UPDATE ON payouts
+  FOR EACH ROW EXECUTE FUNCTION sync_payout_fields();
 
 -- SHIPPING SETTINGS TABLE
 CREATE TABLE IF NOT EXISTS shipping_settings (
@@ -1230,7 +1290,7 @@ GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 DO $$
 BEGIN
   RAISE NOTICE '✅ Database rebuild completed successfully!';
-  RAISE NOTICE '📊 Tables created: users, stores, products, orders, drivers, reviews, notifications, chats, messages, cart_items, wishlists, store_followers, exchange_rates, addresses, user_locations, deals, lucky_boxes, order_items, disputes, support_tickets, pages, loyalty_settings, loyalty_transactions, referrals, payouts, shipping_settings';
+  RAISE NOTICE '📊 Tables created: users, stores, products, orders, drivers, reviews, notifications, chats, messages, cart_items, wishlists, store_followers, exchange_rates, addresses, user_locations, deals, lucky_boxes, order_items, disputes, support_tickets, pages, hero_sections, loyalty_settings, loyalty_transactions, referrals, payouts, shipping_settings';
   RAISE NOTICE '🗂️  View created: vendors (stores with user_id FK to users table)';
   RAISE NOTICE '🔒 RLS policies applied on all tables';
   RAISE NOTICE '🌱 Initial categories seeded';

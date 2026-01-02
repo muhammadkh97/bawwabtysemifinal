@@ -104,8 +104,7 @@ export async function signIn(email: string, password: string) {
     console.log('✅ تم تسجيل الدخول في Auth:', authData.user.id);
 
     // التحقق من Session
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    if (!authData.session) {
       console.warn('⚠️ تحذير: لم يتم إنشاء Session');
     } else {
       console.log('✅ Session تم إنشاؤها بنجاح');
@@ -181,48 +180,57 @@ export async function signOut() {
 /**
  * الحصول على المستخدم الحالي - FIXED
  */
-export async function getCurrentUser() {
+export async function getCurrentUser(): Promise<{ user: any | null; error: string | null }> {
   try {
-    // جلب الـ session من Supabase Auth
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    
-    if (sessionError || !session) {
-      return { user: null, error: 'لم يتم تسجيل الدخول' }
-    }
+    // الحصول على بيانات المستخدم من Supabase Auth
+    // في Supabase v2.45، لا توجد طريقة مباشرة getUser، نستخدم onAuthStateChange
+    return new Promise((resolve) => {
+      const unsubscribe = supabase.auth.onAuthStateChange(async (event, session) => {
+        unsubscribe();
+        
+        if (!session?.user) {
+          resolve({ user: null, error: 'لم يتم تسجيل الدخول' });
+          return;
+        }
+        
+        const user = session.user;
 
-    // جلب بيانات المستخدم من public.users باستخدام دالة آمنة
-    const { data: userData, error: userError } = await supabase
-      .rpc('get_current_user')
-      .single<DbUser>()
+        // جلب بيانات المستخدم من public.users باستخدام دالة آمنة
+        const { data: userData, error: userError } = await supabase
+          .rpc('get_current_user')
+          .single<DbUser>()
 
-    if (userError) {
-      console.warn('Warning: Could not fetch user data:', userError)
-      
-      // محاولة جلب مباشرة
-      const { data: directData } = await supabase
-        .from('users')
-        .select('id, email, full_name, user_role')
-        .eq('id', session.user.id)
-        .single();
+        if (userError) {
+          console.warn('Warning: Could not fetch user data:', userError)
+          
+          // محاولة جلب مباشرة
+          const { data: directData } = await supabase
+            .from('users')
+            .select('id, email, full_name, user_role')
+            .eq('id', user.id)
+            .single();
 
-      return { 
-        user: {
-          ...session.user,
-          role: directData?.user_role || 'customer',
-          full_name: directData?.full_name
-        }, 
-        error: null 
-      }
-    }
+          resolve({ 
+            user: {
+              ...user,
+              role: directData?.user_role || 'customer',
+              full_name: directData?.full_name
+            }, 
+            error: null 
+          });
+          return;
+        }
 
-    return { 
-      user: {
-        ...session.user,
-        ...ensureUserObject(userData),
-        role: resolveRole(userData)
-      }, 
-      error: null 
-    }
+        resolve({ 
+          user: {
+            ...user,
+            ...ensureUserObject(userData),
+            role: resolveRole(userData)
+          }, 
+          error: null 
+        });
+      });
+    });
   } catch (error: any) {
     console.error('GetCurrentUser error:', error)
     return { user: null, error: error.message || 'حدث خطأ' }
