@@ -1,18 +1,23 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import * as L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import { DriverOrder } from '@/types';
 
-// Fix for default marker icon in Next.js
-if (typeof window !== 'undefined' && L.Icon && L.Icon.Default) {
-  delete (L.Icon.Default.prototype as any)._getIconUrl;
-  L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  });
+// Dynamically import Leaflet only on client side
+let L: any;
+if (typeof window !== 'undefined') {
+  L = require('leaflet');
+  require('leaflet/dist/leaflet.css');
+  
+  // Fix for default marker icon in Next.js
+  if (L.Icon && L.Icon.Default) {
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    });
+  }
 }
 
 interface OrdersMapComponentProps {
@@ -29,13 +34,13 @@ export default function OrdersMapComponent({
   onSelectOrder,
 }: OrdersMapComponentProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<L.Map | null>(null);
-  const markers = useRef<{ [key: string]: L.Marker }>({});
-  const driverMarker = useRef<L.Marker | null>(null);
-  const routeLines = useRef<{ [key: string]: L.Polyline }>({});
+  const map = useRef<any>(null);
+  const markers = useRef<{ [key: string]: any }>({});
+  const driverMarker = useRef<any>(null);
+  const routeLines = useRef<{ [key: string]: any }>({});
 
   useEffect(() => {
-    if (!mapContainer.current || map.current) return;
+    if (typeof window === 'undefined' || !mapContainer.current || map.current || !L) return;
 
     // Create map
     map.current = L.map(mapContainer.current).setView(
