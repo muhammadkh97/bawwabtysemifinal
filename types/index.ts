@@ -412,6 +412,7 @@ export interface DriverOrder {
   order_number: string;
   status: string;
   total: number;
+  delivery_fee?: number;
   created_at?: string;
   delivery_latitude?: number;
   delivery_longitude?: number;
