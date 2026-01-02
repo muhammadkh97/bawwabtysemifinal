@@ -132,9 +132,7 @@ function VendorDashboardContent() {
         value: Math.abs(stats.revenueTrend || 0), 
         isPositive: (stats.revenueTrend || 0) >= 0 
       },
-      bgColor: 'bg-emerald-50',
-      iconColor: 'text-emerald-600',
-      borderColor: 'border-emerald-100',
+      gradient: 'from-emerald-500 to-teal-500',
     },
     {
       title: 'إجمالي الطلبات',
@@ -144,27 +142,21 @@ function VendorDashboardContent() {
         value: Math.abs(stats.ordersTrend || 0), 
         isPositive: (stats.ordersTrend || 0) >= 0 
       },
-      bgColor: 'bg-blue-50',
-      iconColor: 'text-blue-600',
-      borderColor: 'border-blue-100',
+      gradient: 'from-blue-500 to-cyan-500',
     },
     {
       title: 'المنتجات النشطة',
       value: stats.activeProducts.toLocaleString('ar-SA'),
       icon: Package,
       trend: { value: 0, isPositive: true },
-      bgColor: 'bg-purple-50',
-      iconColor: 'text-purple-600',
-      borderColor: 'border-purple-100',
+      gradient: 'from-purple-500 to-pink-500',
     },
     {
       title: 'التقييم',
       value: `${stats.averageRating.toFixed(1)} ⭐`,
       icon: Star,
       trend: { value: 0, isPositive: true },
-      bgColor: 'bg-yellow-50',
-      iconColor: 'text-yellow-600',
-      borderColor: 'border-yellow-100',
+      gradient: 'from-yellow-500 to-orange-500',
     },
   ];
 
@@ -174,64 +166,141 @@ function VendorDashboardContent() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0A0515]">
         <div className="text-center">
-          <Loader2 className="w-16 h-16 text-pink-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 text-lg">جاري التحميل...</p>
+          <Loader2 className="w-16 h-16 text-purple-500 animate-spin mx-auto mb-4" />
+          <p className="text-purple-300 text-lg">جاري التحميل...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0515]">
-      <main className="max-w-7xl mx-auto">
-        {/* Welcome Section */}
+    <div className="min-h-screen relative overflow-hidden bg-[#0A0515]">
+      {/* Animated Background Gradients */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent mb-2">
-            مرحباً بك في متجرك! 🏪
-          </h1>
-          <p className="text-gray-600">إدارة منتجاتك وطلباتك وأرباحك</p>
-        </motion.div>
+          animate={{
+            scale: [1, 1.2, 1],
+            rotate: [0, 90, 0],
+            opacity: [0.3, 0.2, 0.3],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+          className="absolute -top-40 -right-40 w-96 h-96 rounded-full blur-3xl"
+          style={{ background: 'radial-gradient(circle, #6236FF 0%, transparent 70%)' }}
+        />
+        <motion.div
+          animate={{
+            scale: [1, 1.3, 1],
+            rotate: [0, -90, 0],
+            opacity: [0.3, 0.2, 0.3],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+          className="absolute top-1/2 -left-40 w-96 h-96 rounded-full blur-3xl"
+          style={{ backgro"relative group"
+              >
+                <div
+                  className="relative backdrop-blur-xl bg-white/5 border border-purple-500/20 rounded-2xl p-6 hover:border-purple-500/40 transition-all duration-300 overflow-hidden"
+                  style={{
+                    boxShadow: '0 8px 32px rgba(98, 54, 255, 0.1)',
+                  }}
+                >
+                  {/* Gradient Overlay on Hover */}
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
+                  />
 
-        {/* Stats Grid */}
+                  <div className="relative z-10">
+                    <div className="flex items-start justify-between mb-4">
+                      <div
+                        className={`p-3 rounded-xl bg-gradient-to-br ${card.gradient} shadow-lg`}
+                        style={{
+                          boxShadow: '0 4px 20px rgba(98, 54, 255, 0.3)',
+                        }}
+                      >
+                        <Icon className="w-6 h-6 text-white" />
+                      </div>
+                      {card.trend.value > 0 && (
+                        <div
+                          className={`flex items-center gap-1 text-sm font-semibold ${
+                            card.trend.isPositive ? 'text-emerald-400' : 'text-red-400'
+                          }`}
+                        >
+                          {card.trend.isPositive ? (
+                        ackdrop-blur-xl bg-orange-500/10 border border-orange-500/30 rounded-2xl p-6 mb-8"
+          >
+            <div className="flex items-start gap-4">
+              <div className="bg-gradient-to-br from-orange-500 to-red-500 p-3 rounded-xl shadow-lg">
+                <AlertTriangle className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-white mb-2">تنبيه: منتجات قريبة من النفاذ</h3>
+                <p className="text-purple-200 mb-4">لديك {lowStockProducts.length} منتج بكمية قليلة في المخزون</p>
+                <Link 
+                  href="/dashboard/vendor/products"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:shadow-lg transition-all duration-300"
+                >
+                  <Package className="w-4 h-4" />
+                  عرض المنتجات
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Recent Products */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          transition={{ delay: 0.6 }}
+          className="backdrop-blur-xl bg-white/5 border border-purple-500/20 rounded-2xl p-6"
         >
-          {statsCards.map((card, index) => {
-            const Icon = card.icon;
-            return (
-              <motion.div
-                key={card.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + index * 0.1 }}
-                className={`bg-[#0A0515] border ${card.borderColor} rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300`}
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-white">أحدث المنتجات</h2>
+            <Link 
+              href="/dashboard/vendor/products"
+              className="text-purple-400 hover:text-purple-300 font-semibold text-sm transition-colors"
+            >
+              عرض الكل ←
+            </Link>
+          </div>
+
+          {products.length === 0 ? (
+            <div className="text-center py-12">
+              <Package className="w-16 h-16 text-purple-400/50 mx-auto mb-4" />
+              <p className="text-purple-300 mb-4">لا توجد منتجات بعد</p>
+              <Link
+                href="/dashboard/vendor/products/new"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition-all duration-300"
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`${card.bgColor} p-3 rounded-xl`}>
-                    <Icon className={`w-6 h-6 ${card.iconColor}`} />
+                <Package className="w-5 h-5" />
+                إضافة منتج جديد
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {products.slice(0, 6).map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 + index * 0.1 }}
+                  className="backdrop-blur-xl bg-white/5 border border-purple-500/20 rounded-xl p-4 hover:border-purple-500/40 hover:bg-white/10 transition-all duration-300"
+                >
+                  <h3 className="font-semibold text-white mb-2 truncate">{product.name}</h3>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-purple-300">السعر:</span>
+                    <span className="font-bold text-white">{formatPrice(product.price)}</span>
                   </div>
-                  {card.trend.value > 0 && (
-                    <div className={`flex items-center gap-1 text-sm ${card.trend.isPositive ? 'text-emerald-600' : 'text-red-600'}`}>
-                      {card.trend.isPositive ? (
-                        <ArrowUp className="w-4 h-4" />
-                      ) : (
-                        <ArrowDown className="w-4 h-4" />
-                      )}
-                      <span className="font-semibold">{card.trend.value}%</span>
-                    </div>
-                  )}
-                </div>
-                <h3 className="text-gray-600 text-sm mb-2">{card.title}</h3>
-                <p className="text-2xl font-bold text-gray-900">{card.value}</p>
-              </motion.div>
-            );
+                  <div className="flex items-center justify-between text-sm mt-2">
+                    <span className="text-purple-300">المخزون:</span>
+                    <span className={`font-semibold ${product.stock < 10 ? 'text-red-400' : 'text-emerald-4
           })}
         </motion.div>
 
