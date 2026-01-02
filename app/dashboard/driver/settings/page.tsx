@@ -132,7 +132,6 @@ export default function DriverSettingsPage() {
             </h2>
           </div>
           <div className="p-6 space-y-5">
-          <div className="p-6 space-y-5">
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 الاسم الكامل
@@ -175,8 +174,6 @@ export default function DriverSettingsPage() {
               معلومات المركبة
             </h2>
           </div>
-          <div className="p-6 space-y-5">
-
           <div className="p-6 space-y-5">
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -255,18 +252,6 @@ export default function DriverSettingsPage() {
               </>
             )}
           </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-              disabled={saving}
-              className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 flex items-center justify-center gap-2 font-medium"
-            >
-              <Save className="w-5 h-5" />
-              {saving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
-            </button>
-          </div>
         </div>
       </div>
     </div>
