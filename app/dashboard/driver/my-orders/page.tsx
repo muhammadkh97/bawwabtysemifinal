@@ -122,58 +122,87 @@ export default function MyOrdersPage() {
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               لا توجد طلبات حالية
             </h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              انتقل إلى قسم الطلبات المتاحة لاختيار طلب جديد
+            </p>
           </div>
         ) : (
           <div className="grid gap-6">
             {orders.map((order) => (
-              <div key={order.id} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <div className="flex justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      طلب #{order.order_number}
-                    </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      العميل: {order.customer_name}
-                    </p>
+              <div
+                key={order.id}
+                className="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700"
+              >
+                <div className="p-6">
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+                        طلب #{order.order_number}
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        العميل: {order.customer_name}
+                      </p>
+                    </div>
+                    <span className={`mt-2 md:mt-0 text-xs font-bold px-3 py-1.5 rounded-full whitespace-nowrap ${
+                      order.status === 'confirmed' && 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100'
+                    } ${
+                      order.status === 'preparing' && 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100'
+                    } ${
+                      order.status === 'ready' && 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100'
+                    } ${
+                      order.status === 'out_for_delivery' && 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-100'
+                    } ${
+                      order.status === 'delivered' && 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
+                    }`}>
+                      {order.status === 'confirmed' && 'مؤكد'}
+                      {order.status === 'preparing' && 'قيد التحضير'}
+                      {order.status === 'ready' && 'جاهز'}
+                      {order.status === 'out_for_delivery' && 'قيد التوصيل'}
+                      {order.status === 'delivered' && 'تم التوصيل'}
+                    </span>
                   </div>
-                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-3 py-1 rounded-full h-fit">
-                    {order.status === 'confirmed' && 'مؤكد'}
-                    {order.status === 'preparing' && 'قيد التحضير'}
-                    {order.status === 'ready' && 'جاهز'}
-                    {order.status === 'out_for_delivery' && 'في الطريق'}
-                  </span>
-                </div>
 
-                <div className="mb-4">
-                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-                    الإجمالي: {order.total.toFixed(2)} ر.س
-                  </p>
-                  <p className="text-sm font-semibold text-green-600">
-                    رسوم التوصيل: {order.delivery_fee.toFixed(2)} ر.س
-                  </p>
-                </div>
-
-                {order.delivery_address && (
-                  <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div className="flex gap-2">
-                      <MapPin className="w-4 h-4 text-gray-600 mt-1" />
-                      <div className="text-sm">
-                        <p className="font-medium mb-1">عنوان التوصيل:</p>
-                        <p className="text-gray-700 dark:text-gray-300">
-                          {order.delivery_address.address || 'غير متوفر'}
-                        </p>
-                      </div>
+                  <div className="grid grid-cols-2 gap-4 mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 uppercase font-semibold">الإجمالي</p>
+                      <p className="text-xl font-bold text-gray-900 dark:text-white mt-1">
+                        {order.total.toFixed(2)} ر.س
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 uppercase font-semibold">رسوم التوصيل</p>
+                      <p className="text-xl font-bold text-green-600 dark:text-green-400 mt-1">
+                        +{order.delivery_fee.toFixed(2)} ر.س
+                      </p>
                     </div>
                   </div>
-                )}
 
-                <button
-                  onClick={() => completeDelivery(order.id)}
-                  className="w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 flex items-center justify-center gap-2"
-                >
-                  <Check className="w-5 h-5" />
-                  إتمام التوصيل
-                </button>
+                  {order.delivery_address && (
+                    <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <div className="flex gap-3">
+                        <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white text-sm mb-1">
+                            عنوان التوصيل
+                          </p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
+                            {order.delivery_address.address || 'غير متوفر'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {order.status !== 'delivered' && (
+                    <button
+                      onClick={() => completeDelivery(order.id)}
+                      className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+                    >
+                      <Check className="w-5 h-5" />
+                      تأكيد التوصيل
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
