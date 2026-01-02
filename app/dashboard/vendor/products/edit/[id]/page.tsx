@@ -176,21 +176,18 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0A0515] transition-colors duration-300">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <Loader2 className="w-16 h-16 text-purple-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-800 dark:text-purple-300 text-lg">جاري تحميل بيانات المنتج...</p>
+          <Loader2 className="w-16 h-16 text-pink-500 animate-spin mx-auto mb-4" />
+          <p className="text-gray-800 text-lg">جاري تحميل بيانات المنتج...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-[#0A0515] transition-colors duration-300">
-      <FuturisticSidebar role="vendor" />
-      
-      <div className="md:mr-[280px] transition-all duration-300">
-        <FuturisticNavbar userName="" userRole="بائع" />
+    <div className="min-h-screen relative overflow-hidden bg-white">
+      <div className="transition-all duration-300">
         
         <main className="pt-24 px-4 md:px-8 lg:px-10 pb-10 relative z-10 max-w-5xl mx-auto">
           {/* Header */}

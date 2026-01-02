@@ -3,8 +3,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
-import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import { Settings, User, Lock, Bell, CreditCard, Shield, Save, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -234,7 +232,7 @@ export default function VendorSettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen relative overflow-hidden flex items-center justify-center bg-[#0A0515] transition-colors duration-300">
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center bg-white transition-colors duration-300">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-purple-500 animate-spin mx-auto mb-4" />
           <p className="text-gray-800 dark:text-purple-300 text-lg">جاري تحميل البيانات...</p>
@@ -244,11 +242,9 @@ export default function VendorSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-[#0A0515] transition-colors duration-300">
-      <FuturisticSidebar role="vendor" />
+    <div className="min-h-screen relative overflow-hidden bg-white transition-colors duration-300">
       
       <div className="md:mr-[280px] transition-all duration-300">
-        <FuturisticNavbar userName={fullName} userRole="بائع" />
         
         <main className="pt-24 px-4 md:px-8 lg:px-10 pb-10 relative z-10 max-w-[1800px] mx-auto">
           {/* رسالة التأكيد/الخطأ */}

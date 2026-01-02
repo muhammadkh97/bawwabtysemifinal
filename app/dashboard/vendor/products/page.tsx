@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
-import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import BulkUploadModal from '@/components/BulkUploadModal';
 import { Package, Plus, Search, Edit, TrendingUp, Trash2, FileUp, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -121,11 +119,9 @@ export default function VendorProductsPage() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-[#0A0515] transition-colors duration-300">
-      <FuturisticSidebar role="vendor" />
+    <div className="min-h-screen relative overflow-hidden bg-white transition-colors duration-300">
       
       <div className="md:mr-[280px] transition-all duration-300">
-        <FuturisticNavbar userName="" userRole="بائع" />
         
         <main className="pt-24 px-4 md:px-8 lg:px-10 pb-10 relative z-10 max-w-[1800px] mx-auto">
           <motion.div
