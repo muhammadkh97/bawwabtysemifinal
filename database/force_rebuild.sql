@@ -260,6 +260,94 @@ CREATE TABLE notifications (
 CREATE INDEX idx_notifications_user ON notifications(user_id);
 CREATE INDEX idx_notifications_read ON notifications(is_read);
 
+-- Chats Table (Conversations between customers and vendors)
+CREATE TABLE chats (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  customer_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  vendor_id UUID REFERENCES stores(id) ON DELETE CASCADE NOT NULL,
+  last_message TEXT,
+  last_message_at TIMESTAMPTZ,
+  customer_unread_count INTEGER DEFAULT 0,
+  vendor_unread_count INTEGER DEFAULT 0,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  UNIQUE(customer_id, vendor_id)
+);
+
+CREATE INDEX idx_chats_customer ON chats(customer_id);
+CREATE INDEX idx_chats_vendor ON chats(vendor_id);
+CREATE INDEX idx_chats_last_message ON chats(last_message_at DESC);
+
+-- Messages Table (Individual messages within chats)
+CREATE TABLE messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  chat_id UUID REFERENCES chats(id) ON DELETE CASCADE NOT NULL,
+  sender_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  content TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_messages_chat ON messages(chat_id);
+CREATE INDEX idx_messages_sender ON messages(sender_id);
+CREATE INDEX idx_messages_created ON messages(created_at DESC);
+
+-- Cart Items Table
+CREATE TABLE cart_items (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
+  quantity INTEGER NOT NULL DEFAULT 1,
+  selected_variant JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  CONSTRAINT positive_quantity CHECK (quantity > 0)
+);
+
+CREATE INDEX idx_cart_items_user ON cart_items(user_id);
+CREATE INDEX idx_cart_items_product ON cart_items(product_id);
+
+-- Wishlists Table
+CREATE TABLE wishlists (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  UNIQUE(user_id, product_id)
+);
+
+CREATE INDEX idx_wishlists_user ON wishlists(user_id);
+CREATE INDEX idx_wishlists_product ON wishlists(product_id);
+
+-- Store Followers Table
+CREATE TABLE store_followers (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  vendor_id UUID REFERENCES stores(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  UNIQUE(user_id, vendor_id)
+);
+
+CREATE INDEX idx_store_followers_user ON store_followers(user_id);
+CREATE INDEX idx_store_followers_vendor ON store_followers(vendor_id);
+
+-- Exchange Rates Table
+CREATE TABLE exchange_rates (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  base_currency TEXT NOT NULL DEFAULT 'SAR',
+  rates JSONB NOT NULL,
+  source TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_exchange_rates_updated ON exchange_rates(updated_at DESC);
+
 -- ==========================================
 -- FUNCTIONS & TRIGGERS
 -- ==========================================
@@ -326,6 +414,68 @@ CREATE SEQUENCE IF NOT EXISTS order_number_seq START 1;
 CREATE TRIGGER set_order_number BEFORE INSERT ON orders
   FOR EACH ROW EXECUTE FUNCTION generate_order_number();
 
+-- Function: Get current user details
+CREATE OR REPLACE FUNCTION get_current_user()
+RETURNS TABLE (
+  id UUID,
+  email TEXT,
+  full_name TEXT,
+  role user_role,
+  phone TEXT,
+  avatar_url TEXT
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT u.id, u.email, u.full_name, u.role, u.phone, u.avatar_url
+  FROM users u
+  WHERE u.id = auth.uid();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function: Get latest exchange rates
+CREATE OR REPLACE FUNCTION get_latest_exchange_rates()
+RETURNS TABLE (
+  rates JSONB,
+  source TEXT,
+  updated_at TIMESTAMPTZ
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT er.rates, er.source, er.updated_at
+  FROM exchange_rates er
+  ORDER BY er.updated_at DESC
+  LIMIT 1;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function: Update exchange rates
+CREATE OR REPLACE FUNCTION update_exchange_rates(p_rates JSONB, p_source TEXT)
+RETURNS UUID AS $$
+DECLARE
+  v_id UUID;
+BEGIN
+  INSERT INTO exchange_rates (base_currency, rates, source, updated_at)
+  VALUES ('SAR', p_rates, p_source, NOW())
+  RETURNING id INTO v_id;
+  
+  RETURN v_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function: Get unread notification count
+CREATE OR REPLACE FUNCTION get_unread_count()
+RETURNS INTEGER AS $$
+DECLARE
+  v_count INTEGER;
+BEGIN
+  SELECT COUNT(*) INTO v_count
+  FROM notifications
+  WHERE user_id = auth.uid() AND is_read = false;
+  
+  RETURN COALESCE(v_count, 0);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- ==========================================
 -- ROW LEVEL SECURITY (RLS)
 -- ==========================================
@@ -338,6 +488,11 @@ ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE drivers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chats ENABLE ROW LEVEL SECURITY;
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE cart_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wishlists ENABLE ROW LEVEL SECURITY;
+ALTER TABLE store_followers ENABLE ROW LEVEL SECURITY;
 
 -- Users policies
 CREATE POLICY "Users can view all profiles" ON users FOR SELECT USING (true);
@@ -384,6 +539,44 @@ CREATE POLICY "Users can view own notifications" ON notifications FOR SELECT
 CREATE POLICY "Users can update own notifications" ON notifications FOR UPDATE 
   USING (user_id = auth.uid());
 
+-- Chats policies
+CREATE POLICY "Customers can view own chats" ON chats FOR SELECT 
+  USING (customer_id = auth.uid());
+CREATE POLICY "Vendors can view store chats" ON chats FOR SELECT 
+  USING (vendor_id IN (SELECT id FROM stores WHERE user_id = auth.uid()));
+CREATE POLICY "Users can create chats" ON chats FOR INSERT 
+  WITH CHECK (customer_id = auth.uid());
+CREATE POLICY "Users can update own chats" ON chats FOR UPDATE 
+  USING (customer_id = auth.uid() OR vendor_id IN (SELECT id FROM stores WHERE user_id = auth.uid()));
+
+-- Messages policies
+CREATE POLICY "Users can view chat messages" ON messages FOR SELECT 
+  USING (chat_id IN (
+    SELECT id FROM chats 
+    WHERE customer_id = auth.uid() 
+    OR vendor_id IN (SELECT id FROM stores WHERE user_id = auth.uid())
+  ));
+CREATE POLICY "Users can send messages" ON messages FOR INSERT 
+  WITH CHECK (sender_id = auth.uid());
+
+-- Cart items policies
+CREATE POLICY "Users can view own cart" ON cart_items FOR SELECT 
+  USING (user_id = auth.uid());
+CREATE POLICY "Users can manage own cart" ON cart_items FOR ALL 
+  USING (user_id = auth.uid());
+
+-- Wishlists policies
+CREATE POLICY "Users can view own wishlist" ON wishlists FOR SELECT 
+  USING (user_id = auth.uid());
+CREATE POLICY "Users can manage own wishlist" ON wishlists FOR ALL 
+  USING (user_id = auth.uid());
+
+-- Store followers policies
+CREATE POLICY "Users can view own follows" ON store_followers FOR SELECT 
+  USING (user_id = auth.uid());
+CREATE POLICY "Users can manage own follows" ON store_followers FOR ALL 
+  USING (user_id = auth.uid());
+
 -- ==========================================
 -- INITIAL DATA SEEDS
 -- ==========================================
@@ -415,8 +608,9 @@ GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 DO $$
 BEGIN
   RAISE NOTICE '✅ Database rebuild completed successfully!';
-  RAISE NOTICE '📊 Tables created: users, stores, products, orders, drivers, reviews, notifications';
+  RAISE NOTICE '📊 Tables created: users, stores, products, orders, drivers, reviews, notifications, chats, messages, cart_items, wishlists, store_followers, exchange_rates';
   RAISE NOTICE '🔒 RLS policies applied';
   RAISE NOTICE '🌱 Initial categories seeded';
+  RAISE NOTICE '⚡ Functions created: get_current_user, get_latest_exchange_rates, update_exchange_rates, get_unread_count';
   RAISE NOTICE '⚠️  Next steps: Run Supabase type generation with: npx supabase gen types typescript --local > types/supabase.ts';
 END $$;
