@@ -36,8 +36,10 @@ CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email TEXT UNIQUE NOT NULL,
   full_name TEXT NOT NULL,
+  name TEXT, -- Alias for full_name (backwards compatibility)
   phone TEXT,
   role user_role NOT NULL DEFAULT 'customer',
+  user_role user_role, -- Alias for role (backwards compatibility)
   avatar_url TEXT,
   is_active BOOLEAN DEFAULT true,
   vendor_id UUID,
@@ -50,15 +52,21 @@ CREATE TABLE stores (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
+  store_name TEXT, -- Alias for name (backwards compatibility)
   name_ar TEXT,
+  shop_name TEXT, -- Alias for name (backwards compatibility)
+  shop_name_ar TEXT, -- Alias for name_ar (backwards compatibility)
   description TEXT,
   business_type business_type NOT NULL DEFAULT 'retail',
+  vendor_type business_type, -- Alias for business_type (backwards compatibility)
   category TEXT,
   phone TEXT,
   email TEXT,
   address TEXT,
   lat FLOAT8,
+  latitude FLOAT8, -- Alias for lat (backwards compatibility)
   lng FLOAT8,
+  longitude FLOAT8, -- Alias for lng (backwards compatibility)
   location GEOGRAPHY(POINT, 4326),
   opening_hours JSONB DEFAULT '{"monday": "9:00-22:00", "tuesday": "9:00-22:00", "wednesday": "9:00-22:00", "thursday": "9:00-22:00", "friday": "9:00-22:00", "saturday": "9:00-22:00", "sunday": "9:00-22:00"}',
   is_online BOOLEAN DEFAULT true,
@@ -70,12 +78,16 @@ CREATE TABLE stores (
   bank_account JSONB,
   theme_preference TEXT DEFAULT 'white',
   logo_url TEXT,
+  shop_logo TEXT, -- Alias for logo_url (backwards compatibility)
   banner_url TEXT,
   rating DECIMAL(2,1) DEFAULT 0,
   total_reviews INTEGER DEFAULT 0,
+  reviews_count INTEGER DEFAULT 0, -- Alias for total_reviews (backwards compatibility)
   total_orders INTEGER DEFAULT 0,
   total_sales DECIMAL(10,2) DEFAULT 0,
   total_products INTEGER DEFAULT 0,
+  min_order_amount DECIMAL(10,2) DEFAULT 0,
+  is_featured BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   
@@ -280,6 +292,11 @@ CREATE INDEX idx_chats_customer ON chats(customer_id);
 CREATE INDEX idx_chats_vendor ON chats(vendor_id);
 CREATE INDEX idx_chats_last_message ON chats(last_message_at DESC);
 
+-- Add foreign key constraint name for Supabase schema cache
+ALTER TABLE chats 
+  DROP CONSTRAINT IF EXISTS chats_vendor_id_fkey,
+  ADD CONSTRAINT chats_vendor_id_fkey FOREIGN KEY (vendor_id) REFERENCES stores(id) ON DELETE CASCADE;
+
 -- Messages Table (Individual messages within chats)
 CREATE TABLE messages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -348,6 +365,51 @@ CREATE TABLE exchange_rates (
 
 CREATE INDEX idx_exchange_rates_updated ON exchange_rates(updated_at DESC);
 
+-- Create vendors view for backwards compatibility
+CREATE VIEW vendors AS
+SELECT 
+  id,
+  user_id,
+  name AS store_name,
+  name,
+  name_ar AS shop_name_ar,
+  name_ar,
+  description,
+  business_type AS vendor_type,
+  business_type,
+  category,
+  phone,
+  email,
+  address,
+  lat AS latitude,
+  lat,
+  lng AS longitude,
+  lng,
+  location,
+  opening_hours,
+  is_online,
+  is_active,
+  approval_status,
+  commission_rate,
+  documents,
+  wallet_balance,
+  bank_account,
+  theme_preference,
+  logo_url AS shop_logo,
+  logo_url,
+  banner_url,
+  rating,
+  total_reviews AS reviews_count,
+  total_reviews,
+  total_orders,
+  total_sales,
+  total_products,
+  min_order_amount,
+  is_featured,
+  created_at,
+  updated_at
+FROM stores;
+
 -- ==========================================
 -- FUNCTIONS & TRIGGERS
 -- ==========================================
@@ -361,12 +423,44 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Function to sync alias columns in users table
+CREATE OR REPLACE FUNCTION sync_users_aliases()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.name = NEW.full_name;
+  NEW.user_role = NEW.role;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to sync alias columns in stores table
+CREATE OR REPLACE FUNCTION sync_stores_aliases()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.store_name = NEW.name;
+  NEW.shop_name = NEW.name;
+  NEW.shop_name_ar = NEW.name_ar;
+  NEW.vendor_type = NEW.business_type;
+  NEW.latitude = NEW.lat;
+  NEW.longitude = NEW.lng;
+  NEW.shop_logo = NEW.logo_url;
+  NEW.reviews_count = NEW.total_reviews;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Apply updated_at triggers
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER sync_users_aliases_trigger BEFORE INSERT OR UPDATE ON users
+  FOR EACH ROW EXECUTE FUNCTION sync_users_aliases();
+
 CREATE TRIGGER update_stores_updated_at BEFORE UPDATE ON stores
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER sync_stores_aliases_trigger BEFORE INSERT OR UPDATE ON stores
+  FOR EACH ROW EXECUTE FUNCTION sync_stores_aliases();
 
 CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON products
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -609,8 +703,10 @@ DO $$
 BEGIN
   RAISE NOTICE '✅ Database rebuild completed successfully!';
   RAISE NOTICE '📊 Tables created: users, stores, products, orders, drivers, reviews, notifications, chats, messages, cart_items, wishlists, store_followers, exchange_rates';
+  RAISE NOTICE '�️  View created: vendors (maps to stores table for backwards compatibility)';
   RAISE NOTICE '🔒 RLS policies applied';
   RAISE NOTICE '🌱 Initial categories seeded';
   RAISE NOTICE '⚡ Functions created: get_current_user, get_latest_exchange_rates, update_exchange_rates, get_unread_count';
+  RAISE NOTICE '🔄 Alias columns added: users.name→full_name, users.user_role→role, stores.store_name→name, stores.latitude→lat, stores.longitude→lng';
   RAISE NOTICE '⚠️  Next steps: Run Supabase type generation with: npx supabase gen types typescript --local > types/supabase.ts';
 END $$;
