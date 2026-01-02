@@ -1,6 +1,7 @@
 'use client';
 
 import ProtectedRoute from '@/components/ProtectedRoute';
+import VendorSidebar from '@/components/VendorSidebar';
 
 /**
  * Layout لحماية جميع صفحات لوحة تحكم البائع
@@ -13,7 +14,14 @@ export default function VendorLayout({
 }) {
   return (
     <ProtectedRoute allowedRoles={['vendor']}>
-      {children}
+      <div className="flex min-h-screen bg-gray-50">
+        <VendorSidebar />
+        <main className="flex-1 lg:mr-64">
+          <div className="p-4 lg:p-8">
+            {children}
+          </div>
+        </main>
+      </div>
     </ProtectedRoute>
   );
 }

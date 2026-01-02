@@ -78,8 +78,9 @@ export default function NewProductPage() {
         .single();
 
       if (vendorError || !vendorData) {
+        console.error('Vendor error:', vendorError);
         toast.error('⚠️ يجب أن تكون بائعاً لإضافة منتجات');
-        router.push('/dashboard');
+        router.push('/dashboard/vendor');
         return;
       }
 
@@ -281,31 +282,30 @@ export default function NewProductPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Modern Header with Gradient */}
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-700 rounded-2xl shadow-xl p-8 mb-8 text-white">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-white/90 hover:text-white mb-4 transition-colors"
-          >
-            <ArrowRight className="w-5 h-5" />
-            <span className="font-medium">رجوع</span>
-          </button>
-          <div className="flex items-center gap-4">
-            <div className="bg-white/20 backdrop-blur-sm p-4 rounded-xl">
-              <Package className="w-8 h-8" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold mb-2">
-                إضافة منتج جديد
-              </h1>
-              <p className="text-white/90 text-lg">
-                أضف منتج جديد إلى متجرك وابدأ البيع
-              </p>
-            </div>
+    <div className="max-w-7xl mx-auto">
+      {/* Page Header */}
+      <div className="mb-6">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+        >
+          <ArrowRight className="w-5 h-5" />
+          <span className="font-medium">رجوع</span>
+        </button>
+        <div className="flex items-center gap-4">
+          <div className="bg-blue-100 p-3 rounded-xl">
+            <Package className="w-8 h-8 text-blue-600" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              إضافة منتج جديد
+            </h1>
+            <p className="text-gray-600 text-lg mt-1">
+              أضف منتج جديد إلى متجرك وابدأ البيع
+            </p>
           </div>
         </div>
+      </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit}>

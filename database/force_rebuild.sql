@@ -547,61 +547,170 @@ CREATE INDEX idx_support_tickets_user ON support_tickets(user_id);
 CREATE INDEX idx_support_tickets_status ON support_tickets(status);
 CREATE INDEX idx_support_tickets_assigned ON support_tickets(assigned_to);
 
--- Create vendors view for backwards compatibility
--- Note: This is actually just the stores table, but named 'vendors' for API compatibility
--- The user_id in stores already links to users table via foreign key
-CREATE VIEW vendors AS
-SELECT 
-  s.id,
-  s.user_id,
-  s.name AS store_name,
-  s.name,
-  s.name AS shop_name,
-  s.name_ar AS shop_name_ar,
-  s.name_ar,
-  s.description,
-  s.business_type AS vendor_type,
-  s.business_type,
-  s.category,
-  s.phone,
-  s.email,
-  s.address,
-  s.lat AS latitude,
-  s.lat,
-  s.lng AS longitude,
-  s.lng,
-  s.location,
-  s.opening_hours,
-  s.is_online,
-  s.is_active,
-  s.approval_status,
-  s.commission_rate,
-  s.documents,
-  s.wallet_balance,
-  s.bank_account,
-  s.bank_name,
-  s.account_number,
-  s.iban,
-  s.notifications_email,
-  s.notifications_sms,
-  s.notifications_orders,
-  s.notifications_reviews,
-  s.notifications_messages,
-  s.theme_preference,
-  s.logo_url AS shop_logo,
-  s.logo_url,
-  s.banner_url,
-  s.rating,
-  s.total_reviews AS reviews_count,
-  s.total_reviews,
-  s.total_orders,
-  s.total_sales,
-  s.total_products,
-  s.min_order_amount,
-  s.is_featured,
-  s.created_at,
-  s.updated_at
-FROM stores s;
+-- Create vendors table for backwards compatibility
+-- This is a real table that syncs with stores via triggers
+-- PostgREST requires real tables for proper RLS and foreign key support
+CREATE TABLE vendors (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  store_name TEXT,
+  name TEXT,
+  shop_name TEXT,
+  shop_name_ar TEXT,
+  name_ar TEXT,
+  description TEXT,
+  vendor_type TEXT,
+  business_type business_type,
+  category TEXT,
+  phone TEXT,
+  email TEXT,
+  address TEXT,
+  latitude FLOAT8,
+  lat FLOAT8,
+  longitude FLOAT8,
+  lng FLOAT8,
+  location GEOGRAPHY(POINT, 4326),
+  opening_hours JSONB DEFAULT '{}',
+  is_online BOOLEAN DEFAULT true,
+  is_active BOOLEAN DEFAULT true,
+  approval_status approval_status DEFAULT 'pending',
+  commission_rate DECIMAL(4,2) DEFAULT 10.00,
+  documents TEXT[] DEFAULT '{}',
+  wallet_balance DECIMAL(10,2) DEFAULT 0,
+  bank_account JSONB,
+  bank_name TEXT,
+  account_number TEXT,
+  iban TEXT,
+  notifications_email BOOLEAN DEFAULT true,
+  notifications_sms BOOLEAN DEFAULT true,
+  notifications_orders BOOLEAN DEFAULT true,
+  notifications_reviews BOOLEAN DEFAULT true,
+  notifications_messages BOOLEAN DEFAULT true,
+  theme_preference TEXT DEFAULT 'white',
+  shop_logo TEXT,
+  logo_url TEXT,
+  banner_url TEXT,
+  rating DECIMAL(2,1) DEFAULT 0,
+  reviews_count INTEGER DEFAULT 0,
+  total_reviews INTEGER DEFAULT 0,
+  total_orders INTEGER DEFAULT 0,
+  total_sales DECIMAL(10,2) DEFAULT 0,
+  total_products INTEGER DEFAULT 0,
+  min_order_amount DECIMAL(10,2) DEFAULT 0,
+  is_featured BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_vendors_user ON vendors(user_id);
+CREATE INDEX idx_vendors_is_active ON vendors(is_active);
+CREATE INDEX idx_vendors_location ON vendors USING GIST(location);
+CREATE INDEX idx_vendors_business_type ON vendors(business_type);
+
+-- Add foreign key constraints to products and chats for PostgREST relationship traversal
+-- Since vendors.id is synced with stores.id, we can reference vendors directly
+ALTER TABLE products 
+  ADD CONSTRAINT products_vendor_id_vendors_fkey 
+  FOREIGN KEY (vendor_id) REFERENCES vendors(id) ON DELETE CASCADE;
+
+ALTER TABLE chats 
+  ADD CONSTRAINT chats_vendor_id_vendors_fkey 
+  FOREIGN KEY (vendor_id) REFERENCES vendors(id) ON DELETE CASCADE;
+
+ALTER TABLE order_items
+  ADD CONSTRAINT order_items_vendor_id_vendors_fkey
+  FOREIGN KEY (vendor_id) REFERENCES vendors(id) ON DELETE SET NULL;
+
+-- Function to sync stores to vendors table
+CREATE OR REPLACE FUNCTION sync_store_to_vendors()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+    INSERT INTO vendors (
+      id, user_id, store_name, name, shop_name, shop_name_ar, name_ar,
+      description, vendor_type, business_type, category, phone, email,
+      address, latitude, lat, longitude, lng, location, opening_hours,
+      is_online, is_active, approval_status, commission_rate, documents,
+      wallet_balance, bank_account, bank_name, account_number, iban,
+      notifications_email, notifications_sms, notifications_orders,
+      notifications_reviews, notifications_messages, theme_preference,
+      shop_logo, logo_url, banner_url, rating, reviews_count, total_reviews,
+      total_orders, total_sales, total_products, min_order_amount,
+      is_featured, created_at, updated_at
+    )
+    VALUES (
+      NEW.id, NEW.user_id, NEW.name, NEW.name, NEW.name, NEW.name_ar, NEW.name_ar,
+      NEW.description, NEW.business_type::TEXT, NEW.business_type, NEW.category,
+      NEW.phone, NEW.email, NEW.address, NEW.lat, NEW.lat, NEW.lng, NEW.lng,
+      NEW.location, NEW.opening_hours, NEW.is_online, NEW.is_active,
+      NEW.approval_status, NEW.commission_rate, NEW.documents, NEW.wallet_balance,
+      NEW.bank_account, NEW.bank_name, NEW.account_number, NEW.iban,
+      NEW.notifications_email, NEW.notifications_sms, NEW.notifications_orders,
+      NEW.notifications_reviews, NEW.notifications_messages, NEW.theme_preference,
+      NEW.logo_url, NEW.logo_url, NEW.banner_url, NEW.rating, NEW.total_reviews,
+      NEW.total_reviews, NEW.total_orders, NEW.total_sales, NEW.total_products,
+      NEW.min_order_amount, NEW.is_featured, NEW.created_at, NEW.updated_at
+    )
+    ON CONFLICT (id) DO UPDATE SET
+      user_id = EXCLUDED.user_id,
+      store_name = EXCLUDED.store_name,
+      name = EXCLUDED.name,
+      shop_name = EXCLUDED.shop_name,
+      shop_name_ar = EXCLUDED.shop_name_ar,
+      name_ar = EXCLUDED.name_ar,
+      description = EXCLUDED.description,
+      vendor_type = EXCLUDED.vendor_type,
+      business_type = EXCLUDED.business_type,
+      category = EXCLUDED.category,
+      phone = EXCLUDED.phone,
+      email = EXCLUDED.email,
+      address = EXCLUDED.address,
+      latitude = EXCLUDED.latitude,
+      lat = EXCLUDED.lat,
+      longitude = EXCLUDED.longitude,
+      lng = EXCLUDED.lng,
+      location = EXCLUDED.location,
+      opening_hours = EXCLUDED.opening_hours,
+      is_online = EXCLUDED.is_online,
+      is_active = EXCLUDED.is_active,
+      approval_status = EXCLUDED.approval_status,
+      commission_rate = EXCLUDED.commission_rate,
+      documents = EXCLUDED.documents,
+      wallet_balance = EXCLUDED.wallet_balance,
+      bank_account = EXCLUDED.bank_account,
+      bank_name = EXCLUDED.bank_name,
+      account_number = EXCLUDED.account_number,
+      iban = EXCLUDED.iban,
+      notifications_email = EXCLUDED.notifications_email,
+      notifications_sms = EXCLUDED.notifications_sms,
+      notifications_orders = EXCLUDED.notifications_orders,
+      notifications_reviews = EXCLUDED.notifications_reviews,
+      notifications_messages = EXCLUDED.notifications_messages,
+      theme_preference = EXCLUDED.theme_preference,
+      shop_logo = EXCLUDED.shop_logo,
+      logo_url = EXCLUDED.logo_url,
+      banner_url = EXCLUDED.banner_url,
+      rating = EXCLUDED.rating,
+      reviews_count = EXCLUDED.reviews_count,
+      total_reviews = EXCLUDED.total_reviews,
+      total_orders = EXCLUDED.total_orders,
+      total_sales = EXCLUDED.total_sales,
+      total_products = EXCLUDED.total_products,
+      min_order_amount = EXCLUDED.min_order_amount,
+      is_featured = EXCLUDED.is_featured,
+      updated_at = EXCLUDED.updated_at;
+  ELSIF TG_OP = 'DELETE' THEN
+    DELETE FROM vendors WHERE id = OLD.id;
+  END IF;
+  
+  RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to sync stores changes to vendors
+CREATE TRIGGER sync_stores_to_vendors
+  AFTER INSERT OR UPDATE OR DELETE ON stores
+  FOR EACH ROW EXECUTE FUNCTION sync_store_to_vendors();
 
 -- ==========================================
 -- FUNCTIONS & TRIGGERS
@@ -832,6 +941,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Enable RLS on all tables
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE stores ENABLE ROW LEVEL SECURITY;
+ALTER TABLE vendors ENABLE ROW LEVEL SECURITY;
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE drivers ENABLE ROW LEVEL SECURITY;
@@ -857,6 +967,10 @@ CREATE POLICY "Users can update own profile" ON users FOR UPDATE USING (auth.uid
 -- Stores policies
 CREATE POLICY "Anyone can view active stores" ON stores FOR SELECT USING (is_active = true);
 CREATE POLICY "Vendors can manage own store" ON stores FOR ALL USING (auth.uid() = user_id);
+
+-- Vendors policies (same as stores for backwards compatibility)
+CREATE POLICY "Anyone can view active vendors" ON vendors FOR SELECT USING (is_active = true);
+CREATE POLICY "Vendors can manage own vendor profile" ON vendors FOR ALL USING (auth.uid() = user_id);
 
 -- Products policies
 CREATE POLICY "Anyone can view approved products" ON products FOR SELECT USING (status = 'approved' AND is_active = true);
@@ -1011,6 +1125,34 @@ SELECT
   COALESCE(au.raw_user_meta_data->>'role', 'customer')
 FROM auth.users au
 WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = au.id);
+
+-- Sync existing stores to vendors table
+INSERT INTO vendors (
+  id, user_id, store_name, name, shop_name, shop_name_ar, name_ar,
+  description, vendor_type, business_type, category, phone, email,
+  address, latitude, lat, longitude, lng, location, opening_hours,
+  is_online, is_active, approval_status, commission_rate, documents,
+  wallet_balance, bank_account, bank_name, account_number, iban,
+  notifications_email, notifications_sms, notifications_orders,
+  notifications_reviews, notifications_messages, theme_preference,
+  shop_logo, logo_url, banner_url, rating, reviews_count, total_reviews,
+  total_orders, total_sales, total_products, min_order_amount,
+  is_featured, created_at, updated_at
+)
+SELECT 
+  s.id, s.user_id, s.name, s.name, s.name, s.name_ar, s.name_ar,
+  s.description, s.business_type::TEXT, s.business_type, s.category,
+  s.phone, s.email, s.address, s.lat, s.lat, s.lng, s.lng,
+  s.location, s.opening_hours, s.is_online, s.is_active,
+  s.approval_status, s.commission_rate, s.documents, s.wallet_balance,
+  s.bank_account, s.bank_name, s.account_number, s.iban,
+  s.notifications_email, s.notifications_sms, s.notifications_orders,
+  s.notifications_reviews, s.notifications_messages, s.theme_preference,
+  s.logo_url, s.logo_url, s.banner_url, s.rating, s.total_reviews,
+  s.total_reviews, s.total_orders, s.total_sales, s.total_products,
+  s.min_order_amount, s.is_featured, s.created_at, s.updated_at
+FROM stores s
+WHERE NOT EXISTS (SELECT 1 FROM vendors v WHERE v.id = s.id);
 
 -- ===============================================
 -- ADDITIONAL ADMIN DASHBOARD TABLES
@@ -1290,8 +1432,9 @@ GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 DO $$
 BEGIN
   RAISE NOTICE '✅ Database rebuild completed successfully!';
-  RAISE NOTICE '📊 Tables created: users, stores, products, orders, drivers, reviews, notifications, chats, messages, cart_items, wishlists, store_followers, exchange_rates, addresses, user_locations, deals, lucky_boxes, order_items, disputes, support_tickets, pages, hero_sections, loyalty_settings, loyalty_transactions, referrals, payouts, shipping_settings';
-  RAISE NOTICE '🗂️  View created: vendors (stores with user_id FK to users table)';
+  RAISE NOTICE '📊 Tables created: users, stores, vendors, products, orders, drivers, reviews, notifications, chats, messages, cart_items, wishlists, store_followers, exchange_rates, addresses, user_locations, deals, lucky_boxes, order_items, disputes, support_tickets, pages, hero_sections, loyalty_settings, loyalty_transactions, referrals, payouts, shipping_settings';
+  RAISE NOTICE '🗂️  Vendors table: Real table synced with stores via triggers (not a VIEW)';
+  RAISE NOTICE '🔄 Auto-sync: stores ↔ vendors (INSERT/UPDATE/DELETE triggers)';
   RAISE NOTICE '🔒 RLS policies applied on all tables';
   RAISE NOTICE '🌱 Initial categories seeded';
   RAISE NOTICE '⚡ Functions created: get_current_user, get_latest_exchange_rates, update_exchange_rates, get_unread_count, get_admin_dashboard_stats, handle_new_user, generate_referral_code';
