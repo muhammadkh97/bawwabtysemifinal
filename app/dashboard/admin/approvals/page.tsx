@@ -368,7 +368,6 @@ export default function ApprovalsPage() {
                               sizes="64px"
                             />
                           </div>
-                          />
                         ))}
                         {product.images.length > 5 && (
                           <div className="w-16 h-16 rounded-lg flex items-center justify-center text-white text-sm font-bold"
