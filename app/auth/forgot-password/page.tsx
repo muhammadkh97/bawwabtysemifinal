@@ -19,12 +19,27 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
-      });
+      // استخدام API الاسترجاع في Supabase
+      // في بعض الإصدارات، هذه تُستدعى admin.resetPasswordForEmail أو auth.api.resetPasswordForEmail
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/recover`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+          },
+          body: JSON.stringify({
+            email: email,
+            gotrue_meta_security: {},
+          }),
+        }
+      );
 
-      if (error) throw error;
-
+      if (!response.ok) {
+        throw new Error('فشل إرسال رابط إعادة التعيين');
+      }
+      
       setSuccess(true);
     } catch (err: any) {
       console.error('Reset password error:', err);
