@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
-import { Package, MapPin, DollarSign, Check } from 'lucide-react';
+import { Package, MapPin, DollarSign, Check, Zap, Clock } from 'lucide-react';
 
 interface Order {
   id: string;
@@ -97,84 +97,113 @@ export default function AvailableOrdersPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          <p className="text-gray-600 dark:text-gray-400">جاري تحميل الطلبات...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-          الطلبات المتاحة
-        </h1>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Header */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center gap-3 mb-2">
+            <Zap className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              الطلبات المتاحة
+            </h1>
+          </div>
+          <p className="text-gray-600 dark:text-gray-400">
+            اختر الطلبات التي تريد تنفيذها واحصل على أرباح إضافية
+          </p>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
         {orders.length === 0 ? (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
             <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              لا توجد طلبات متاحة
+              لا توجد طلبات متاحة حالياً
             </h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              تحقق لاحقاً من الطلبات الجديدة أو جرّب البحث بمعايير مختلفة
+            </p>
           </div>
         ) : (
           <div className="grid gap-6">
             {orders.map((order) => (
-              <div key={order.id} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <div className="flex justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      طلب #{order.order_number}
-                    </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {new Date(order.created_at).toLocaleString('ar-SA')}
-                    </p>
+              <div
+                key={order.id}
+                className="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700"
+              >
+                <div className="p-6">
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+                        طلب #{order.order_number}
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        العميل: {order.customer_name}
+                      </p>
+                    </div>
+                    <span className="mt-2 md:mt-0 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100 text-xs font-bold px-3 py-1.5 rounded-full whitespace-nowrap">
+                      متاح الآن
+                    </span>
                   </div>
-                  <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-3 py-1 rounded-full h-fit">
-                    متاح
-                  </span>
-                </div>
 
-                <div className="grid md:grid-cols-2 gap-4 mb-4">
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
-                      العميل: {order.customer_name}
-                    </p>
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
-                      الهاتف: {order.customer_phone}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
-                      الإجمالي: {order.total.toFixed(2)} ر.س
-                    </p>
-                    <p className="text-sm font-semibold text-green-600">
-                      رسوم التوصيل: {order.delivery_fee.toFixed(2)} ر.س
-                    </p>
-                  </div>
-                </div>
-
-                {order.delivery_address && (
-                  <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div className="flex gap-2">
-                      <MapPin className="w-4 h-4 text-gray-600 mt-1" />
-                      <div className="text-sm">
-                        <p className="font-medium mb-1">عنوان التوصيل:</p>
-                        <p className="text-gray-700 dark:text-gray-300">
-                          {order.delivery_address.address || 'غير متوفر'}
-                        </p>
-                      </div>
+                  <div className="grid grid-cols-2 gap-4 mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 uppercase font-semibold">الإجمالي</p>
+                      <p className="text-xl font-bold text-gray-900 dark:text-white mt-1">
+                        {order.total.toFixed(2)} ر.س
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 uppercase font-semibold">رسوم التوصيل</p>
+                      <p className="text-xl font-bold text-green-600 dark:text-green-400 mt-1">
+                        +{order.delivery_fee.toFixed(2)} ر.س
+                      </p>
                     </div>
                   </div>
-                )}
 
-                <button
-                  onClick={() => acceptOrder(order.id)}
-                  className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 flex items-center justify-center gap-2"
-                >
-                  <Check className="w-5 h-5" />
-                  قبول الطلب
-                </button>
+                  {order.delivery_address && (
+                    <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <div className="flex gap-3">
+                        <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white text-sm mb-1">
+                            عنوان التوصيل
+                          </p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
+                            {order.delivery_address.address || 'غير متوفر'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {order.customer_phone && (
+                    <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                      <p className="text-sm font-semibold text-green-700 dark:text-green-400">
+                        📞 {order.customer_phone}
+                      </p>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => acceptOrder(order.id)}
+                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+                  >
+                    <Check className="w-5 h-5" />
+                    قبول الطلب
+                  </button>
+                </div>
               </div>
             ))}
           </div>
