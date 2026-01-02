@@ -25,7 +25,7 @@ CREATE TYPE order_status AS ENUM ('pending', 'confirmed', 'processing', 'prepari
 CREATE TYPE payment_status AS ENUM ('pending', 'paid', 'failed', 'refunded');
 CREATE TYPE payment_method AS ENUM ('cash', 'card', 'wallet');
 CREATE TYPE product_status AS ENUM ('draft', 'pending', 'approved', 'rejected');
-CREATE TYPE delivery_status AS ENUM ('idle', 'assigned', 'picked_up', 'delivering', 'completed');
+CREATE TYPE delivery_status AS ENUM ('idle', 'pending', 'assigned', 'picked_up', 'delivering', 'completed');
 
 -- ==========================================
 -- CORE TABLES
@@ -482,8 +482,15 @@ CREATE TABLE order_items (
   name_ar TEXT,
   quantity INTEGER NOT NULL,
   price DECIMAL(10,2) NOT NULL,
+  unit_price DECIMAL(10,2),
+  item_total DECIMAL(10,2),
   total DECIMAL(10,2) NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  stock_quantity INTEGER,
+  product_name TEXT,
+  product_name_ar TEXT,
+  product_image TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX idx_order_items_order ON order_items(order_id);
@@ -533,50 +540,52 @@ CREATE INDEX idx_support_tickets_status ON support_tickets(status);
 CREATE INDEX idx_support_tickets_assigned ON support_tickets(assigned_to);
 
 -- Create vendors view for backwards compatibility
+-- Note: This is actually just the stores table, but named 'vendors' for API compatibility
+-- The user_id in stores already links to users table via foreign key
 CREATE VIEW vendors AS
 SELECT 
-  id,
-  user_id,
-  name AS store_name,
-  name,
-  name AS shop_name,
-  name_ar AS shop_name_ar,
-  name_ar,
-  description,
-  business_type AS vendor_type,
-  business_type,
-  category,
-  phone,
-  email,
-  address,
-  lat AS latitude,
-  lat,
-  lng AS longitude,
-  lng,
-  location,
-  opening_hours,
-  is_online,
-  is_active,
-  approval_status,
-  commission_rate,
-  documents,
-  wallet_balance,
-  bank_account,
-  theme_preference,
-  logo_url AS shop_logo,
-  logo_url,
-  banner_url,
-  rating,
-  total_reviews AS reviews_count,
-  total_reviews,
-  total_orders,
-  total_sales,
-  total_products,
-  min_order_amount,
-  is_featured,
-  created_at,
-  updated_at
-FROM stores;
+  s.id,
+  s.user_id,
+  s.name AS store_name,
+  s.name,
+  s.name AS shop_name,
+  s.name_ar AS shop_name_ar,
+  s.name_ar,
+  s.description,
+  s.business_type AS vendor_type,
+  s.business_type,
+  s.category,
+  s.phone,
+  s.email,
+  s.address,
+  s.lat AS latitude,
+  s.lat,
+  s.lng AS longitude,
+  s.lng,
+  s.location,
+  s.opening_hours,
+  s.is_online,
+  s.is_active,
+  s.approval_status,
+  s.commission_rate,
+  s.documents,
+  s.wallet_balance,
+  s.bank_account,
+  s.theme_preference,
+  s.logo_url AS shop_logo,
+  s.logo_url,
+  s.banner_url,
+  s.rating,
+  s.total_reviews AS reviews_count,
+  s.total_reviews,
+  s.total_orders,
+  s.total_sales,
+  s.total_products,
+  s.min_order_amount,
+  s.is_featured,
+  s.created_at,
+  s.updated_at
+FROM stores s;
 
 -- ==========================================
 -- FUNCTIONS & TRIGGERS
@@ -661,6 +670,9 @@ CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON orders
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_drivers_updated_at BEFORE UPDATE ON drivers
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_order_items_updated_at BEFORE UPDATE ON order_items
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Function to sync location geography from lat/lng
@@ -984,6 +996,208 @@ SELECT
 FROM auth.users au
 WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = au.id);
 
+-- ===============================================
+-- ADDITIONAL ADMIN DASHBOARD TABLES
+-- ===============================================
+
+-- PAGES TABLE (CMS for static pages)
+CREATE TABLE IF NOT EXISTS pages (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    slug TEXT NOT NULL UNIQUE,
+    title TEXT NOT NULL,
+    title_ar TEXT,
+    content TEXT NOT NULL,
+    content_ar TEXT,
+    meta_description TEXT,
+    meta_description_ar TEXT,
+    is_published BOOLEAN DEFAULT false,
+    order_index INTEGER DEFAULT 0,
+    created_by UUID REFERENCES users(id),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_pages_slug ON pages(slug);
+CREATE INDEX idx_pages_is_published ON pages(is_published);
+
+ALTER TABLE pages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view published pages" ON pages FOR SELECT USING (is_published = true);
+CREATE POLICY "Admins can do everything with pages" ON pages FOR ALL TO authenticated USING (
+    EXISTS (SELECT 1 FROM users WHERE users.id = auth.uid() AND users.role = 'admin')
+);
+CREATE TRIGGER update_pages_updated_at BEFORE UPDATE ON pages FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- LOYALTY SETTINGS TABLE
+CREATE TABLE IF NOT EXISTS loyalty_settings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    points_per_currency DECIMAL(10, 2) NOT NULL DEFAULT 1.00,
+    referral_bonus INTEGER NOT NULL DEFAULT 100,
+    min_redemption_points INTEGER NOT NULL DEFAULT 100,
+    point_expiry_days INTEGER DEFAULT 365,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE loyalty_settings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view loyalty settings" ON loyalty_settings FOR SELECT USING (is_active = true);
+CREATE POLICY "Admins can manage loyalty settings" ON loyalty_settings FOR ALL TO authenticated USING (
+    EXISTS (SELECT 1 FROM users WHERE users.id = auth.uid() AND users.role = 'admin')
+);
+CREATE TRIGGER update_loyalty_settings_updated_at BEFORE UPDATE ON loyalty_settings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Insert default loyalty settings
+INSERT INTO loyalty_settings (points_per_currency, referral_bonus, min_redemption_points)
+VALUES (1.00, 100, 100)
+ON CONFLICT DO NOTHING;
+
+-- LOYALTY TRANSACTIONS TABLE
+CREATE TABLE IF NOT EXISTS loyalty_transactions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    points INTEGER NOT NULL,
+    transaction_type TEXT NOT NULL CHECK (transaction_type IN ('earned', 'redeemed', 'expired', 'adjusted', 'referral_bonus')),
+    reference_type TEXT CHECK (reference_type IN ('order', 'referral', 'admin_adjustment', 'signup_bonus')),
+    reference_id UUID,
+    description TEXT,
+    balance_after INTEGER NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_loyalty_transactions_user_id ON loyalty_transactions(user_id);
+CREATE INDEX idx_loyalty_transactions_type ON loyalty_transactions(transaction_type);
+CREATE INDEX idx_loyalty_transactions_created_at ON loyalty_transactions(created_at);
+
+ALTER TABLE loyalty_transactions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Admins can do everything with loyalty_transactions" ON loyalty_transactions FOR ALL TO authenticated USING (
+    EXISTS (SELECT 1 FROM users WHERE users.id = auth.uid() AND users.role = 'admin')
+);
+CREATE POLICY "Users can view their own loyalty transactions" ON loyalty_transactions FOR SELECT TO authenticated USING (
+    user_id = auth.uid()
+);
+
+-- REFERRALS TABLE
+CREATE TABLE IF NOT EXISTS referrals (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    referrer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    referred_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'expired')),
+    reward_points INTEGER NOT NULL DEFAULT 100,
+    completed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT unique_referral UNIQUE (referrer_id, referred_id)
+);
+
+CREATE INDEX idx_referrals_referrer_id ON referrals(referrer_id);
+CREATE INDEX idx_referrals_referred_id ON referrals(referred_id);
+CREATE INDEX idx_referrals_status ON referrals(status);
+
+ALTER TABLE referrals ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Admins can do everything with referrals" ON referrals FOR ALL TO authenticated USING (
+    EXISTS (SELECT 1 FROM users WHERE users.id = auth.uid() AND users.role = 'admin')
+);
+CREATE POLICY "Users can view their own referrals" ON referrals FOR SELECT TO authenticated USING (
+    referrer_id = auth.uid() OR referred_id = auth.uid()
+);
+
+-- PAYOUTS TABLE
+CREATE TABLE IF NOT EXISTS payouts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    store_id UUID REFERENCES stores(id),
+    amount DECIMAL(10, 2) NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'rejected')),
+    payment_method TEXT CHECK (payment_method IN ('bank_transfer', 'paypal', 'stripe', 'cash')),
+    bank_name TEXT,
+    account_number TEXT,
+    account_holder TEXT,
+    transaction_id TEXT,
+    notes TEXT,
+    requested_at TIMESTAMPTZ DEFAULT NOW(),
+    processed_at TIMESTAMPTZ,
+    processed_by UUID REFERENCES users(id),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_payouts_user_id ON payouts(user_id);
+CREATE INDEX idx_payouts_store_id ON payouts(store_id);
+CREATE INDEX idx_payouts_status ON payouts(status);
+
+ALTER TABLE payouts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Admins can do everything with payouts" ON payouts FOR ALL TO authenticated USING (
+    EXISTS (SELECT 1 FROM users WHERE users.id = auth.uid() AND users.role = 'admin')
+);
+CREATE POLICY "Vendors can view their own payouts" ON payouts FOR SELECT TO authenticated USING (
+    user_id = auth.uid()
+);
+CREATE POLICY "Vendors can create payout requests" ON payouts FOR INSERT TO authenticated WITH CHECK (
+    user_id = auth.uid()
+);
+CREATE TRIGGER update_payouts_updated_at BEFORE UPDATE ON payouts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- SHIPPING SETTINGS TABLE
+CREATE TABLE IF NOT EXISTS shipping_settings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    base_rate DECIMAL(10, 2) NOT NULL DEFAULT 5.00,
+    per_km_rate DECIMAL(10, 2) NOT NULL DEFAULT 0.50,
+    free_shipping_threshold DECIMAL(10, 2) DEFAULT 100.00,
+    max_distance_km INTEGER DEFAULT 50,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE shipping_settings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view shipping settings" ON shipping_settings FOR SELECT USING (is_active = true);
+CREATE POLICY "Admins can manage shipping settings" ON shipping_settings FOR ALL TO authenticated USING (
+    EXISTS (SELECT 1 FROM users WHERE users.id = auth.uid() AND users.role = 'admin')
+);
+CREATE TRIGGER update_shipping_settings_updated_at BEFORE UPDATE ON shipping_settings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Insert default shipping settings
+INSERT INTO shipping_settings (base_rate, per_km_rate, free_shipping_threshold, max_distance_km)
+VALUES (5.00, 0.50, 100.00, 50)
+ON CONFLICT DO NOTHING;
+
+-- ===============================================
+-- ADD MISSING COLUMNS
+-- ===============================================
+
+-- Add columns to users table
+ALTER TABLE users ADD COLUMN IF NOT EXISTS total_earned_points INTEGER DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code) WHERE referral_code IS NOT NULL;
+
+-- Add total_amount to orders table (if not exists)
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS total_amount DECIMAL(10, 2);
+UPDATE orders SET total_amount = total WHERE total_amount IS NULL AND total IS NOT NULL;
+
+-- ===============================================
+-- ADDITIONAL FUNCTIONS
+-- ===============================================
+
+-- Generate Referral Code Function
+CREATE OR REPLACE FUNCTION generate_referral_code()
+RETURNS TEXT AS $$
+DECLARE
+    code TEXT;
+    code_exists BOOLEAN;
+BEGIN
+    LOOP
+        code := upper(substring(md5(random()::text) from 1 for 8));
+        SELECT EXISTS(SELECT 1 FROM users WHERE referral_code = code) INTO code_exists;
+        EXIT WHEN NOT code_exists;
+    END LOOP;
+    RETURN code;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Update existing users with referral codes
+UPDATE users 
+SET referral_code = generate_referral_code()
+WHERE referral_code IS NULL;
+
 -- ==========================================
 -- GRANT PERMISSIONS
 -- ==========================================
@@ -1000,17 +1214,19 @@ GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 DO $$
 BEGIN
   RAISE NOTICE '✅ Database rebuild completed successfully!';
-  RAISE NOTICE '📊 Tables created: users, stores, products, orders, drivers, reviews, notifications, chats, messages, cart_items, wishlists, store_followers, exchange_rates, addresses, user_locations, deals, lucky_boxes, order_items, disputes, support_tickets';
-  RAISE NOTICE '🗂️  View created: vendors (maps to stores table for backwards compatibility)';
-  RAISE NOTICE '🔒 RLS policies applied';
+  RAISE NOTICE '📊 Tables created: users, stores, products, orders, drivers, reviews, notifications, chats, messages, cart_items, wishlists, store_followers, exchange_rates, addresses, user_locations, deals, lucky_boxes, order_items, disputes, support_tickets, pages, loyalty_settings, loyalty_transactions, referrals, payouts, shipping_settings';
+  RAISE NOTICE '🗂️  View created: vendors (stores with user_id FK to users table)';
+  RAISE NOTICE '🔒 RLS policies applied on all tables';
   RAISE NOTICE '🌱 Initial categories seeded';
-  RAISE NOTICE '⚡ Functions created: get_current_user, get_latest_exchange_rates, update_exchange_rates, get_unread_count, get_admin_dashboard_stats, handle_new_user';
-  RAISE NOTICE '🔄 Alias columns auto-synced via triggers: users.name, users.user_role, stores.store_name, stores.shop_name, stores.latitude, stores.longitude, stores.shop_logo';
+  RAISE NOTICE '⚡ Functions created: get_current_user, get_latest_exchange_rates, update_exchange_rates, get_unread_count, get_admin_dashboard_stats, handle_new_user, generate_referral_code';
+  RAISE NOTICE '🔄 Alias columns auto-synced via triggers';
   RAISE NOTICE '👤 Auth trigger: Automatically creates user profile on signup';
   RAISE NOTICE '♻️  Existing auth users synced to users table';
-  RAISE NOTICE '🎁 loyalty_points column added to users table';
-  RAISE NOTICE '📍 addresses and user_locations tables added';
-  RAISE NOTICE '🎯 deals and lucky_boxes tables added for promotions';
-  RAISE NOTICE '🛡️  order_items, disputes, support_tickets tables added for admin dashboard';
-  RAISE NOTICE '⚠️  Next steps: Reload website - all 404 errors should be resolved';
+  RAISE NOTICE '🎁 Loyalty system: points, transactions, referrals, settings tables added';
+  RAISE NOTICE '💰 Payouts table added for vendor/driver payments';
+  RAISE NOTICE '🚚 Shipping settings table added';
+  RAISE NOTICE '📄 Pages table added for CMS';
+  RAISE NOTICE '🎫 Support tickets and disputes tables added';
+  RAISE NOTICE '⚠️  IMPORTANT: Reload Schema Cache in Supabase Dashboard after running this script';
+  RAISE NOTICE '📌 To reload schema: Go to Settings → API → Click "Reload schema cache" button';
 END $$;
