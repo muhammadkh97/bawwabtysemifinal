@@ -36,8 +36,10 @@ CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email TEXT UNIQUE NOT NULL,
   full_name TEXT NOT NULL,
+  name TEXT,
   phone TEXT,
   role user_role NOT NULL DEFAULT 'customer',
+  user_role TEXT,
   avatar_url TEXT,
   is_active BOOLEAN DEFAULT true,
   vendor_id UUID,
@@ -45,24 +47,26 @@ CREATE TABLE users (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Add computed columns for backwards compatibility
-ALTER TABLE users ADD COLUMN name TEXT GENERATED ALWAYS AS (full_name) STORED;
-ALTER TABLE users ADD COLUMN user_role TEXT GENERATED ALWAYS AS (role::TEXT) STORED;
-
 -- Stores Table (Hybrid: Retail + Restaurant)
 CREATE TABLE stores (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
+  store_name TEXT,
+  shop_name TEXT,
   name_ar TEXT,
+  shop_name_ar TEXT,
   description TEXT,
   business_type business_type NOT NULL DEFAULT 'retail',
+  vendor_type TEXT,
   category TEXT,
   phone TEXT,
   email TEXT,
   address TEXT,
   lat FLOAT8,
+  latitude FLOAT8,
   lng FLOAT8,
+  longitude FLOAT8,
   location GEOGRAPHY(POINT, 4326),
   opening_hours JSONB DEFAULT '{"monday": "9:00-22:00", "tuesday": "9:00-22:00", "wednesday": "9:00-22:00", "thursday": "9:00-22:00", "friday": "9:00-22:00", "saturday": "9:00-22:00", "sunday": "9:00-22:00"}',
   is_online BOOLEAN DEFAULT true,
@@ -74,9 +78,11 @@ CREATE TABLE stores (
   bank_account JSONB,
   theme_preference TEXT DEFAULT 'white',
   logo_url TEXT,
+  shop_logo TEXT,
   banner_url TEXT,
   rating DECIMAL(2,1) DEFAULT 0,
   total_reviews INTEGER DEFAULT 0,
+  reviews_count INTEGER,
   total_orders INTEGER DEFAULT 0,
   total_sales DECIMAL(10,2) DEFAULT 0,
   total_products INTEGER DEFAULT 0,
@@ -87,16 +93,6 @@ CREATE TABLE stores (
   
   CONSTRAINT valid_coordinates CHECK (lat >= -90 AND lat <= 90 AND lng >= -180 AND lng <= 180)
 );
-
--- Add computed columns for backwards compatibility
-ALTER TABLE stores ADD COLUMN store_name TEXT GENERATED ALWAYS AS (name) STORED;
-ALTER TABLE stores ADD COLUMN shop_name TEXT GENERATED ALWAYS AS (name) STORED;
-ALTER TABLE stores ADD COLUMN shop_name_ar TEXT GENERATED ALWAYS AS (name_ar) STORED;
-ALTER TABLE stores ADD COLUMN vendor_type TEXT GENERATED ALWAYS AS (business_type::TEXT) STORED;
-ALTER TABLE stores ADD COLUMN latitude FLOAT8 GENERATED ALWAYS AS (lat) STORED;
-ALTER TABLE stores ADD COLUMN longitude FLOAT8 GENERATED ALWAYS AS (lng) STORED;
-ALTER TABLE stores ADD COLUMN shop_logo TEXT GENERATED ALWAYS AS (logo_url) STORED;
-ALTER TABLE stores ADD COLUMN reviews_count INTEGER GENERATED ALWAYS AS (total_reviews) STORED;
 
 -- Create spatial index for location-based queries
 CREATE INDEX idx_stores_location ON stores USING GIST(location);
@@ -428,12 +424,44 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Function to sync alias columns in users table
+CREATE OR REPLACE FUNCTION sync_users_aliases()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.name = NEW.full_name;
+  NEW.user_role = NEW.role::TEXT;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to sync alias columns in stores table
+CREATE OR REPLACE FUNCTION sync_stores_aliases()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.store_name = NEW.name;
+  NEW.shop_name = NEW.name;
+  NEW.shop_name_ar = NEW.name_ar;
+  NEW.vendor_type = NEW.business_type::TEXT;
+  NEW.latitude = NEW.lat;
+  NEW.longitude = NEW.lng;
+  NEW.shop_logo = NEW.logo_url;
+  NEW.reviews_count = NEW.total_reviews;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Apply updated_at triggers
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER sync_users_aliases_trigger BEFORE INSERT OR UPDATE ON users
+  FOR EACH ROW EXECUTE FUNCTION sync_users_aliases();
+
 CREATE TRIGGER update_stores_updated_at BEFORE UPDATE ON stores
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER sync_stores_aliases_trigger BEFORE INSERT OR UPDATE ON stores
+  FOR EACH ROW EXECUTE FUNCTION sync_stores_aliases();
 
 CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON products
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -680,6 +708,6 @@ BEGIN
   RAISE NOTICE '🔒 RLS policies applied';
   RAISE NOTICE '🌱 Initial categories seeded';
   RAISE NOTICE '⚡ Functions created: get_current_user, get_latest_exchange_rates, update_exchange_rates, get_unread_count';
-  RAISE NOTICE '🔄 Generated columns added: users.name, users.user_role, stores.store_name, stores.shop_name, stores.latitude, stores.longitude, stores.shop_logo';
+  RAISE NOTICE '🔄 Alias columns auto-synced via triggers: users.name, users.user_role, stores.store_name, stores.shop_name, stores.latitude, stores.longitude, stores.shop_logo';
   RAISE NOTICE '⚠️  Next steps: Run Supabase type generation with: npx supabase gen types typescript --local > types/supabase.ts';
 END $$;
