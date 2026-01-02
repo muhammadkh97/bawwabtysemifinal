@@ -262,7 +262,7 @@ export default function VendorPromotionsPage() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-white transition-colors duration-300">
+    <div className="min-h-screen relative overflow-hidden bg-[#0A0515] transition-colors duration-300">
       
       <div className="md:mr-[280px] transition-all duration-300">
         
@@ -417,7 +417,7 @@ export default function VendorPromotionsPage() {
                         {coupon.used_count} / {coupon.usage_limit}
                       </span>
                     </div>
-                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div className="w-full h-2 bg-[#0A0515]/10 rounded-full overflow-hidden">
                       <div
                         className="h-full transition-all duration-500"
                         style={{
@@ -699,7 +699,7 @@ export default function VendorPromotionsPage() {
                   <Eye className="w-5 h-5 text-green-400" />
                   معاينة الكوبون
                 </h3>
-                <div className="bg-white/5 rounded-xl p-4 border border-green-500/30">
+                <div className="bg-[#0A0515]/5 rounded-xl p-4 border border-green-500/30">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-2xl font-bold text-white">{formData.code || 'COUPON'}</span>
                     <span className="px-3 py-1 rounded-lg text-sm font-bold"

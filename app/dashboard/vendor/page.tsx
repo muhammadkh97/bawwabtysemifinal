@@ -172,7 +172,7 @@ function VendorDashboardContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-[#0A0515]">
         <div className="text-center">
           <Loader2 className="w-16 h-16 text-pink-500 animate-spin mx-auto mb-4" />
           <p className="text-gray-600 text-lg">جاري التحميل...</p>
@@ -182,7 +182,7 @@ function VendorDashboardContent() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#0A0515]">
       <main className="max-w-7xl mx-auto">
         {/* Welcome Section */}
         <motion.div
@@ -211,7 +211,7 @@ function VendorDashboardContent() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 + index * 0.1 }}
-                className={`bg-white border ${card.borderColor} rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300`}
+                className={`bg-[#0A0515] border ${card.borderColor} rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300`}
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className={`${card.bgColor} p-3 rounded-xl`}>
@@ -267,7 +267,7 @@ function VendorDashboardContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm"
+          className="bg-[#0A0515] border border-gray-100 rounded-2xl p-6 shadow-sm"
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900">أحدث المنتجات</h2>
@@ -299,7 +299,7 @@ function VendorDashboardContent() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.7 + index * 0.1 }}
-                  className="bg-gray-50 border border-gray-100 rounded-xl p-4 hover:shadow-md transition-all duration-300"
+                  className="bg-[#0A0515] border border-gray-100 rounded-xl p-4 hover:shadow-md transition-all duration-300"
                 >
                   <h3 className="font-semibold text-gray-900 mb-2 truncate">{product.name}</h3>
                   <div className="flex items-center justify-between text-sm">
