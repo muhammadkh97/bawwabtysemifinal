@@ -154,6 +154,7 @@ export default function DeliveryRouteMap({
       }
       document.head.removeChild(style)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pickupLat, pickupLng, deliveryLat, deliveryLng, driverLat, driverLng, showRoute])
 
   // Calculate distance for display
