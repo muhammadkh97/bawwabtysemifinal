@@ -19,6 +19,7 @@ import {
   Map as MapIcon
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { DriverOrder } from '@/types';
 
 const OrdersMapComponent = dynamic(() => import('@/components/OrdersMapComponent'), {
   ssr: false,
@@ -34,29 +35,6 @@ interface DashboardStats {
   average_rating: number;
 }
 
-interface Order {
-  id: string;
-  order_number: string;
-  status: string;
-  total: number;
-  delivery_fee: number;
-  created_at: string;
-  delivery_latitude?: number;
-  delivery_longitude?: number;
-  delivery_address?: any;
-  customer: {
-    id: string;
-    name: string;
-    phone?: string;
-  };
-  vendor: {
-    id: string;
-    store_name: string;
-    store_latitude?: number;
-    store_longitude?: number;
-  };
-}
-
 export default function DriverDashboard() {
   const router = useRouter();
   
@@ -70,9 +48,9 @@ export default function DriverDashboard() {
     average_rating: 0
   });
   const [driverId, setDriverId] = useState<string | null>(null);
-  const [activeOrders, setActiveOrders] = useState<Order[]>([]);
+  const [activeOrders, setActiveOrders] = useState<DriverOrder[]>([]);
   const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<DriverOrder | null>(null);
 
   useEffect(() => {
     loadDashboardData();
