@@ -39,6 +39,7 @@ export default function VendorMessagesPage() {
     if (userId) {
       fetchChats();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const fetchChats = async () => {

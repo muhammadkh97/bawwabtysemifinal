@@ -44,6 +44,7 @@ export default function VendorAnalyticsPage() {
     if (userId) {
       fetchAnalyticsData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, timeRange]);
 
   const fetchAnalyticsData = async () => {

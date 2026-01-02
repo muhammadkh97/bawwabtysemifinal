@@ -25,6 +25,7 @@ export default function UserDetailsPage() {
     if (userId) {
       fetchUserDetails();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const fetchUserDetails = async () => {

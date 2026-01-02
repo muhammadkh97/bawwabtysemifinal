@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import Image from 'next/image';
 import { Search, Filter, SlidersHorizontal, ChevronDown, Star, ShoppingCart, Eye, LayoutGrid, List } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -385,10 +386,12 @@ function ProductsContent() {
                   >
                     {/* Image Container - Optimized for mobile */}
                     <Link href={`/products/${product.id}`} className="relative aspect-square overflow-hidden block">
-                      <img 
+                      <Image 
                         src={product.image_url || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'} 
                         alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        fill
+                        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                        className="object-cover group-hover:scale-110 transition-transform duration-700"
                       />
                       {/* Gradient Overlay */}
                       <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent opacity-40"></div>

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { MapPin, Star, Clock, ChefHat, Search, Filter, DollarSign } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
@@ -165,10 +166,12 @@ export default function RestaurantsPage() {
                       {/* Restaurant Image */}
                       <div className="relative h-48 overflow-hidden">
                         {restaurant.shop_logo ? (
-                          <img
+                          <Image
                             src={restaurant.shop_logo}
                             alt={restaurant.shop_name_ar}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                            className="object-cover group-hover:scale-110 transition-transform duration-300"
                           />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">

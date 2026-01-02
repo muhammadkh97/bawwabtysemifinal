@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -15,18 +15,44 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // التحقق من تسجيل الدخول عند تحميل الصفحة
-  useEffect(() => {
-    checkAuth();
-  }, []);
+  const redirectUserByRole = useCallback((role: string) => {
+    const redirectPath = searchParams.get('redirect');
+    
+    if (redirectPath) {
+      router.push(redirectPath);
+      return;
+    }
 
-  const checkAuth = async () => {
+    switch (role) {
+      case 'admin':
+        router.push('/dashboard/admin');
+        break;
+      case 'vendor':
+        router.push('/dashboard/vendor');
+        break;
+      case 'restaurant':
+        router.push('/dashboard/restaurant');
+        break;
+      case 'driver':
+        router.push('/dashboard/driver');
+        break;
+      default:
+        router.push('/');
+    }
+  }, [router, searchParams]);
+
+  const checkAuth = useCallback(async () => {
     const { user } = await getCurrentUser();
     if (user) {
       // المستخدم مسجل دخول بالفعل، توجيهه حسب دوره
       redirectUserByRole((user as any).role || 'customer');
     }
-  };
+  }, [redirectUserByRole]);
+
+  // التحقق من تسجيل الدخول عند تحميل الصفحة
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   const redirectUserByRole = (role: string) => {
     const redirectPath = searchParams.get('redirect');

@@ -36,6 +36,7 @@ export default function VendorMyStorePage() {
     if (userId) {
       fetchStoreData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const fetchStoreData = async () => {

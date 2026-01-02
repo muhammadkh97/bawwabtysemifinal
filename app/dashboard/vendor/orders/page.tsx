@@ -47,6 +47,7 @@ export default function VendorOrdersPageImproved() {
     if (userId) {
       fetchOrders();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const handleUpdateOrderStatus = async (orderId: string, newStatus: OrderStatus) => {

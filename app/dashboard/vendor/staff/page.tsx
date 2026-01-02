@@ -44,6 +44,7 @@ export default function VendorStaffPage() {
     if (userId) {
       fetchStaff();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const fetchStaff = async () => {

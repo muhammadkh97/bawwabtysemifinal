@@ -51,6 +51,7 @@ export default function VendorStorePage() {
     fetchVendor();
     fetchProducts();
     loadFollowersCount();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vendorId]);
 
   // تأثير الأنيميشن عند تغيير عدد المتابعين

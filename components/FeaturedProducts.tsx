@@ -124,10 +124,12 @@ export default function FeaturedProducts() {
                   {/* Image Container */}
                   <Link href={`/products/${product.id}`} className="block">
                     <div className="relative aspect-square overflow-hidden">
-                      <img 
+                      <Image 
                         src={productImage} 
                         alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        fill
+                        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                        className="object-cover group-hover:scale-110 transition-transform duration-700"
                       />
                       {/* Gradient Overlay */}
                       <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent opacity-40"></div>

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import Image from 'next/image';
 import LoyaltyCard from '@/components/LoyaltyCard';
 import CountryPhoneInput from '@/components/CountryPhoneInput';
 import LocationsManager from '@/components/LocationsManager';
@@ -461,11 +462,15 @@ export default function ProfilePage() {
                 />
                 <div className="relative group">
                   {avatarPreview || profile?.avatar_url ? (
-                    <img
-                      src={avatarPreview || profile?.avatar_url}
-                      alt="Profile"
-                      className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full object-cover border-4 border-white shadow-lg ring-4 ring-purple-100"
-                    />
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-white shadow-lg ring-4 ring-purple-100 relative">
+                      <Image
+                        src={avatarPreview || profile?.avatar_url || ''}
+                        alt="Profile"
+                        fill
+                        sizes="128px"
+                        className="object-cover"
+                      />
+                    </div>
                   ) : (
                     <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center text-4xl sm:text-5xl md:text-6xl font-bold text-white shadow-lg ring-4 ring-purple-100" style={{ background: 'linear-gradient(135deg, #6236FF, #FF219D)' }}>
                       {profile?.name?.charAt(0) || 'م'}

@@ -34,6 +34,7 @@ export default function VendorReviewsPage() {
     if (userId) {
       fetchVendorReviews();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const fetchVendorReviews = async () => {

@@ -54,6 +54,7 @@ export default function VendorPromotionsPage() {
     if (userId) {
       fetchCoupons();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const fetchCoupons = async () => {

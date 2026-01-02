@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Star, MapPin, Package, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -107,8 +108,8 @@ export default function VendorsPage() {
                     {/* Header */}
                     <div className="bg-gradient-to-r from-purple-600 to-pink-500 p-6 text-center">
                       {logoUrl ? (
-                        <div className="w-24 h-24 mx-auto mb-3 rounded-full overflow-hidden bg-white">
-                          <img src={logoUrl} alt={vendor.store_name} className="w-full h-full object-cover" />
+                        <div className="w-24 h-24 mx-auto mb-3 rounded-full overflow-hidden bg-white relative">
+                          <Image src={logoUrl} alt={vendor.store_name} fill sizes="96px" className="object-cover" />
                         </div>
                       ) : (
                         <div className="text-6xl mb-3">🏪</div>

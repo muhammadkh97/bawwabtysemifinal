@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
+import Image from 'next/image';
 import { 
   MapPin, Star, Clock, Phone, ChefHat, Package, 
   ArrowRight, ShoppingCart, Heart, Share2 
@@ -61,6 +62,7 @@ export default function VendorDetailsPage() {
       fetchVendorDetails();
       fetchVendorProducts();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vendorId]);
 
   const fetchVendorDetails = async () => {
@@ -146,10 +148,13 @@ export default function VendorDetailsPage() {
       {/* Banner Section */}
       <div className="relative h-80 overflow-hidden">
         {vendor.shop_banner ? (
-          <img 
+          <Image 
             src={vendor.shop_banner} 
             alt={vendor.shop_name_ar}
-            className="w-full h-full object-cover"
+            fill
+            sizes="100vw"
+            className="object-cover"
+            priority
           />
         ) : (
           <div className={`w-full h-full bg-gradient-to-r ${themeColor}`}></div>
@@ -162,11 +167,15 @@ export default function VendorDetailsPage() {
             {/* Logo */}
             <div className="w-32 h-32 bg-white rounded-3xl p-3 shadow-2xl">
               {vendor.shop_logo ? (
-                <img 
-                  src={vendor.shop_logo} 
-                  alt={vendor.shop_name_ar}
-                  className="w-full h-full object-cover rounded-2xl"
-                />
+                <div className="relative w-full h-full">
+                  <Image 
+                    src={vendor.shop_logo} 
+                    alt={vendor.shop_name_ar}
+                    fill
+                    sizes="128px"
+                    className="object-cover rounded-2xl"
+                  />
+                </div>
               ) : (
                 <div className={`w-full h-full bg-gradient-to-br ${themeColor} rounded-2xl flex items-center justify-center`}>
                   {isRestaurant ? (
@@ -294,10 +303,12 @@ export default function VendorDetailsPage() {
                         {/* Product Image */}
                         <div className="relative h-48 overflow-hidden">
                           {product.images && product.images.length > 0 ? (
-                            <img
+                            <Image
                               src={product.images[0]}
                               alt={product.name_ar || product.name}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                              fill
+                              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                              className="object-cover group-hover:scale-110 transition-transform duration-300"
                             />
                           ) : (
                             <div className={`w-full h-full bg-gradient-to-br ${themeColor} flex items-center justify-center`}>
