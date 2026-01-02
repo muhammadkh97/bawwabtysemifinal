@@ -27,6 +27,7 @@ export default function AvailableOrdersPage() {
 
   useEffect(() => {
     loadAvailableOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadAvailableOrders = async () => {

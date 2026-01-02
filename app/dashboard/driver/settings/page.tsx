@@ -22,6 +22,7 @@ export default function DriverSettingsPage() {
 
   useEffect(() => {
     loadDriverData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadDriverData = async () => {

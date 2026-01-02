@@ -20,6 +20,7 @@ export default function EarningsPage() {
 
   useEffect(() => {
     loadEarnings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadEarnings = async () => {
