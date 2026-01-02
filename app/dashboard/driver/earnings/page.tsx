@@ -2,14 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
-import { DollarSign, TrendingUp, Calendar } from 'lucide-react';
+import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
+import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
+import FuturisticStatCard from '@/components/dashboard/FuturisticStatCard';
+import { DollarSign, TrendingUp, Calendar, Package } from 'lucide-react';
 
 export default function EarningsPage() {
   const router = useRouter();
-  // Using supabase from lib/supabase
   
   const [loading, setLoading] = useState(true);
+  const [userName, setUserName] = useState('');
   const [earnings, setEarnings] = useState({
     total: 0,
     today: 0,
@@ -27,8 +31,19 @@ export default function EarningsPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        router.push('/login');
+        router.push('/auth/login');
         return;
+      }
+
+      // Get user name
+      const { data: userData } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', user.id)
+        .single();
+      
+      if (userData) {
+        setUserName(userData.name || 'مندوب التوصيل');
       }
 
       const { data: driverData } = await supabase
@@ -81,73 +96,119 @@ export default function EarningsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen relative overflow-hidden bg-gray-50 dark:bg-[#0A0515]">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+        </div>
       </div>
     );
   }
 
+  const statsCards = [
+    {
+      title: 'إجمالي الأرباح',
+      value: `${earnings.total.toFixed(2)} ر.س`,
+      icon: DollarSign,
+      gradient: 'from-purple-500 to-pink-500',
+    },
+    {
+      title: 'أرباح اليوم',
+      value: `${earnings.today.toFixed(2)} ر.س`,
+      icon: TrendingUp,
+      gradient: 'from-green-500 to-emerald-500',
+    },
+    {
+      title: 'أرباح الأسبوع',
+      value: `${earnings.week.toFixed(2)} ر.س`,
+      icon: Calendar,
+      gradient: 'from-blue-500 to-cyan-500',
+    },
+    {
+      title: 'أرباح الشهر',
+      value: `${earnings.month.toFixed(2)} ر.س`,
+      icon: Calendar,
+      gradient: 'from-indigo-500 to-purple-500',
+    },
+    {
+      title: 'إجمالي التوصيلات',
+      value: earnings.count.toLocaleString('ar-SA'),
+      icon: Package,
+      gradient: 'from-orange-500 to-red-500',
+    },
+    {
+      title: 'متوسط الربح لكل توصيل',
+      value: earnings.count > 0 ? `${(earnings.total / earnings.count).toFixed(2)} ر.س` : '0 ر.س',
+      icon: DollarSign,
+      gradient: 'from-yellow-500 to-orange-500',
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-          الأرباح
-        </h1>
+    <div className="min-h-screen relative overflow-hidden bg-gray-50 dark:bg-[#0A0515] transition-colors duration-300">
+      <FuturisticSidebar role="driver" />
+      
+      <div className="md:mr-[280px] transition-all duration-300">
+        <FuturisticNavbar userName={userName} userRole="مندوب توصيل" />
+        
+        <main className="pt-24 px-4 md:px-8 lg:px-10 pb-10 relative z-10 max-w-[1800px] mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <h1 className="text-4xl font-bold text-white mb-2">الأرباح والمحفظة</h1>
+            <p className="text-purple-300 text-lg">تتبع أرباحك من التوصيلات</p>
+          </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  إجمالي الأرباح
-                </p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {earnings.total.toFixed(2)} ر.س
-                </p>
-              </div>
-              <div className="bg-purple-100 dark:bg-purple-900 p-3 rounded-full">
-                <DollarSign className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              </div>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {statsCards.map((stat, index) => (
+              <FuturisticStatCard
+                key={stat.title}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                gradient={stat.gradient}
+                delay={index * 0.1}
+              />
+            ))}
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  أرباح اليوم
-                </p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {earnings.today.toFixed(2)} ر.س
-                </p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="mt-8 rounded-2xl p-6"
+            style={{
+              background: 'rgba(15, 10, 30, 0.6)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(98, 54, 255, 0.3)',
+            }}
+          >
+            <h2 className="text-2xl font-bold text-white mb-4">نصائح لزيادة أرباحك</h2>
+            <div className="space-y-3 text-purple-200">
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 rounded-full bg-purple-500 mt-2 flex-shrink-0"></div>
+                <p>قبول المزيد من الطلبات في أوقات الذروة (الغداء والعشاء)</p>
               </div>
-              <div className="bg-green-100 dark:bg-green-900 p-3 rounded-full">
-                <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 rounded-full bg-purple-500 mt-2 flex-shrink-0"></div>
+                <p>حافظ على تقييم عالٍ لتحصل على أولوية في الطلبات</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 rounded-full bg-purple-500 mt-2 flex-shrink-0"></div>
+                <p>كن نشطاً في المناطق ذات الطلب المرتفع</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 rounded-full bg-purple-500 mt-2 flex-shrink-0"></div>
+                <p>أكمل التوصيلات بسرعة للحصول على مكافآت إضافية</p>
               </div>
             </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  أرباح الأسبوع
-                </p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {earnings.week.toFixed(2)} ر.س
-                </p>
-              </div>
-              <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-full">
-                <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  أرباح الشهر
+          </motion.div>
+        </main>
+      </div>
+    </div>
+  );
+}
                 </p>
                 <p className="text-3xl font-bold text-gray-900 dark:text-white">
                   {earnings.month.toFixed(2)} ر.س

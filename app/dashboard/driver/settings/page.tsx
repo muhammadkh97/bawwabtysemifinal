@@ -2,16 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
-import { User, Phone, Save } from 'lucide-react';
+import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
+import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
+import { User, Phone, Save, Car, FileText } from 'lucide-react';
 
 export default function DriverSettingsPage() {
   const router = useRouter();
-  // Using supabase from lib/supabase
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [userName, setUserName] = useState('');
   const [driverData, setDriverData] = useState({
     name: '',
     phone: '',
@@ -29,7 +32,7 @@ export default function DriverSettingsPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        router.push('/login');
+        router.push('/auth/login');
         return;
       }
 
@@ -46,6 +49,7 @@ export default function DriverSettingsPage() {
         .single();
 
       if (userData) {
+        setUserName(userData.name || 'مندوب التوصيل');
         setDriverData({
           name: userData.name || '',
           phone: userData.phone || '',
@@ -87,6 +91,7 @@ export default function DriverSettingsPage() {
         .eq('user_id', user.id);
 
       toast.success('✅ تم حفظ التغييرات بنجاح!');
+      setUserName(driverData.name);
     } catch (error) {
       console.error('Error:', error);
       toast.error('حدث خطأ في حفظ التغييرات');
@@ -97,7 +102,162 @@ export default function DriverSettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="min-h-screen relative overflow-hidden bg-gray-50 dark:bg-[#0A0515]">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen relative overflow-hidden bg-gray-50 dark:bg-[#0A0515] transition-colors duration-300">
+      <FuturisticSidebar role="driver" />
+      
+      <div className="md:mr-[280px] transition-all duration-300">
+        <FuturisticNavbar userName={userName} userRole="مندوب توصيل" />
+        
+        <main className="pt-24 px-4 md:px-8 lg:px-10 pb-10 relative z-10 max-w-[1800px] mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <h1 className="text-4xl font-bold text-white mb-2">الإعدادات</h1>
+            <p className="text-purple-300 text-lg">إدارة معلومات حسابك ومركبتك</p>
+          </motion.div>
+
+          <div className="grid gap-6 max-w-3xl">
+            {/* Personal Info */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="rounded-2xl p-6"
+              style={{
+                background: 'rgba(15, 10, 30, 0.6)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(98, 54, 255, 0.3)',
+              }}
+            >
+              <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                <User className="w-6 h-6" />
+                المعلومات الشخصية
+              </h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-purple-300 text-sm mb-2">
+                    الاسم الكامل
+                  </label>
+                  <input
+                    type="text"
+                    value={driverData.name}
+                    onChange={(e) => setDriverData({ ...driverData, name: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl text-white bg-white/5 border border-purple-500/30 focus:border-purple-500 outline-none transition"
+                    placeholder="أدخل اسمك الكامل"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-purple-300 text-sm mb-2">
+                    رقم الجوال
+                  </label>
+                  <input
+                    type="tel"
+                    value={driverData.phone}
+                    onChange={(e) => setDriverData({ ...driverData, phone: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl text-white bg-white/5 border border-purple-500/30 focus:border-purple-500 outline-none transition"
+                    placeholder="+966 5xxxxxxxx"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Vehicle Info */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="rounded-2xl p-6"
+              style={{
+                background: 'rgba(15, 10, 30, 0.6)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(98, 54, 255, 0.3)',
+              }}
+            >
+              <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                <Car className="w-6 h-6" />
+                معلومات المركبة
+              </h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-purple-300 text-sm mb-2">
+                    نوع المركبة
+                  </label>
+                  <select
+                    value={driverData.vehicle_type}
+                    onChange={(e) => setDriverData({ ...driverData, vehicle_type: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl text-white bg-white/5 border border-purple-500/30 focus:border-purple-500 outline-none transition"
+                  >
+                    <option value="" className="bg-gray-800">اختر نوع المركبة</option>
+                    <option value="motorcycle" className="bg-gray-800">دراجة نارية</option>
+                    <option value="car" className="bg-gray-800">سيارة</option>
+                    <option value="van" className="bg-gray-800">فان</option>
+                    <option value="bicycle" className="bg-gray-800">دراجة هوائية</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-purple-300 text-sm mb-2">
+                    رقم اللوحة
+                  </label>
+                  <input
+                    type="text"
+                    value={driverData.vehicle_number}
+                    onChange={(e) => setDriverData({ ...driverData, vehicle_number: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl text-white bg-white/5 border border-purple-500/30 focus:border-purple-500 outline-none transition"
+                    placeholder="ABC 1234"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-purple-300 text-sm mb-2">
+                    رقم الرخصة
+                  </label>
+                  <input
+                    type="text"
+                    value={driverData.license_number}
+                    onChange={(e) => setDriverData({ ...driverData, license_number: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl text-white bg-white/5 border border-purple-500/30 focus:border-purple-500 outline-none transition"
+                    placeholder="رقم رخصة القيادة"
+                  />
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Save Button */}
+            <motion.button
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full py-4 rounded-xl font-bold text-white flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Save className="w-5 h-5" />
+              {saving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+            </motion.button>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
       </div>
     );
