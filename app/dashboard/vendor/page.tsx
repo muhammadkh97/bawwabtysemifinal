@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import FuturisticStatCard from '@/components/dashboard/FuturisticStatCard';
+import FuturisticProductCard from '@/components/dashboard/FuturisticProductCard';
 import {
   Package,
   ShoppingCart,
@@ -153,20 +155,20 @@ function VendorDashboardContent() {
     },
     {
       title: 'التقييم',
-      value: `${stats.averageRating.toFixed(1)} ⭐`,
+      value: `${stats.averageRating.toFixed(1)}`,
       icon: Star,
       trend: { value: 0, isPositive: true },
       gradient: 'from-yellow-500 to-orange-500',
     },
   ];
 
-  const lowStockProducts = products.filter(p => p.stock < 10);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0A0515]">
-        <div className="text-center">
-          <Loader2 className="w-16 h-16 text-purple-500 animate-spin mx-auto mb-4" />
+  const quickStats = [
+    { label: 'طلبات معلقة', value: products.filter(p => p.stock < 10).length.toString(), icon: AlertTriangle, color: 'from-orange-500 to-red-500' },
+    { label: 'منتجات منخفضة', value: products.filter(p => p.stock < 10).length.toString(), icon: Package, color: 'from-red-500 to-pink-500' },
+    { label: 'متوسط المبيعات', value: stats.totalOrders > 0 ? Math.round(stats.totalRevenue / stats.totalOrders).toString() : '0', icon: TrendingUp, color: 'from-blue-500 to-cyan-500' },
+    { label: 'عدد التقييمات', value: '0', icon: Star, color: 'from-yellow-500 to-orange-500' },
+  ];
+div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-purple-300 text-lg">جاري التحميل...</p>
         </div>
       </div>
@@ -176,7 +178,7 @@ function VendorDashboardContent() {
   return (
     <div className="min-h-screen relative overflow-hidden bg-[#0A0515]">
       {/* Animated Background Gradients */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div
           animate={{
             scale: [1, 1.2, 1],
@@ -221,7 +223,7 @@ function VendorDashboardContent() {
         />
       </div>
 
-      <main className="relative z-10 max-w-[1800px] mx-auto">
+      <main className="relative z-10 max-w-[1800px] mx-auto px-4 md:px-8 lg:px-10 py-8">
         {/* Welcome Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -235,67 +237,44 @@ function VendorDashboardContent() {
         </motion.div>
 
         {/* Stats Grid */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
-        >
-          {statsCards.map((card, index) => {
-            const Icon = card.icon;
-            return (
-              <motion.div
-                key={card.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + index * 0.1 }}
-                className="relative group"
-              >
-                <div
-                  className="relative backdrop-blur-xl bg-white/5 border border-purple-500/20 rounded-2xl p-6 hover:border-purple-500/40 transition-all duration-300 overflow-hidden"
-                  style={{
-                    boxShadow: '0 8px 32px rgba(98, 54, 255, 0.1)',
-                  }}
-                >
-                  {/* Gradient Overlay on Hover */}
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
-                  />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {statsCards.map((stat, index) => (
+            <FuturisticStatCard
+              key={stat.title}
+              title={stat.title}
+              value={stat.value}
+              icon={stat.icon}
+              trend={stat.trend}
+              gradient={stat.gradient}
+              delay={index * 0.1}
+            />
+          ))}
+        </div>
 
-                  <div className="relative z-10">
-                    <div className="flex items-start justify-between mb-4">
-                      <div
-                        className={`p-3 rounded-xl bg-gradient-to-br ${card.gradient} shadow-lg`}
-                        style={{
-                          boxShadow: '0 4px 20px rgba(98, 54, 255, 0.3)',
-                        }}
-                      >
-                        <Icon className="w-6 h-6 text-white" />
-                      </div>
-                      {card.trend.value > 0 && (
-                        <div
-                          className={`flex items-center gap-1 text-sm font-semibold ${
-                            card.trend.isPositive ? 'text-emerald-400' : 'text-red-400'
-                          }`}
-                        >
-                          {card.trend.isPositive ? (
-                            <ArrowUp className="w-4 h-4" />
-                          ) : (
-                            <ArrowDown className="w-4 h-4" />
-                          )}
-                          <span>{card.trend.value}%</span>
-                        </div>
-                      )}
-                    </div>
-                    <h3 className="text-purple-300 text-sm mb-2">{card.title}</h3>
-                    <p className="text-3xl font-bold text-white">{card.value}</p>
-                  </div>
-
-                  {/* Shine Effect */}
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-                    initial={{ x: '-100%' }}
-                    whileHover={{ x: '100%' }}
+        {/* Quick Stats Row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {quickStats.map((item, index) => (
+            <motion.div
+              key={item.label}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5 + index * 0.1 }}
+              whileHover={{ y: -5 }}
+              className="relative rounded-2xl p-4 text-center"
+              style={{
+                background: 'rgba(15, 10, 30, 0.6)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(98, 54, 255, 0.3)',
+              }}
+            >
+              <div className={`w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center`}>
+                <item.icon className="w-6 h-6 text-white" />
+              </div>
+              <p className="text-2xl font-bold text-white mb-1">{item.value}</p>
+              <p className="text-sm text-purple-200">{item.label}</p>
+            </motion.div>
+          ))}
+        </   whileHover={{ x: '100%' }}
                     transition={{ duration: 0.6 }}
                   />
                 </div>
@@ -356,41 +335,47 @@ function VendorDashboardContent() {
                 href="/dashboard/vendor/products/new"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition-all duration-300"
               >
+                <Package classN }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-white">أحدث المنتجات</h2>
+            <Link
+              href="/dashboard/vendor/products"
+              className="px-4 py-2 rounded-xl text-purple-300 hover:text-white transition-colors"
+            >
+              عرض الكل ←
+            </Link>
+          </div>
+
+          {products.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="backdrop-blur-xl bg-white/5 border border-purple-500/20 rounded-2xl p-12 text-center"
+            >
+              <Package className="w-16 h-16 text-purple-400/50 mx-auto mb-4" />
+              <p className="text-purple-300 mb-4 text-lg">لا توجد منتجات بعد</p>
+              <Link
+                href="/dashboard/vendor/products/new"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:shadow-lg transition-all duration-300 font-semibold"
+              >
                 <Package className="w-5 h-5" />
                 إضافة منتج جديد
               </Link>
-            </div>
+            </motion.div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {products.slice(0, 6).map((product, index) => (
-                <motion.div
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {products.slice(0, 8).map((product, index) => (
+                <FuturisticProductCard
                   key={product.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.7 + index * 0.1 }}
-                  className="backdrop-blur-xl bg-white/5 border border-purple-500/20 rounded-xl p-4 hover:border-purple-500/40 hover:bg-white/10 transition-all duration-300"
-                >
-                  <h3 className="font-semibold text-white mb-2 truncate">{product.name}</h3>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-purple-300">السعر:</span>
-                    <span className="font-bold text-white">{formatPrice(product.price)}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm mt-2">
-                    <span className="text-purple-300">المخزون:</span>
-                    <span className={`font-semibold ${product.stock < 10 ? 'text-red-400' : 'text-emerald-400'}`}>
-                      {product.stock}
-                    </span>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
-        </motion.div>
-      </main>
-    </div>
-  );
-}
-
-export default function VendorDashboard() {
-  return <VendorDashboardContent />;
-}
+                  id={product.id}
+                  name={product.name}
+                  price={product.price}
+                  category={product.category || 'عام'}
+                  stock={product.stock}
+                  sales={product.sales || 0}
+                  revenue={product.price * (product.sales || 0)}
+                  delay={0.9 + index * 0.1}
+                /
