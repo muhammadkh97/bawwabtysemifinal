@@ -472,6 +472,66 @@ CREATE INDEX idx_lucky_boxes_vendor ON lucky_boxes(vendor_id);
 CREATE INDEX idx_lucky_boxes_active ON lucky_boxes(is_active);
 CREATE INDEX idx_lucky_boxes_dates ON lucky_boxes(start_date, end_date);
 
+-- Order Items Table (Individual items in orders for better querying)
+CREATE TABLE order_items (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  order_id UUID REFERENCES orders(id) ON DELETE CASCADE NOT NULL,
+  product_id UUID REFERENCES products(id) ON DELETE SET NULL,
+  vendor_id UUID REFERENCES stores(id) ON DELETE SET NULL,
+  name TEXT NOT NULL,
+  name_ar TEXT,
+  quantity INTEGER NOT NULL,
+  price DECIMAL(10,2) NOT NULL,
+  total DECIMAL(10,2) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_order_items_order ON order_items(order_id);
+CREATE INDEX idx_order_items_product ON order_items(product_id);
+CREATE INDEX idx_order_items_vendor ON order_items(vendor_id);
+
+-- Disputes Table (Customer/Vendor disputes)
+CREATE TABLE disputes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  order_id UUID REFERENCES orders(id) ON DELETE CASCADE NOT NULL,
+  customer_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  vendor_id UUID REFERENCES stores(id) ON DELETE CASCADE NOT NULL,
+  subject TEXT NOT NULL,
+  description TEXT NOT NULL,
+  status TEXT DEFAULT 'open',
+  priority TEXT DEFAULT 'medium',
+  resolution TEXT,
+  resolved_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  resolved_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_disputes_order ON disputes(order_id);
+CREATE INDEX idx_disputes_customer ON disputes(customer_id);
+CREATE INDEX idx_disputes_vendor ON disputes(vendor_id);
+CREATE INDEX idx_disputes_status ON disputes(status);
+
+-- Support Tickets Table (Customer support tickets)
+CREATE TABLE support_tickets (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  subject TEXT NOT NULL,
+  description TEXT NOT NULL,
+  category TEXT,
+  status TEXT DEFAULT 'open',
+  priority TEXT DEFAULT 'medium',
+  assigned_to UUID REFERENCES users(id) ON DELETE SET NULL,
+  resolution TEXT,
+  resolved_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_support_tickets_user ON support_tickets(user_id);
+CREATE INDEX idx_support_tickets_status ON support_tickets(status);
+CREATE INDEX idx_support_tickets_assigned ON support_tickets(assigned_to);
+
 -- Create vendors view for backwards compatibility
 CREATE VIEW vendors AS
 SELECT 
@@ -709,6 +769,34 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Function: Get admin dashboard statistics
+CREATE OR REPLACE FUNCTION get_admin_dashboard_stats()
+RETURNS TABLE (
+  total_users BIGINT,
+  total_vendors BIGINT,
+  total_orders BIGINT,
+  total_revenue NUMERIC,
+  pending_vendors BIGINT,
+  pending_orders BIGINT,
+  active_drivers BIGINT,
+  open_disputes BIGINT,
+  open_tickets BIGINT
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    (SELECT COUNT(*) FROM users WHERE role = 'customer')::BIGINT,
+    (SELECT COUNT(*) FROM stores)::BIGINT,
+    (SELECT COUNT(*) FROM orders)::BIGINT,
+    (SELECT COALESCE(SUM(total), 0) FROM orders WHERE payment_status = 'paid')::NUMERIC,
+    (SELECT COUNT(*) FROM stores WHERE approval_status = 'pending')::BIGINT,
+    (SELECT COUNT(*) FROM orders WHERE status = 'pending')::BIGINT,
+    (SELECT COUNT(*) FROM drivers WHERE is_available = true AND is_active = true)::BIGINT,
+    (SELECT COUNT(*) FROM disputes WHERE status = 'open')::BIGINT,
+    (SELECT COUNT(*) FROM support_tickets WHERE status = 'open')::BIGINT;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- ==========================================
 -- ROW LEVEL SECURITY (RLS)
 -- ==========================================
@@ -730,6 +818,9 @@ ALTER TABLE addresses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_locations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE deals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE lucky_boxes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE disputes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE support_tickets ENABLE ROW LEVEL SECURITY;
 
 -- Users policies
 CREATE POLICY "Users can view all profiles" ON users FOR SELECT USING (true);
@@ -838,6 +929,34 @@ CREATE POLICY "Anyone can view active lucky boxes" ON lucky_boxes FOR SELECT
 CREATE POLICY "Vendors can manage own lucky boxes" ON lucky_boxes FOR ALL 
   USING (vendor_id IN (SELECT id FROM stores WHERE user_id = auth.uid()));
 
+-- Order items policies
+CREATE POLICY "Customers can view own order items" ON order_items FOR SELECT 
+  USING (order_id IN (SELECT id FROM orders WHERE customer_id = auth.uid()));
+CREATE POLICY "Vendors can view store order items" ON order_items FOR SELECT 
+  USING (vendor_id IN (SELECT id FROM stores WHERE user_id = auth.uid()));
+CREATE POLICY "Admins can view all order items" ON order_items FOR SELECT 
+  USING ((SELECT role FROM users WHERE id = auth.uid()) = 'admin');
+
+-- Disputes policies
+CREATE POLICY "Customers can view own disputes" ON disputes FOR SELECT 
+  USING (customer_id = auth.uid());
+CREATE POLICY "Vendors can view store disputes" ON disputes FOR SELECT 
+  USING (vendor_id IN (SELECT id FROM stores WHERE user_id = auth.uid()));
+CREATE POLICY "Admins can manage all disputes" ON disputes FOR ALL 
+  USING ((SELECT role FROM users WHERE id = auth.uid()) = 'admin');
+CREATE POLICY "Customers can create disputes" ON disputes FOR INSERT 
+  WITH CHECK (customer_id = auth.uid());
+
+-- Support tickets policies
+CREATE POLICY "Users can view own tickets" ON support_tickets FOR SELECT 
+  USING (user_id = auth.uid());
+CREATE POLICY "Admins can view all tickets" ON support_tickets FOR SELECT 
+  USING ((SELECT role FROM users WHERE id = auth.uid()) = 'admin');
+CREATE POLICY "Users can create tickets" ON support_tickets FOR INSERT 
+  WITH CHECK (user_id = auth.uid());
+CREATE POLICY "Admins can update tickets" ON support_tickets FOR UPDATE 
+  USING ((SELECT role FROM users WHERE id = auth.uid()) = 'admin');
+
 -- ==========================================
 -- INITIAL DATA SEEDS
 -- ==========================================
@@ -881,16 +1000,17 @@ GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 DO $$
 BEGIN
   RAISE NOTICE '✅ Database rebuild completed successfully!';
-  RAISE NOTICE '📊 Tables created: users, stores, products, orders, drivers, reviews, notifications, chats, messages, cart_items, wishlists, store_followers, exchange_rates, addresses, user_locations, deals, lucky_boxes';
+  RAISE NOTICE '📊 Tables created: users, stores, products, orders, drivers, reviews, notifications, chats, messages, cart_items, wishlists, store_followers, exchange_rates, addresses, user_locations, deals, lucky_boxes, order_items, disputes, support_tickets';
   RAISE NOTICE '🗂️  View created: vendors (maps to stores table for backwards compatibility)';
   RAISE NOTICE '🔒 RLS policies applied';
   RAISE NOTICE '🌱 Initial categories seeded';
-  RAISE NOTICE '⚡ Functions created: get_current_user, get_latest_exchange_rates, update_exchange_rates, get_unread_count, handle_new_user';
+  RAISE NOTICE '⚡ Functions created: get_current_user, get_latest_exchange_rates, update_exchange_rates, get_unread_count, get_admin_dashboard_stats, handle_new_user';
   RAISE NOTICE '🔄 Alias columns auto-synced via triggers: users.name, users.user_role, stores.store_name, stores.shop_name, stores.latitude, stores.longitude, stores.shop_logo';
   RAISE NOTICE '👤 Auth trigger: Automatically creates user profile on signup';
   RAISE NOTICE '♻️  Existing auth users synced to users table';
   RAISE NOTICE '🎁 loyalty_points column added to users table';
   RAISE NOTICE '📍 addresses and user_locations tables added';
   RAISE NOTICE '🎯 deals and lucky_boxes tables added for promotions';
+  RAISE NOTICE '🛡️  order_items, disputes, support_tickets tables added for admin dashboard';
   RAISE NOTICE '⚠️  Next steps: Reload website - all 404 errors should be resolved';
 END $$;
