@@ -87,7 +87,7 @@ const getAdminNavItems = (badges: any): NavItem[] => [
   },
   {
     title: 'التصنيفات',
-    href: '/dashboard/admin/categories',
+    href: '/admin/categories',
     icon: LayoutGrid,
   },
   {

@@ -1,0 +1,962 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import AdminLayout from '@/components/AdminLayout';
+import { 
+  Plus, 
+  Search, 
+  Edit2, 
+  Trash2, 
+  ChevronRight, 
+  ChevronDown, 
+  Save, 
+  X, 
+  LayoutGrid,
+  Smartphone,
+  Shirt,
+  Home,
+  ShoppingBasket,
+  Sparkles,
+  UtensilsCrossed,
+  Box,
+  Package,
+  FolderTree,
+  CheckCircle,
+  XCircle,
+  Clock,
+  AlertCircle,
+  Eye
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Category } from '@/types';
+
+const iconOptions = [
+  'Smartphone', 'Shirt', 'Home', 'ShoppingBasket', 'Sparkles', 'UtensilsCrossed', 'Box', 'Package'
+];
+
+const iconMap: { [key: string]: any } = {
+  'Smartphone': Smartphone,
+  'Shirt': Shirt,
+  'Home': Home,
+  'ShoppingBasket': ShoppingBasket,
+  'Sparkles': Sparkles,
+  'UtensilsCrossed': UtensilsCrossed,
+  'Box': Box,
+  'Package': Package,
+};
+
+interface ExtendedCategory extends Category {
+  subcategories?: ExtendedCategory[];
+  product_count?: number;
+  approval_status?: 'pending' | 'approved' | 'rejected';
+  requires_approval?: boolean;
+  approved_by?: string;
+  approved_at?: string;
+  rejection_reason?: string;
+  created_by?: string;
+  creator_name?: string;
+  approver_name?: string;
+}
+
+export default function AdminCategoriesPage() {
+  const [categories, setCategories] = useState<ExtendedCategory[]>([]);
+  const [pendingCategories, setPendingCategories] = useState<ExtendedCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Partial<ExtendedCategory> | null>(null);
+  const [rejectingCategory, setRejectingCategory] = useState<ExtendedCategory | null>(null);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState<'approved' | 'pending'>('approved');
+
+  useEffect(() => {
+    fetchCategories();
+    fetchPendingCategories();
+  }, []);
+
+  async function fetchCategories() {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('approval_status', 'approved')
+        .order('display_order', { ascending: true });
+
+      if (error) throw error;
+      
+      // بناء الهيكل الشجري
+      const categoryMap = new Map<string, ExtendedCategory>();
+      const rootCategories: ExtendedCategory[] = [];
+
+      // إنشاء خريطة للتصنيفات
+      data?.forEach((cat: any) => {
+        categoryMap.set(cat.id, { ...cat, subcategories: [] });
+      });
+
+      // بناء الهيكل الشجري
+      data?.forEach((cat: any) => {
+        const category = categoryMap.get(cat.id)!;
+        if (cat.parent_id) {
+          const parent = categoryMap.get(cat.parent_id);
+          if (parent) {
+            parent.subcategories!.push(category);
+          }
+        } else {
+          rootCategories.push(category);
+        }
+      });
+
+      setCategories(rootCategories);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function fetchPendingCategories() {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select(`
+          *,
+          creator:created_by(full_name),
+          approver:approved_by(full_name)
+        `)
+        .eq('approval_status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      const formattedData = data?.map((cat: any) => ({
+        ...cat,
+        creator_name: cat.creator?.full_name || 'غير معروف',
+        approver_name: cat.approver?.full_name
+      })) || [];
+      
+      setPendingCategories(formattedData);
+    } catch (error) {
+      console.error('Error fetching pending categories:', error);
+    }
+  }
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCategory) return;
+
+    try {
+      // حساب المستوى بناءً على parent_id
+      let level = 0;
+      if (editingCategory.parent_id) {
+        const parent = await supabase
+          .from('categories')
+          .select('level')
+          .eq('id', editingCategory.parent_id)
+          .single();
+        level = (parent.data?.level || 0) + 1;
+      }
+
+      const categoryData = {
+        name: editingCategory.name,
+        name_ar: editingCategory.name_ar,
+        slug: editingCategory.slug,
+        description: editingCategory.description || null,
+        description_ar: editingCategory.description_ar || null,
+        icon: editingCategory.icon,
+        image_url: editingCategory.image_url || null,
+        parent_id: editingCategory.parent_id || null,
+        display_order: editingCategory.display_order || 0,
+        is_active: editingCategory.is_active !== false,
+        requires_approval: editingCategory.requires_approval || false,
+        approval_status: editingCategory.requires_approval ? 'pending' : 'approved',
+        level: level
+      };
+
+      if (editingCategory.id) {
+        const { error } = await supabase
+          .from('categories')
+          .update(categoryData)
+          .eq('id', editingCategory.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('categories')
+          .insert([categoryData]);
+        if (error) throw error;
+      }
+      
+      setIsModalOpen(false);
+      setEditingCategory(null);
+      fetchCategories();
+      fetchPendingCategories();
+    } catch (error: any) {
+      console.error('Error saving category:', error);
+      alert(`حدث خطأ أثناء الحفظ: ${error.message || 'خطأ غير معروف'}`);
+    }
+  };
+
+  const handleApprove = async (categoryId: string) => {
+    if (!confirm('هل أنت متأكد من الموافقة على هذا التصنيف؟')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('categories')
+        .update({ 
+          approval_status: 'approved',
+          approved_at: new Date().toISOString()
+        })
+        .eq('id', categoryId);
+      
+      if (error) throw error;
+      
+      alert('تمت الموافقة على التصنيف بنجاح! ✅');
+      fetchCategories();
+      fetchPendingCategories();
+    } catch (error: any) {
+      console.error('Error approving category:', error);
+      alert(`حدث خطأ: ${error.message}`);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!rejectingCategory || !rejectionReason.trim()) {
+      alert('يرجى كتابة سبب الرفض');
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('categories')
+        .update({ 
+          approval_status: 'rejected',
+          rejection_reason: rejectionReason,
+          approved_at: new Date().toISOString()
+        })
+        .eq('id', rejectingCategory.id);
+      
+      if (error) throw error;
+      
+      setIsRejectionModalOpen(false);
+      setRejectingCategory(null);
+      setRejectionReason('');
+      alert('تم رفض التصنيف ✅');
+      fetchCategories();
+      fetchPendingCategories();
+    } catch (error: any) {
+      console.error('Error rejecting category:', error);
+      alert(`حدث خطأ: ${error.message}`);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('هل أنت متأكد من حذف هذا التصنيف؟ سيتم حذف جميع التصنيفات الفرعية المرتبطة به.')) return;
+    try {
+      const { error } = await supabase.from('categories').delete().eq('id', id);
+      if (error) throw error;
+      fetchCategories();
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      alert('حدث خطأ أثناء الحذف');
+    }
+  };
+
+  const toggleExpand = (categoryId: string) => {
+    setExpandedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId);
+      } else {
+        newSet.add(categoryId);
+      }
+      return newSet;
+    });
+  };
+
+  const getAllCategories = (cats: ExtendedCategory[]): ExtendedCategory[] => {
+    return cats.flatMap(cat => [cat, ...getAllCategories(cat.subcategories || [])]);
+  };
+
+  const filteredCategories = searchQuery 
+    ? getAllCategories(categories).filter(c => 
+        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.name_ar.includes(searchQuery)
+      )
+    : categories;
+
+  const renderCategoryTree = (category: ExtendedCategory, depth: number = 0) => {
+    const isExpanded = expandedCategories.has(category.id);
+    const hasSubcategories = category.subcategories && category.subcategories.length > 0;
+    const Icon = iconMap[category.icon || 'Box'] || Box;
+
+    return (
+      <div key={category.id} className="mb-2">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`
+            bg-white/5 border border-white/10 rounded-xl overflow-hidden
+            hover:border-purple-500/30 transition-all
+            ${depth > 0 ? 'mr-8' : ''}
+          `}
+        >
+          <div className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors">
+            <div className="flex items-center gap-4 flex-1">
+              {hasSubcategories && (
+                <button
+                  onClick={() => toggleExpand(category.id)}
+                  className="p-1 hover:bg-purple-500/20 rounded-lg transition-colors"
+                >
+                  {isExpanded ? (
+                    <ChevronDown className="w-5 h-5 text-purple-400" />
+                  ) : (
+                    <ChevronRight className="w-5 h-5 text-purple-400" />
+                  )}
+                </button>
+              )}
+              
+              <div className={`w-12 h-12 rounded-xl ${depth === 0 ? 'bg-gradient-to-br from-purple-600/30 to-pink-600/30' : 'bg-purple-600/10'} flex items-center justify-center`}>
+                <Icon className="w-6 h-6 text-purple-400" />
+              </div>
+
+              <div className="flex-1">
+                <div className="flex items-center gap-3">
+                  <h3 className={`font-bold ${depth === 0 ? 'text-lg' : 'text-base'}`}>
+                    {category.name_ar}
+                  </h3>
+                  {!category.is_active && (
+                    <span className="px-2 py-0.5 text-xs bg-red-500/20 text-red-400 rounded-full">
+                      غير نشط
+                    </span>
+                  )}
+                  {depth === 0 && (
+                    <span className="px-2 py-0.5 text-xs bg-purple-500/20 text-purple-400 rounded-full">
+                      رئيسي
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-4 mt-1">
+                  <span className="text-xs text-purple-400/60">{category.slug}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setEditingCategory(category);
+                  setIsModalOpen(true);
+                }}
+                className="p-2 hover:bg-purple-500/20 rounded-lg text-purple-400 transition-colors"
+                title="تعديل"
+              >
+                <Edit2 className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => handleDelete(category.id)}
+                className="p-2 hover:bg-red-500/20 rounded-lg text-red-400 transition-colors"
+                title="حذف"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+              {depth === 0 && (
+                <button
+                  onClick={() => {
+                    setEditingCategory({ 
+                      name: '', 
+                      name_ar: '', 
+                      slug: '', 
+                      icon: 'Box', 
+                      parent_id: category.id, 
+                      display_order: 0, 
+                      is_active: true 
+                    });
+                    setIsModalOpen(true);
+                  }}
+                  className="p-2 hover:bg-green-500/20 rounded-lg text-green-400 transition-colors"
+                  title="إضافة تصنيف فرعي"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Subcategories */}
+        <AnimatePresence>
+          {isExpanded && hasSubcategories && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-2 space-y-2"
+            >
+              {category.subcategories!.map(sub => renderCategoryTree(sub, depth + 1))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  };
+
+  return (
+    <AdminLayout>
+      <div className="p-6 bg-[#0A0515] min-h-screen text-white" dir="rtl">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+                <FolderTree className="w-6 h-6" />
+              </div>
+              <h1 className="text-3xl font-black">إدارة التصنيفات</h1>
+            </div>
+            <p className="text-purple-300/60 mr-15">نظام هرمي احترافي للتصنيفات (أب وابن) مثل ووردبريس</p>
+          </div>
+          <button
+            onClick={() => {
+              setEditingCategory({ 
+                name: '', 
+                name_ar: '', 
+                slug: '', 
+                icon: 'Box', 
+                display_order: 0, 
+                is_active: true 
+              });
+              setIsModalOpen(true);
+            }}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl font-bold hover:scale-105 transition-transform shadow-lg shadow-purple-500/20"
+          >
+            <Plus className="w-5 h-5" />
+            إضافة تصنيف رئيسي
+          </button>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-gradient-to-br from-purple-600/20 to-purple-600/5 border border-purple-500/20 rounded-xl p-4">
+            <div className="text-purple-400 text-sm mb-1">إجمالي التصنيفات</div>
+            <div className="text-2xl font-black">{getAllCategories(categories).length}</div>
+          </div>
+          <div className="bg-gradient-to-br from-blue-600/20 to-blue-600/5 border border-blue-500/20 rounded-xl p-4">
+            <div className="text-blue-400 text-sm mb-1">التصنيفات الرئيسية</div>
+            <div className="text-2xl font-black">{categories.length}</div>
+          </div>
+          <div className="bg-gradient-to-br from-green-600/20 to-green-600/5 border border-green-500/20 rounded-xl p-4">
+            <div className="text-green-400 text-sm mb-1">التصنيفات النشطة</div>
+            <div className="text-2xl font-black">
+              {getAllCategories(categories).filter(c => c.is_active).length}
+            </div>
+          </div>
+          <div 
+            className="bg-gradient-to-br from-orange-600/20 to-orange-600/5 border border-orange-500/20 rounded-xl p-4 cursor-pointer hover:scale-105 transition-transform"
+            onClick={() => setActiveTab('pending')}
+          >
+            <div className="text-orange-400 text-sm mb-1 flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              التصنيفات المعلقة
+            </div>
+            <div className="text-2xl font-black">{pendingCategories.length}</div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => setActiveTab('approved')}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
+              activeTab === 'approved'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg shadow-purple-500/20'
+                : 'bg-white/5 hover:bg-white/10'
+            }`}
+          >
+            <CheckCircle className="w-5 h-5" />
+            التصنيفات المعتمدة
+          </button>
+          <button
+            onClick={() => setActiveTab('pending')}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all relative ${
+              activeTab === 'pending'
+                ? 'bg-gradient-to-r from-orange-600 to-yellow-600 shadow-lg shadow-orange-500/20'
+                : 'bg-white/5 hover:bg-white/10'
+            }`}
+          >
+            <Clock className="w-5 h-5" />
+            الموافقات المعلقة
+            {pendingCategories.length > 0 && (
+              <span className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs font-black">
+                {pendingCategories.length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative mb-6">
+          <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-purple-400 w-5 h-5" />
+          <input
+            type="text"
+            placeholder="ابحث عن تصنيف..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pr-12 pl-4 py-4 bg-white/5 border border-white/10 rounded-2xl focus:border-purple-500 outline-none transition-all"
+          />
+        </div>
+
+        {/* Pending Categories Section */}
+        {activeTab === 'pending' && (
+          <div className="space-y-4 mb-8">
+            {pendingCategories.length === 0 ? (
+              <div className="text-center py-20 bg-white/5 border border-white/10 rounded-2xl">
+                <CheckCircle className="w-16 h-16 text-green-600/30 mx-auto mb-4" />
+                <p className="text-purple-300/60">لا توجد تصنيفات معلقة! كل شيء تمت الموافقة عليه ✅</p>
+              </div>
+            ) : (
+              pendingCategories.map(category => (
+                <motion.div
+                  key={category.id}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-gradient-to-r from-orange-600/10 to-yellow-600/10 border border-orange-500/30 rounded-2xl p-6"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        {(() => {
+                          const Icon = iconMap[category.icon || 'Box'] || Box;
+                          return (
+                            <div className="w-12 h-12 rounded-xl bg-orange-600/20 flex items-center justify-center">
+                              <Icon className="w-6 h-6 text-orange-400" />
+                            </div>
+                          );
+                        })()}
+                        <div>
+                          <h3 className="font-bold text-xl">{category.name_ar}</h3>
+                          <p className="text-sm text-purple-400/60">{category.slug}</p>
+                        </div>
+                        <span className="px-3 py-1 bg-orange-500/20 text-orange-400 rounded-full text-sm flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          معلق
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+                        <div>
+                          <span className="text-purple-400/60">الاسم الإنجليزي:</span>
+                          <p className="font-medium">{category.name}</p>
+                        </div>
+                        {category.description_ar && (
+                          <div>
+                            <span className="text-purple-400/60">الوصف:</span>
+                            <p className="font-medium">{category.description_ar}</p>
+                          </div>
+                        )}
+                        <div>
+                          <span className="text-purple-400/60">تم الإنشاء بواسطة:</span>
+                          <p className="font-medium">{category.creator_name || 'غير معروف'}</p>
+                        </div>
+                        <div>
+                          <span className="text-purple-400/60">تاريخ الطلب:</span>
+                          <p className="font-medium">
+                            {new Date(category.created_at!).toLocaleDateString('ar-EG', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={() => handleApprove(category.id)}
+                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl font-bold hover:scale-105 transition-transform shadow-lg shadow-green-500/20"
+                      >
+                        <CheckCircle className="w-5 h-5" />
+                        موافقة
+                      </button>
+                      <button
+                        onClick={() => {
+                          setRejectingCategory(category);
+                          setIsRejectionModalOpen(true);
+                        }}
+                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 rounded-xl font-bold hover:scale-105 transition-transform shadow-lg shadow-red-500/20"
+                      >
+                        <XCircle className="w-5 h-5" />
+                        رفض
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingCategory(category);
+                          setIsModalOpen(true);
+                        }}
+                        className="flex items-center gap-2 px-6 py-3 bg-white/10 rounded-xl font-bold hover:bg-white/20 transition-colors"
+                      >
+                        <Eye className="w-5 h-5" />
+                        عرض
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Categories Tree View */}
+        {activeTab === 'approved' && (
+          <div className="space-y-3">
+            {loading ? (
+              <div className="text-center py-20">
+                <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-purple-300">جاري تحميل البيانات...</p>
+              </div>
+            ) : filteredCategories.length === 0 ? (
+              <div className="text-center py-20">
+                <LayoutGrid className="w-16 h-16 text-purple-600/30 mx-auto mb-4" />
+                <p className="text-purple-300/60">لا توجد تصنيفات</p>
+              </div>
+            ) : searchQuery ? (
+              // عرض القائمة المسطحة عند البحث
+              <div className="space-y-2">{filteredCategories.map(cat => (
+                <div key={cat.id} className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center justify-between hover:border-purple-500/30 transition-all">
+                  <div className="flex items-center gap-4">
+                    {(() => {
+                      const Icon = iconMap[cat.icon || 'Box'] || Box;
+                      return <Icon className="w-6 h-6 text-purple-400" />;
+                    })()}
+                    <div>
+                      <h3 className="font-bold">{cat.name_ar}</h3>
+                      <span className="text-xs text-purple-400/60">{cat.slug}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingCategory(cat);
+                        setIsModalOpen(true);
+                      }}
+                      className="p-2 hover:bg-purple-500/20 rounded-lg text-purple-400 transition-colors"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(cat.id)}
+                      className="p-2 hover:bg-red-500/20 rounded-lg text-red-400 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            // عرض الشجرة
+            categories.map(cat => renderCategoryTree(cat))
+          )}
+          </div>
+        )}
+
+        {/* Modal */}
+        <AnimatePresence>
+          {isModalOpen && (
+            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="bg-[#150B25] border border-purple-500/30 rounded-[32px] w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl"
+              >
+                <div className="p-8 border-b border-white/10 flex justify-between items-center sticky top-0 bg-[#150B25] z-10">
+                  <h2 className="text-2xl font-black">
+                    {editingCategory?.id ? 'تعديل التصنيف' : editingCategory?.parent_id ? 'إضافة تصنيف فرعي' : 'إضافة تصنيف رئيسي'}
+                  </h2>
+                  <button 
+                    onClick={() => setIsModalOpen(false)} 
+                    className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSave} className="p-8 space-y-6">
+                  {/* الأسماء */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-bold text-purple-300 mb-2">
+                        الاسم (English) *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editingCategory?.name || ''}
+                        onChange={e => setEditingCategory({...editingCategory!, name: e.target.value})}
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-purple-500 outline-none transition-all"
+                        placeholder="Electronics"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-purple-300 mb-2">
+                        الاسم (عربي) *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editingCategory?.name_ar || ''}
+                        onChange={e => setEditingCategory({...editingCategory!, name_ar: e.target.value})}
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-purple-500 outline-none text-right transition-all"
+                        placeholder="إلكترونيات"
+                      />
+                    </div>
+                  </div>
+
+                  {/* الوصف */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-bold text-purple-300 mb-2">
+                        الوصف (English)
+                      </label>
+                      <textarea
+                        value={editingCategory?.description || ''}
+                        onChange={e => setEditingCategory({...editingCategory!, description: e.target.value})}
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-purple-500 outline-none transition-all resize-none"
+                        rows={3}
+                        placeholder="Category description..."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-purple-300 mb-2">
+                        الوصف (عربي)
+                      </label>
+                      <textarea
+                        value={editingCategory?.description_ar || ''}
+                        onChange={e => setEditingCategory({...editingCategory!, description_ar: e.target.value})}
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-purple-500 outline-none text-right transition-all resize-none"
+                        rows={3}
+                        placeholder="وصف التصنيف..."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Slug والأيقونة */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-bold text-purple-300 mb-2">
+                        الرابط (Slug) *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editingCategory?.slug || ''}
+                        onChange={e => setEditingCategory({...editingCategory!, slug: e.target.value})}
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-purple-500 outline-none transition-all"
+                        placeholder="electronics"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-purple-300 mb-2">
+                        الأيقونة
+                      </label>
+                      <select
+                        value={editingCategory?.icon || 'Box'}
+                        onChange={e => setEditingCategory({...editingCategory!, icon: e.target.value})}
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-purple-500 outline-none transition-all"
+                      >
+                        {iconOptions.map(opt => (
+                          <option key={opt} value={opt} className="bg-[#150B25]">{opt}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* التصنيف الأب */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-bold text-purple-300 mb-2">
+                        التصنيف الأب (اختياري)
+                      </label>
+                      <select
+                        value={editingCategory?.parent_id || ''}
+                        onChange={e => setEditingCategory({...editingCategory!, parent_id: e.target.value || null})}
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-purple-500 outline-none transition-all"
+                        disabled={!!editingCategory?.id && editingCategory?.level === 0}
+                      >
+                        <option value="" className="bg-[#150B25]">-- تصنيف رئيسي --</option>
+                        {categories.map(cat => (
+                          <option key={cat.id} value={cat.id} className="bg-[#150B25]">
+                            {cat.name_ar}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-purple-300 mb-2">
+                        ترتيب العرض
+                      </label>
+                      <input
+                        type="number"
+                        value={editingCategory?.display_order || 0}
+                        onChange={e => setEditingCategory({...editingCategory!, display_order: parseInt(e.target.value)})}
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-purple-500 outline-none transition-all"
+                        min="0"
+                      />
+                    </div>
+                  </div>
+
+                  {/* رابط الصورة والحالة */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-bold text-purple-300 mb-2">
+                        رابط الصورة (اختياري)
+                      </label>
+                      <input
+                        type="url"
+                        value={editingCategory?.image_url || ''}
+                        onChange={e => setEditingCategory({...editingCategory!, image_url: e.target.value})}
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-purple-500 outline-none transition-all"
+                        placeholder="https://example.com/image.jpg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-purple-300 mb-2">
+                        الحالة
+                      </label>
+                      <label className="flex items-center gap-3 px-4 py-3 bg-white/5 border border-white/10 rounded-xl cursor-pointer hover:border-purple-500 transition-all">
+                        <input
+                          type="checkbox"
+                          checked={editingCategory?.is_active !== false}
+                          onChange={e => setEditingCategory({...editingCategory!, is_active: e.target.checked})}
+                          className="w-5 h-5 rounded accent-purple-600"
+                        />
+                        <span>نشط</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* خيار يحتاج موافقة */}
+                  <div className="border border-orange-500/30 bg-orange-600/10 rounded-xl p-4">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={editingCategory?.requires_approval || false}
+                        onChange={e => setEditingCategory({...editingCategory!, requires_approval: e.target.checked})}
+                        className="w-5 h-5 rounded accent-orange-600 mt-0.5"
+                      />
+                      <div>
+                        <div className="font-bold text-orange-400 flex items-center gap-2">
+                          <AlertCircle className="w-5 h-5" />
+                          يحتاج موافقة من المدير
+                        </div>
+                        <p className="text-sm text-purple-300/60 mt-1">
+                          عند تفعيل هذا الخيار، سيتم إرسال التصنيف للمدير للموافقة عليه قبل نشره في الموقع. 
+                          مفيد للتصنيفات الحساسة مثل الأدوية أو المنتجات التي تحتاج مراجعة.
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* الأزرار */}
+                  <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-white/10">
+                    <button
+                      type="button"
+                      onClick={() => setIsModalOpen(false)}
+                      className="px-8 py-3 rounded-xl font-bold hover:bg-white/5 transition-colors"
+                    >
+                      إلغاء
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl font-bold shadow-lg shadow-purple-500/20 hover:scale-105 transition-transform"
+                    >
+                      <Save className="w-5 h-5" />
+                      حفظ التغييرات
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Rejection Modal */}
+        <AnimatePresence>
+          {isRejectionModalOpen && rejectingCategory && (
+            <div className="fixed inset-0 z-[1001] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="bg-[#150B25] border border-red-500/30 rounded-[32px] w-full max-w-2xl overflow-hidden shadow-2xl"
+              >
+                <div className="p-8 border-b border-white/10 flex justify-between items-center bg-gradient-to-r from-red-600/20 to-pink-600/20">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-red-600/20 flex items-center justify-center">
+                      <XCircle className="w-6 h-6 text-red-400" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-black">رفض التصنيف</h2>
+                      <p className="text-sm text-purple-300/60">{rejectingCategory.name_ar}</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setIsRejectionModalOpen(false);
+                      setRejectingCategory(null);
+                      setRejectionReason('');
+                    }} 
+                    className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <div className="p-8">
+                  <label className="block text-sm font-bold text-purple-300 mb-3">
+                    سبب الرفض (إلزامي) *
+                  </label>
+                  <textarea
+                    required
+                    value={rejectionReason}
+                    onChange={e => setRejectionReason(e.target.value)}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-red-500 outline-none transition-all resize-none text-right"
+                    rows={5}
+                    placeholder="اشرح سبب رفض هذا التصنيف... (مثال: التصنيف غير مناسب، يحتاج تعديل، مكرر، إلخ)"
+                  />
+
+                  <div className="flex justify-end gap-4 mt-6 pt-6 border-t border-white/10">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsRejectionModalOpen(false);
+                        setRejectingCategory(null);
+                        setRejectionReason('');
+                      }}
+                      className="px-8 py-3 rounded-xl font-bold hover:bg-white/5 transition-colors"
+                    >
+                      إلغاء
+                    </button>
+                    <button
+                      onClick={handleReject}
+                      disabled={!rejectionReason.trim()}
+                      className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-red-600 to-pink-600 rounded-xl font-bold shadow-lg shadow-red-500/20 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <XCircle className="w-5 h-5" />
+                      تأكيد الرفض
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
+    </AdminLayout>
+  );
+}
