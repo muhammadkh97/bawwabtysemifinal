@@ -80,6 +80,7 @@ export default function NewProductPage() {
           .from('vendors')
           .select('id')
           .eq('user_id', userId)
+          .eq('is_active', true)
           .single();
 
         const { data: vendorData, error: vendorError } = await Promise.race([
