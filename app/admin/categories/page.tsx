@@ -785,7 +785,7 @@ export default function AdminCategoriesPage() {
                       </label>
                       <select
                         value={editingCategory?.parent_id ?? ''}
-                        onChange={e => setEditingCategory({...editingCategory!, parent_id: e.target.value || null})}
+                        onChange={e => setEditingCategory({...editingCategory!, parent_id: e.target.value || undefined})}
                         className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-purple-500 outline-none transition-all"
                         disabled={!!editingCategory?.id && editingCategory?.level === 0}
                       >
