@@ -76,11 +76,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // محاولة بديلة: جلب مباشر من الجدول
         console.log('🔄 [AuthContext] محاولة جلب مباشر من جدول users...');
+
         const { data: directData, error: directError } = await supabase
           .from('users')
           .select('role, user_role, full_name, name')
           .eq('id', uid)
-          .single();
+          .single<{ role?: string; user_role?: string; full_name?: string; name?: string }>();
 
         if (directError) {
           console.error('❌ [AuthContext] خطأ في الجلب المباشر:', directError);
