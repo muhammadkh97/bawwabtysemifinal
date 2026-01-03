@@ -57,6 +57,7 @@ interface ExtendedCategory extends Category {
   created_by?: string;
   creator_name?: string;
   approver_name?: string;
+  created_at?: string;
 }
 
 export default function AdminCategoriesPage() {
@@ -783,7 +784,7 @@ export default function AdminCategoriesPage() {
                         التصنيف الأب (اختياري)
                       </label>
                       <select
-                        value={editingCategory?.parent_id || ''}
+                        value={editingCategory?.parent_id ?? ''}
                         onChange={e => setEditingCategory({...editingCategory!, parent_id: e.target.value || null})}
                         className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-purple-500 outline-none transition-all"
                         disabled={!!editingCategory?.id && editingCategory?.level === 0}
