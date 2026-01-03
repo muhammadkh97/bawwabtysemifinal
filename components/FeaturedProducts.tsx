@@ -45,9 +45,11 @@ export default function FeaturedProducts() {
           old_price,
           images,
           featured_image,
-          vendor_id
+          vendor_id,
+          vendors!inner(vendor_type)
         `)
         .eq('status', 'approved')
+        .neq('vendors.vendor_type', 'restaurant')
         .order('created_at', { ascending: false })
         .limit(8);
 

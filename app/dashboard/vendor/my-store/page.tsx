@@ -150,12 +150,18 @@ export default function VendorMyStorePage() {
       if (logoFile) {
         newLogoUrl = await uploadImage(logoFile, 'logos');
         setLogoUrl(newLogoUrl);
+      } else if (!logoPreview) {
+        newLogoUrl = '';
+        setLogoUrl('');
       }
 
       // Upload banner if changed
       if (bannerFile) {
         newBannerUrl = await uploadImage(bannerFile, 'banners');
         setBannerUrl(newBannerUrl);
+      } else if (!bannerPreview) {
+        newBannerUrl = '';
+        setBannerUrl('');
       }
 
       // Get vendor ID

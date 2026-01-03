@@ -1,7 +1,7 @@
 import Header from '@/components/Header'
 import Hero from '@/components/Hero'
 import Features from '@/components/Features'
-import Categories from '@/components/Categories'
+// import Categories from '@/components/Categories'
 import NearbyRestaurants from '@/components/NearbyRestaurants'
 import FeaturedProducts from '@/components/FeaturedProducts'
 import Newsletter from '@/components/Newsletter'
@@ -13,7 +13,7 @@ export default function Home() {
       <Header />
       <Hero />
       <Features />
-      <Categories />
+      {/* <Categories /> */}
       <NearbyRestaurants />
       <FeaturedProducts />
       <Newsletter />

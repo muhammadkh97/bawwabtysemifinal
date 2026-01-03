@@ -130,8 +130,9 @@ function ProductsContent() {
         
         let query = supabase
           .from('products')
-          .select('*, categories!products_category_id_fkey(name, name_ar)')
-          .eq('status', 'approved');
+          .select('*, categories!products_category_id_fkey(name, name_ar), vendors!inner(vendor_type)')
+          .eq('status', 'approved')
+          .neq('vendors.vendor_type', 'restaurant');
 
         // Apply category filter
         if (selectedCategory !== 'all') {
