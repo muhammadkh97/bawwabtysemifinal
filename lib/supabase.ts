@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://qigqcyoggtxjtottlhpl.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpZ3FjeW9nZ3R4anRvdHRsaHBsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyNzg0OTQsImV4cCI6MjA4Mjg1NDQ5NH0.lFu4SgGHOgVm31VEwv0Yb1c2klJ4hxbgH5G4eE9J3vk'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://itptinhxsylzvfcpxwpl.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0cHRpbmh4c3lsenZmY3B4d3BsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0MjczMjQsImV4cCI6MjA4MzAwMzMyNH0.iTc6noakhbFkn2SYEtb8FQjO7P1CsBP-AAfr3Xeu3Cw'
 
 // إنشاء عميل Supabase مع تفعيل حفظ الجلسة في localStorage
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
