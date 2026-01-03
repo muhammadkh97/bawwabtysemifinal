@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const fetchUserData = async (uid: string, retryCount = 0) => {
+  const fetchUserData = async (uid: string, retryCount = 0): Promise<void> => {
     try {
       console.log('🔍 [AuthContext] جلب بيانات المستخدم لـ:', uid);
       
@@ -89,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (retryCount < 1) {
           console.log('🔄 [AuthContext] إعادة المحاولة...');
           await new Promise(resolve => setTimeout(resolve, 500));
-          return fetchUserData(uid, retryCount + 1);
+          return await fetchUserData(uid, retryCount + 1);
         }
         
         throw error;
