@@ -256,7 +256,11 @@ function VendorDashboardContent() {
           {statsCards.map((stat, index) => (
             <FuturisticStatCard
               key={stat.title}
-              {...stat}
+              title={stat.title}
+              value={stat.value}
+              icon={stat.icon}
+              trend={stat.trend}
+              gradient={stat.gradient}
               delay={index * 0.1}
             />
           ))}
@@ -357,7 +361,6 @@ function VendorDashboardContent() {
                   category={product.category || 'عام'}
                   stock={product.stock}
                   sales={product.sales || 0}
-                  revenue={product.price * (product.sales || 0)}
                   delay={0.9 + index * 0.1}
                 />
               ))}
