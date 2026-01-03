@@ -211,6 +211,7 @@ export default function FuturisticSidebar({ role }: FuturisticSidebarProps) {
           { name: 'الموافقات', href: '/dashboard/admin/approvals', icon: Shield, badge: adminBadges.approvals },
           { name: 'المستخدمين', href: '/dashboard/admin/users', icon: Users },
           { name: 'إدارة الصفحات', href: '/dashboard/admin/pages-management', icon: FileText },
+          { name: 'التصنيفات', href: '/dashboard/admin/categories', icon: Tag },
           { name: 'نظام نقاط الولاء', href: '/dashboard/admin/loyalty', icon: Star },
           { name: 'صناديق الحظ', href: '/dashboard/admin/lucky-boxes', icon: Gift },
           { name: 'التذاكر', href: '/dashboard/admin/tickets', icon: MessageSquare, badge: adminBadges.tickets },
