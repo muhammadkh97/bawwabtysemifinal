@@ -130,14 +130,14 @@ function VendorDashboardContent() {
       value: formatPrice(stats.totalRevenue),
       icon: DollarSign,
       gradient: 'from-emerald-500 to-teal-500',
-      trend: stats.revenueTrend,
+      trend: stats.revenueTrend ? { value: stats.revenueTrend, isPositive: stats.revenueTrend > 0 } : undefined,
     },
     {
       title: 'إجمالي الطلبات',
       value: stats.totalOrders.toString(),
       icon: ShoppingCart,
       gradient: 'from-blue-500 to-cyan-500',
-      trend: stats.ordersTrend,
+      trend: stats.ordersTrend ? { value: stats.ordersTrend, isPositive: stats.ordersTrend > 0 } : undefined,
     },
     {
       title: 'المنتجات النشطة',
