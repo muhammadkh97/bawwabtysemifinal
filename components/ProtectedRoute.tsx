@@ -47,30 +47,29 @@ export default function ProtectedRoute({
 
       // جلب الدور مباشرة من public.users
       console.log('🔍 [ProtectedRoute] جلب الدور من public.users...');
+      console.log('👤 [ProtectedRoute] User ID:', session.user.id);
+      
       const { data: userData, error: userError } = await supabase
-        .rpc('get_current_user')
+        .from('users')
+        .select('role, user_role')
+        .eq('id', session.user.id)
         .single<DbUser>();
 
-      console.log('📊 [ProtectedRoute] بيانات من get_current_user:', userData);
+      console.log('📊 [ProtectedRoute] بيانات المستخدم:', userData);
+      console.log('⚠️ [ProtectedRoute] خطأ (إن وجد):', userError);
 
       let userRole = 'customer';
 
       if (userError || !userData) {
-        console.log('⚠️ [ProtectedRoute] خطأ في جلب بيانات المستخدم عبر RPC، محاولة جلب مباشرة...');
-        const { data: directData } = await supabase
-          .from('users')
-          .select('user_role')
-          .eq('id', session.user.id)
-          .single();
-        
-        userRole = directData?.user_role || 'customer';
+        console.log('❌ [ProtectedRoute] لا يمكن جلب بيانات المستخدم - استخدام الافتراضي customer');
+        userRole = 'customer';
       } else {
-        userRole = resolveRole(userData);
+        // استخدام role أولاً، ثم user_role كبديل
+        userRole = userData.role || userData.user_role || 'customer';
+        console.log('✅ [ProtectedRoute] تم الحصول على الدور:', userRole);
       }
 
       console.log('🎭 [ProtectedRoute] دور المستخدم النهائي:', userRole);
-      
-      console.log('🎭 [ProtectedRoute] دور المستخدم من public.users:', userRole);
       console.log('🔒 [ProtectedRoute] الأدوار المسموحة:', allowedRoles);
 
       if (!allowedRoles.includes(userRole)) {

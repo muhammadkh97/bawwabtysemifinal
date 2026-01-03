@@ -64,18 +64,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserData = async (uid: string) => {
     try {
+      console.log('🔍 [AuthContext] جلب بيانات المستخدم لـ:', uid);
       const { data, error } = await supabase
         .from('users')
-        .select('role, name')
+        .select('role, user_role, full_name, name')
         .eq('id', uid)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [AuthContext] خطأ في جلب البيانات:', error);
+        throw error;
+      }
 
-      setUserRole(data.role || 'customer');
-      setUserFullName(data.name || null);
+      console.log('📊 [AuthContext] البيانات المسترجعة:', data);
+      
+      // استخدام role أو user_role (كلاهما يجب أن يكون متزامنين بواسطة triggers)
+      const userRoleValue = data?.role || data?.user_role || 'customer';
+      const fullName = data?.full_name || data?.name || null;
+      
+      console.log('🎭 [AuthContext] الدور النهائي:', userRoleValue);
+      console.log('👤 [AuthContext] الاسم:', fullName);
+      
+      setUserRole(userRoleValue);
+      setUserFullName(fullName);
     } catch (error) {
-      console.error('خطأ في جلب بيانات المستخدم:', error);
+      console.error('❌ [AuthContext] خطأ في جلب بيانات المستخدم:', error);
       setUserRole('customer');
       setUserFullName(null);
     } finally {
