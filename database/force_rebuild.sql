@@ -18,7 +18,7 @@ CREATE EXTENSION IF NOT EXISTS "postgis";
 -- ENUMS: Define all enumeration types
 -- ==========================================
 
-CREATE TYPE user_role AS ENUM ('customer', 'vendor', 'driver', 'admin');
+CREATE TYPE user_role AS ENUM ('customer', 'vendor', 'driver', 'admin', 'restaurant');
 CREATE TYPE approval_status AS ENUM ('pending', 'approved', 'rejected');
 CREATE TYPE business_type AS ENUM ('retail', 'restaurant');
 CREATE TYPE order_status AS ENUM ('pending', 'confirmed', 'processing', 'preparing', 'ready', 'shipped', 'out_for_delivery', 'delivered', 'cancelled');

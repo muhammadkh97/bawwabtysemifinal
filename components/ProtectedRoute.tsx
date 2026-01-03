@@ -81,6 +81,7 @@ export default function ProtectedRoute({
         const roleRedirects: { [key: string]: string } = {
           'admin': '/dashboard/admin',
           'vendor': '/dashboard/vendor',
+          'restaurant': '/dashboard/restaurant',
           'driver': '/dashboard/driver',
           'customer': '/'
         };
