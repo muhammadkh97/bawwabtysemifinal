@@ -64,11 +64,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserData = async (uid: string, retryCount = 0): Promise<void> => {
     try {
-      console.log('🔍 [AuthContext] جلب بيانات المستخدم لـ:', uid);
+      console.log(`🔍 [AuthContext] جلب بيانات المستخدم لـ: ${uid} (محاولة ${retryCount + 1}/3)`);
       
-      // إعداد timeout 3 ثواني
+      // زيادة timeout إلى 10 ثوانٍ
+      const timeoutDuration = 10000;
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Timeout fetching user data')), 3000)
+        setTimeout(() => reject(new Error('Timeout fetching user data')), timeoutDuration)
       );
 
       const fetchPromise = supabase
@@ -85,10 +86,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) {
         console.error('❌ [AuthContext] خطأ في جلب البيانات:', error);
         
-        // إعادة المحاولة مرة واحدة في حالة الفشل
-        if (retryCount < 1) {
-          console.log('🔄 [AuthContext] إعادة المحاولة...');
-          await new Promise(resolve => setTimeout(resolve, 500));
+        // إعادة المحاولة حتى 3 مرات مع Exponential Backoff
+        if (retryCount < 2) {
+          const backoffDelay = Math.pow(2, retryCount) * 1000; // 1s, 2s
+          console.log(`🔄 [AuthContext] إعادة المحاولة بعد ${backoffDelay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, backoffDelay));
           return await fetchUserData(uid, retryCount + 1);
         }
         

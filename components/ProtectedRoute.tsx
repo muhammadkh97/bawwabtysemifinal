@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 type DbUser = {
   role?: string | null;
@@ -23,21 +24,23 @@ export default function ProtectedRoute({
   redirectTo = '/auth/login'
 }: ProtectedRouteProps) {
   const router = useRouter();
+  const { userRole: contextUserRole, loading: contextLoading } = useAuth();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     checkAuth();
-  }, []);
+  }, [contextUserRole, contextLoading]);
 
   const checkAuth = async () => {
     try {
       console.log('🔐 [ProtectedRoute] بدء التحقق من الصلاحيات...');
       
-      // إعداد timeout 5 ثواني
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout')), 5000)
-      );
+      // انتظار تحميل AuthContext أولاً
+      if (contextLoading) {
+        console.log('⏳ [ProtectedRoute] انتظار AuthContext...');
+        return;
+      }
 
       // التحقق من Session أولاً
       const { data: { session } } = await supabase.auth.getSession();
@@ -50,69 +53,80 @@ export default function ProtectedRoute({
         return;
       }
 
-      // جلب الدور مباشرة من public.users مع timeout
-      console.log('🔍 [ProtectedRoute] جلب الدور من public.users...');
-      console.log('👤 [ProtectedRoute] User ID:', session.user.id);
-      
-      try {
-        const fetchPromise = supabase
-          .from('users')
-          .select('role, user_role')
-          .eq('id', session.user.id)
-          .single<DbUser>();
+      let userRole = 'customer';
 
-        const { data: userData, error: userError } = await Promise.race([
-          fetchPromise,
-          timeoutPromise as any
-        ]);
+      // محاولة استخدام الدور من AuthContext أولاً
+      if (contextUserRole) {
+        console.log('✅ [ProtectedRoute] استخدام الدور من AuthContext:', contextUserRole);
+        userRole = contextUserRole;
+      } else {
+        // إذا لم يكن متاحاً، جلبه مباشرة مع timeout محسّن
+        console.log('🔍 [ProtectedRoute] جلب الدور من public.users...');
+        console.log('👤 [ProtectedRoute] User ID:', session.user.id);
+        
+        try {
+          // زيادة timeout إلى 15 ثانية
+          const timeoutDuration = 15000;
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout')), timeoutDuration)
+          );
 
-        console.log('📊 [ProtectedRoute] بيانات المستخدم:', userData);
-        console.log('⚠️ [ProtectedRoute] خطأ (إن وجد):', userError);
+          const fetchPromise = supabase
+            .from('users')
+            .select('role, user_role')
+            .eq('id', session.user.id)
+            .single<DbUser>();
 
-        let userRole = 'customer';
+          const { data: userData, error: userError } = await Promise.race([
+            fetchPromise,
+            timeoutPromise as any
+          ]);
 
-        if (userError || !userData) {
-          console.log('❌ [ProtectedRoute] لا يمكن جلب بيانات المستخدم - استخدام الافتراضي customer');
+          console.log('📊 [ProtectedRoute] بيانات المستخدم:', userData);
+          console.log('⚠️ [ProtectedRoute] خطأ (إن وجد):', userError);
+
+          if (userError || !userData) {
+            console.log('❌ [ProtectedRoute] لا يمكن جلب بيانات المستخدم - استخدام الافتراضي customer');
+            userRole = 'customer';
+          } else {
+            // استخدام role أولاً، ثم user_role كبديل
+            userRole = userData.role || userData.user_role || 'customer';
+            console.log('✅ [ProtectedRoute] تم الحصول على الدور:', userRole);
+          }
+        } catch (queryError) {
+          console.error('❌ [ProtectedRoute] خطأ في الـ query أو timeout:', queryError);
+          // في حالة الخطأ، نفترض الدور customer للسماح بالعودة للصفحة الرئيسية
           userRole = 'customer';
-        } else {
-          // استخدام role أولاً، ثم user_role كبديل
-          userRole = userData.role || userData.user_role || 'customer';
-          console.log('✅ [ProtectedRoute] تم الحصول على الدور:', userRole);
         }
-
-        console.log('🎭 [ProtectedRoute] دور المستخدم النهائي:', userRole);
-        console.log('🔒 [ProtectedRoute] الأدوار المسموحة:', allowedRoles);
-
-        if (!allowedRoles.includes(userRole)) {
-          console.log('❌ [ProtectedRoute] الدور غير مسموح - التوجيه للوحة التحكم الصحيحة');
-          console.log(`   المطلوب: ${allowedRoles.join(', ')}`);
-          console.log(`   الموجود: ${userRole}`);
-          
-          // إعادة التوجيه إلى لوحة التحكم الصحيحة حسب دور المستخدم
-          const roleRedirects: { [key: string]: string } = {
-            'admin': '/dashboard/admin',
-            'vendor': '/dashboard/vendor',
-            'restaurant': '/dashboard/restaurant',
-            'driver': '/dashboard/driver',
-            'customer': '/'
-          };
-          
-          const redirectPath = roleRedirects[userRole] || '/';
-          console.log(`🔄 [ProtectedRoute] إعادة التوجيه إلى: ${redirectPath}`);
-          setIsLoading(false);
-          router.push(redirectPath);
-          return;
-        }
-
-        console.log('✅ [ProtectedRoute] مصرح بالدخول!');
-        setIsAuthorized(true);
-        setIsLoading(false);
-      } catch (queryError) {
-        console.error('❌ [ProtectedRoute] خطأ في الـ query أو timeout:', queryError);
-        // في حالة الخطأ، نفترض الدور customer للسماح بالعودة للصفحة الرئيسية
-        setIsLoading(false);
-        router.push('/');
       }
+
+      console.log('🎭 [ProtectedRoute] دور المستخدم النهائي:', userRole);
+      console.log('🔒 [ProtectedRoute] الأدوار المسموحة:', allowedRoles);
+
+      if (!allowedRoles.includes(userRole)) {
+        console.log('❌ [ProtectedRoute] الدور غير مسموح - التوجيه للوحة التحكم الصحيحة');
+        console.log(`   المطلوب: ${allowedRoles.join(', ')}`);
+        console.log(`   الموجود: ${userRole}`);
+        
+        // إعادة التوجيه إلى لوحة التحكم الصحيحة حسب دور المستخدم
+        const roleRedirects: { [key: string]: string } = {
+          'admin': '/dashboard/admin',
+          'vendor': '/dashboard/vendor',
+          'restaurant': '/dashboard/restaurant',
+          'driver': '/dashboard/driver',
+          'customer': '/'
+        };
+        
+        const redirectPath = roleRedirects[userRole] || '/';
+        console.log(`🔄 [ProtectedRoute] إعادة التوجيه إلى: ${redirectPath}`);
+        setIsLoading(false);
+        router.push(redirectPath);
+        return;
+      }
+
+      console.log('✅ [ProtectedRoute] مصرح بالدخول!');
+      setIsAuthorized(true);
+      setIsLoading(false);
     } catch (err) {
       console.error('❌ [ProtectedRoute] خطأ غير متوقع:', err);
       setIsLoading(false);
@@ -120,7 +134,7 @@ export default function ProtectedRoute({
     }
   };
 
-  if (isLoading) {
+  if (isLoading || contextLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 to-pink-900">
         <div className="text-center">
