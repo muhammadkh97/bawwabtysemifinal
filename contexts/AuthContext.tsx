@@ -139,12 +139,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshUser = async () => {
+
     setLoading(true);
     await initializeAuth();
   };
 
   const handleSignOut = async () => {
     try {
+      await supabase.auth.signOut();
+      resetAuthState();
+    } catch (error) {
+      console.error('❌ [AuthContext] خطأ في تسجيل الخروج:', error);
+    }
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        userId,
+        userRole,
         userFullName,
         loading,
         refreshUser,
