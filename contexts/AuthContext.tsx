@@ -111,14 +111,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       console.log('✅ [AuthContext] البيانات المسترجعة من get_current_user:', data);
-      
+      // نوع بيانات الدالة rpc غير معرف افتراضيًا، نستخدم assertion
+      const userData = data as { role?: string; full_name?: string };
       // استخدام role من الدالة
-      const userRoleValue = data?.role || 'customer';
-      const fullName = data?.full_name || null;
-      
+      const userRoleValue = userData?.role || 'customer';
+      const fullName = userData?.full_name || null;
       console.log('🎭 [AuthContext] الدور النهائي:', userRoleValue);
       console.log('👤 [AuthContext] الاسم:', fullName);
-      
       setUserRole(userRoleValue);
       setUserFullName(fullName);
     } catch (error) {
