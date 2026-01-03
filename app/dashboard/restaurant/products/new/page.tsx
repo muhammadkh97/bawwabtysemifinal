@@ -39,6 +39,7 @@ export default function NewMealPage() {
   const [stock, setStock] = useState('100');
   const [preparationTime, setPreparationTime] = useState('');
   const [category, setCategory] = useState('');
+  const [originalCurrency, setOriginalCurrency] = useState('SAR');
 
   // Images
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -214,7 +215,7 @@ export default function NewMealPage() {
         vendor_id: vendorId,
         name: mealName.trim(),
         description: description.trim() || null,
-        category_id: category || 'f4514891-ce20-4f9b-9da0-103d13006797', // Grocery & Food category
+        category_id: category || 'f4573c7e-b55a-4dd5-8e4b-22e51dcec6a0', // Grocery & Food category
         price: parseFloat(price),
         old_price: oldPrice ? parseFloat(oldPrice) : null,
         stock: hasVariants ? variants.reduce((sum, v) => sum + v.stock, 0) : parseInt(stock),
@@ -227,7 +228,7 @@ export default function NewMealPage() {
         variants: hasVariants ? variants : null,
         attributes: mealAttributes,
         is_active: true,
-        original_currency: 'SAR'
+        original_currency: originalCurrency
       };
       
       // Insert product
@@ -356,7 +357,7 @@ export default function NewMealPage() {
             </div>
             
             <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     <DollarSign className="w-4 h-4" />
@@ -385,6 +386,30 @@ export default function NewMealPage() {
                     className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all"
                     placeholder="0.00"
                   />
+                </div>
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <DollarSign className="w-4 h-4" />
+                    العملة *
+                  </label>
+                  <select
+                    value={originalCurrency}
+                    onChange={(e) => setOriginalCurrency(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all"
+                    required
+                  >
+                    <option value="SAR">ريال سعودي (SAR)</option>
+                    <option value="USD">دولار أمريكي (USD)</option>
+                    <option value="EUR">يورو (EUR)</option>
+                    <option value="GBP">جنيه إسترليني (GBP)</option>
+                    <option value="AED">درهم إماراتي (AED)</option>
+                    <option value="KWD">دينار كويتي (KWD)</option>
+                    <option value="BHD">دينار بحريني (BHD)</option>
+                    <option value="OMR">ريال عماني (OMR)</option>
+                    <option value="QAR">ريال قطري (QAR)</option>
+                    <option value="EGP">جنيه مصري (EGP)</option>
+                    <option value="JOD">دينار أردني (JOD)</option>
+                  </select>
                 </div>
               </div>
             </div>
