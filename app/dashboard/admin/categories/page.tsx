@@ -4,7 +4,6 @@ import { useState, useEffect, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 import AdminLayout from '@/components/AdminLayout';
 import { 
   Plus, 
