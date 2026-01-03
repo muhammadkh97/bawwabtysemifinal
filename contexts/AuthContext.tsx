@@ -62,17 +62,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const fetchUserData = async (uid: string) => {
+  const fetchUserData = async (uid: string, retryCount = 0) => {
     try {
       console.log('🔍 [AuthContext] جلب بيانات المستخدم لـ:', uid);
-      const { data, error } = await supabase
+      
+      // إعداد timeout 3 ثواني
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout fetching user data')), 3000)
+      );
+
+      const fetchPromise = supabase
         .from('users')
         .select('role, user_role, full_name, name')
         .eq('id', uid)
         .single();
 
+      const { data, error } = await Promise.race([
+        fetchPromise,
+        timeoutPromise as any
+      ]);
+
       if (error) {
         console.error('❌ [AuthContext] خطأ في جلب البيانات:', error);
+        
+        // إعادة المحاولة مرة واحدة في حالة الفشل
+        if (retryCount < 1) {
+          console.log('🔄 [AuthContext] إعادة المحاولة...');
+          await new Promise(resolve => setTimeout(resolve, 500));
+          return fetchUserData(uid, retryCount + 1);
+        }
+        
         throw error;
       }
 
@@ -88,7 +107,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUserRole(userRoleValue);
       setUserFullName(fullName);
     } catch (error) {
-      console.error('❌ [AuthContext] خطأ في جلب بيانات المستخدم:', error);
+      console.error('❌ [AuthContext] خطأ في جلب بيانات المستخدم بعد المحاولات:', error);
+      // في حالة الفشل، نستخدم الافتراضي
       setUserRole('customer');
       setUserFullName(null);
     } finally {

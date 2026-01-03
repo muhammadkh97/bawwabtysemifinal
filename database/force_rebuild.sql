@@ -974,8 +974,17 @@ CREATE POLICY "Vendors can manage own vendor profile" ON vendors FOR ALL USING (
 
 -- Products policies
 CREATE POLICY "Anyone can view approved products" ON products FOR SELECT USING (status = 'approved' AND is_active = true);
-CREATE POLICY "Vendors can manage own products" ON products FOR ALL 
+CREATE POLICY "Vendors can view own products" ON products FOR SELECT 
   USING (vendor_id IN (SELECT id FROM stores WHERE user_id = auth.uid()));
+CREATE POLICY "Vendors can insert products" ON products FOR INSERT 
+  WITH CHECK (vendor_id IN (SELECT id FROM stores WHERE user_id = auth.uid()));
+CREATE POLICY "Vendors can update own products" ON products FOR UPDATE 
+  USING (vendor_id IN (SELECT id FROM stores WHERE user_id = auth.uid()))
+  WITH CHECK (vendor_id IN (SELECT id FROM stores WHERE user_id = auth.uid()));
+CREATE POLICY "Vendors can delete own products" ON products FOR DELETE 
+  USING (vendor_id IN (SELECT id FROM stores WHERE user_id = auth.uid()));
+CREATE POLICY "Admins can manage all products" ON products FOR ALL 
+  USING ((SELECT role FROM users WHERE id = auth.uid()) = 'admin');
 
 -- Orders policies
 CREATE POLICY "Customers can view own orders" ON orders FOR SELECT 

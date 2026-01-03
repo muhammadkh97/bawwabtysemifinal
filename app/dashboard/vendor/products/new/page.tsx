@@ -70,21 +70,37 @@ export default function NewProductPage() {
         return;
       }
 
-      // Get vendor ID
-      const { data: vendorData, error: vendorError } = await supabase
-        .from('vendors')
-        .select('id')
-        .eq('user_id', userId)
-        .single();
+      try {
+        // Get vendor ID with timeout
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout')), 5000)
+        );
 
-      if (vendorError || !vendorData) {
-        console.error('Vendor error:', vendorError);
-        toast.error('⚠️ يجب أن تكون بائعاً لإضافة منتجات');
-        router.push('/dashboard/vendor');
-        return;
+        const fetchPromise = supabase
+          .from('vendors')
+          .select('id')
+          .eq('user_id', userId)
+          .single();
+
+        const { data: vendorData, error: vendorError } = await Promise.race([
+          fetchPromise,
+          timeoutPromise as any
+        ]);
+
+        if (vendorError || !vendorData) {
+          console.error('❌ Vendor error:', vendorError);
+          toast.error('⚠️ لم نتمكن من العثور على حسابك. يرجى تحديث الصفحة أو الاتصال بالدعم');
+          setTimeout(() => router.push('/dashboard/vendor'), 2000);
+          return;
+        }
+
+        setVendorId(vendorData.id);
+        console.log('✅ Vendor ID loaded:', vendorData.id);
+      } catch (error) {
+        console.error('❌ Error loading vendor data:', error);
+        toast.error('❌ خطأ في تحميل البيانات. يرجى المحاولة لاحقاً');
+        setTimeout(() => router.push('/dashboard/vendor'), 2000);
       }
-
-      setVendorId(vendorData.id);
     };
 
     loadVendorData();
@@ -248,16 +264,35 @@ export default function NewProductPage() {
         is_active: true
       };
 
-      // Insert product
-      const { data, error } = await supabase
+      // Insert product with timeout
+      const insertTimeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout inserting product')), 10000)
+      );
+
+      const insertPromise = supabase
         .from('products')
         .insert([productData])
         .select()
         .single();
 
+      const { data, error } = await Promise.race([
+        insertPromise,
+        insertTimeout as any
+      ]);
+
       if (error) {
-        console.error('Error saving product:', error);
-        toast.error(`خطأ في حفظ المنتج: ${error.message}`);
+        console.error('❌ Error saving product:', error);
+        
+        // معالجة أخطاء RLS
+        if (error.message.includes('new row violates row-level security')) {
+          toast.error('❌ خطأ في الصلاحيات: تأكد من أنك مسجل دخول كبائع');
+        } else if (error.message.includes('violates foreign key')) {
+          toast.error('❌ خطأ: تأكد من اختيار فئة صحيحة');
+        } else {
+          toast.error(`❌ خطأ في حفظ المنتج: ${error.message}`);
+        }
+        
+        console.error('Full error:', error);
         setLoading(false);
         return;
       }

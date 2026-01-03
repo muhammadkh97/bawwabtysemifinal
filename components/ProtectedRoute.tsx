@@ -34,72 +34,89 @@ export default function ProtectedRoute({
     try {
       console.log('🔐 [ProtectedRoute] بدء التحقق من الصلاحيات...');
       
+      // إعداد timeout 5 ثواني
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 5000)
+      );
+
       // التحقق من Session أولاً
       const { data: { session } } = await supabase.auth.getSession();
       console.log('📋 [ProtectedRoute] Session:', session ? 'موجودة ✅' : 'غير موجودة ❌');
       
       if (!session) {
         console.log('❌ [ProtectedRoute] لا توجد Session - التوجيه لتسجيل الدخول');
-        router.push(`${redirectTo}?redirect=${window.location.pathname}`);
         setIsLoading(false);
+        router.push(`${redirectTo}?redirect=${window.location.pathname}`);
         return;
       }
 
-      // جلب الدور مباشرة من public.users
+      // جلب الدور مباشرة من public.users مع timeout
       console.log('🔍 [ProtectedRoute] جلب الدور من public.users...');
       console.log('👤 [ProtectedRoute] User ID:', session.user.id);
       
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('role, user_role')
-        .eq('id', session.user.id)
-        .single<DbUser>();
+      try {
+        const fetchPromise = supabase
+          .from('users')
+          .select('role, user_role')
+          .eq('id', session.user.id)
+          .single<DbUser>();
 
-      console.log('📊 [ProtectedRoute] بيانات المستخدم:', userData);
-      console.log('⚠️ [ProtectedRoute] خطأ (إن وجد):', userError);
+        const { data: userData, error: userError } = await Promise.race([
+          fetchPromise,
+          timeoutPromise as any
+        ]);
 
-      let userRole = 'customer';
+        console.log('📊 [ProtectedRoute] بيانات المستخدم:', userData);
+        console.log('⚠️ [ProtectedRoute] خطأ (إن وجد):', userError);
 
-      if (userError || !userData) {
-        console.log('❌ [ProtectedRoute] لا يمكن جلب بيانات المستخدم - استخدام الافتراضي customer');
-        userRole = 'customer';
-      } else {
-        // استخدام role أولاً، ثم user_role كبديل
-        userRole = userData.role || userData.user_role || 'customer';
-        console.log('✅ [ProtectedRoute] تم الحصول على الدور:', userRole);
-      }
+        let userRole = 'customer';
 
-      console.log('🎭 [ProtectedRoute] دور المستخدم النهائي:', userRole);
-      console.log('🔒 [ProtectedRoute] الأدوار المسموحة:', allowedRoles);
+        if (userError || !userData) {
+          console.log('❌ [ProtectedRoute] لا يمكن جلب بيانات المستخدم - استخدام الافتراضي customer');
+          userRole = 'customer';
+        } else {
+          // استخدام role أولاً، ثم user_role كبديل
+          userRole = userData.role || userData.user_role || 'customer';
+          console.log('✅ [ProtectedRoute] تم الحصول على الدور:', userRole);
+        }
 
-      if (!allowedRoles.includes(userRole)) {
-        console.log('❌ [ProtectedRoute] الدور غير مسموح - التوجيه للوحة التحكم الصحيحة');
-        console.log(`   المطلوب: ${allowedRoles.join(', ')}`);
-        console.log(`   الموجود: ${userRole}`);
-        
-        // إعادة التوجيه إلى لوحة التحكم الصحيحة حسب دور المستخدم
-        const roleRedirects: { [key: string]: string } = {
-          'admin': '/dashboard/admin',
-          'vendor': '/dashboard/vendor',
-          'restaurant': '/dashboard/restaurant',
-          'driver': '/dashboard/driver',
-          'customer': '/'
-        };
-        
-        const redirectPath = roleRedirects[userRole] || '/';
-        console.log(`🔄 [ProtectedRoute] إعادة التوجيه إلى: ${redirectPath}`);
-        router.push(redirectPath);
+        console.log('🎭 [ProtectedRoute] دور المستخدم النهائي:', userRole);
+        console.log('🔒 [ProtectedRoute] الأدوار المسموحة:', allowedRoles);
+
+        if (!allowedRoles.includes(userRole)) {
+          console.log('❌ [ProtectedRoute] الدور غير مسموح - التوجيه للوحة التحكم الصحيحة');
+          console.log(`   المطلوب: ${allowedRoles.join(', ')}`);
+          console.log(`   الموجود: ${userRole}`);
+          
+          // إعادة التوجيه إلى لوحة التحكم الصحيحة حسب دور المستخدم
+          const roleRedirects: { [key: string]: string } = {
+            'admin': '/dashboard/admin',
+            'vendor': '/dashboard/vendor',
+            'restaurant': '/dashboard/restaurant',
+            'driver': '/dashboard/driver',
+            'customer': '/'
+          };
+          
+          const redirectPath = roleRedirects[userRole] || '/';
+          console.log(`🔄 [ProtectedRoute] إعادة التوجيه إلى: ${redirectPath}`);
+          setIsLoading(false);
+          router.push(redirectPath);
+          return;
+        }
+
+        console.log('✅ [ProtectedRoute] مصرح بالدخول!');
+        setIsAuthorized(true);
         setIsLoading(false);
-        return;
+      } catch (queryError) {
+        console.error('❌ [ProtectedRoute] خطأ في الـ query أو timeout:', queryError);
+        // في حالة الخطأ، نفترض الدور customer للسماح بالعودة للصفحة الرئيسية
+        setIsLoading(false);
+        router.push('/');
       }
-
-      console.log('✅ [ProtectedRoute] مصرح بالدخول!');
-      setIsAuthorized(true);
-      setIsLoading(false);
     } catch (err) {
       console.error('❌ [ProtectedRoute] خطأ غير متوقع:', err);
-      router.push(redirectTo);
       setIsLoading(false);
+      router.push(redirectTo);
     }
   };
 
