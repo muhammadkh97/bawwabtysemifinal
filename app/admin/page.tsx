@@ -2,6 +2,8 @@
 
 import { TrendingUp, Users, Package, ShoppingCart, DollarSign, AlertCircle } from 'lucide-react'
 
+export const dynamic = 'force-dynamic';
+
 export default function AdminDashboard() {
   // سيتم جلب البيانات من Supabase
   const stats: any[] = [];
