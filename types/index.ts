@@ -283,13 +283,18 @@ export interface Coupon {
 export interface Category {
   id: string;
   name: string;
+  name_ar: string;
   slug: string;
+  description?: string;
+  description_ar?: string;
   icon?: string;
-  image?: string;
+  image_url?: string;
   parent_id?: string;
+  level: number;
   is_active: boolean;
-  order: number;
+  display_order: number;
   productsCount?: number;
+  subcategories?: Category[];
 }
 
 export interface PlatformSettings {

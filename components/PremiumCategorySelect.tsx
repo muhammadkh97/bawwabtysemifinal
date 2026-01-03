@@ -1,8 +1,21 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Search, Package, Check, Sparkles, ShoppingBag, Home, Shirt, Laptop, Heart, Baby, Book, Dumbbell, Coffee, Gamepad2, Music, Camera, Watch, Gift, Palette, Wrench, Car, Pill, Flower2, PawPrint, Globe, Tag } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ChevronDown, 
+  Search, 
+  Check, 
+  Package, 
+  Sparkles,
+  Smartphone,
+  Shirt,
+  Home,
+  ShoppingBasket,
+  UtensilsCrossed,
+  Box,
+  ChevronLeft
+} from 'lucide-react';
 
 interface Category {
   id: string;
@@ -10,6 +23,8 @@ interface Category {
   name_ar: string;
   icon?: string;
   requires_approval?: boolean;
+  parent_id?: string;
+  description_ar?: string;
 }
 
 interface PremiumCategorySelectProps {
@@ -22,46 +37,16 @@ interface PremiumCategorySelectProps {
   showApprovalBadge?: boolean;
 }
 
-// أيقونات التصنيفات الافتراضية
-const categoryIcons: { [key: string]: any } = {
-  'إلكترونيات': Laptop,
-  'إلكترونيات وأجهزة': Laptop,
-  'أزياء': Shirt,
-  'أزياء وملابس': Shirt,
-  'منزل': Home,
-  'منزل وديكور': Home,
-  'جمال': Heart,
-  'جمال وعناية': Heart,
-  'أطفال': Baby,
-  'كتب': Book,
-  'رياضة': Dumbbell,
-  'طعام': Coffee,
-  'ألعاب': Gamepad2,
-  'موسيقى': Music,
-  'كاميرات': Camera,
-  'ساعات': Watch,
-  'هدايا': Gift,
-  'فنون': Palette,
-  'أدوات': Wrench,
-  'سيارات': Car,
-  'صحة': Pill,
-  'نباتات': Flower2,
-  'حيوانات': PawPrint,
-  'سفر': Globe,
-  'تسوق': Tag,
+const iconMap: { [key: string]: any } = {
+  'Smartphone': Smartphone,
+  'Shirt': Shirt,
+  'Home': Home,
+  'ShoppingBasket': ShoppingBasket,
+  'Sparkles': Sparkles,
+  'UtensilsCrossed': UtensilsCrossed,
+  'Box': Box,
 };
 
-const getIconForCategory = (categoryName: string) => {
-  const name = categoryName.toLowerCase();
-  for (const [key, Icon] of Object.entries(categoryIcons)) {
-    if (name.includes(key.toLowerCase())) {
-      return Icon;
-    }
-  }
-  return Package; // الأيقونة الافتراضية
-};
-
-// ألوان التصنيفات
 const categoryColors = [
   'from-purple-500 to-pink-500',
   'from-blue-500 to-cyan-500',
@@ -69,10 +54,6 @@ const categoryColors = [
   'from-orange-500 to-red-500',
   'from-indigo-500 to-purple-500',
   'from-yellow-500 to-orange-500',
-  'from-pink-500 to-rose-500',
-  'from-teal-500 to-green-500',
-  'from-violet-500 to-purple-500',
-  'from-cyan-500 to-blue-500',
 ];
 
 export default function PremiumCategorySelect({
@@ -95,6 +76,24 @@ export default function PremiumCategorySelect({
     (cat.name_ar || cat.name).toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // تنظيم التصنيفات بشكل هرمي للعرض
+  const hierarchicalCategories = useMemo(() => {
+    if (searchQuery) return filteredCategories;
+    
+    const main = filteredCategories.filter(c => !c.parent_id);
+    const result: (Category & { isSub?: boolean })[] = [];
+    
+    main.forEach(m => {
+      result.push(m);
+      const subs = filteredCategories.filter(s => s.parent_id === m.id);
+      subs.forEach(s => {
+        result.push({ ...s, isSub: true });
+      });
+    });
+    
+    return result;
+  }, [filteredCategories, searchQuery]);
+
   // إغلاق القائمة عند النقر خارجها
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -116,30 +115,31 @@ export default function PremiumCategorySelect({
     setSearchQuery('');
   };
 
-  const SelectedIcon = selectedCategory ? getIconForCategory(selectedCategory.name_ar || selectedCategory.name) : Package;
-  const selectedColorIndex = selectedCategory ? Math.abs(selectedCategory.id.charCodeAt(0) % categoryColors.length) : 0;
+  const getIcon = (iconName: string | undefined) => {
+    const Icon = iconMap[iconName || 'Box'] || Box;
+    return <Icon className="w-5 h-5" />;
+  };
 
   return (
-    <div className="relative" ref={dropdownRef}>
-      {/* Label */}
+    <div className="relative" ref={dropdownRef} dir="rtl">
       {label && (
         <label className="block text-purple-300 text-sm font-medium mb-2">
           {label} {required && <span className="text-red-400">*</span>}
         </label>
       )}
 
-      {/* Select Button */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-3.5 rounded-xl text-white bg-white/5 border border-purple-500/30 hover:border-purple-500/50 focus:border-purple-500 outline-none transition-all duration-300 flex items-center justify-between group"
+        className={`w-full px-4 py-3.5 rounded-xl text-white bg-white/5 border transition-all duration-300 flex items-center justify-between group ${
+          isOpen ? 'border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.2)]' : 'border-purple-500/30 hover:border-purple-500/50'
+        }`}
       >
         <div className="flex items-center gap-3">
           {selectedCategory ? (
             <>
-              {/* أيقونة التصنيف مع خلفية ملونة */}
-              <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${categoryColors[selectedColorIndex]} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                <SelectedIcon className="w-5 h-5 text-white" />
+              <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${categoryColors[Math.abs(selectedCategory.id.charCodeAt(0) % categoryColors.length)]} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                {getIcon(selectedCategory.icon)}
               </div>
               <div className="text-right">
                 <span className="font-medium">{selectedCategory.name_ar || selectedCategory.name}</span>
@@ -163,22 +163,14 @@ export default function PremiumCategorySelect({
         <ChevronDown className={`w-5 h-5 text-purple-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
-      {/* Dropdown Menu */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="absolute z-[9999] w-full mt-2 rounded-2xl overflow-hidden shadow-2xl"
-            style={{
-              background: 'rgba(15, 10, 30, 0.95)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(98, 54, 255, 0.3)',
-            }}
+            className="absolute z-[9999] w-full mt-2 rounded-2xl overflow-hidden shadow-2xl border border-purple-500/30 bg-[#0F0A1E]/95 backdrop-blur-xl"
           >
-            {/* Search Box */}
             <div className="p-3 border-b border-purple-500/20">
               <div className="relative">
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
@@ -193,60 +185,50 @@ export default function PremiumCategorySelect({
               </div>
             </div>
 
-            {/* Categories List */}
-            <div className="max-h-80 overflow-y-auto custom-scrollbar">
-              {filteredCategories.length > 0 ? (
-                <div className="p-2">
-                  {filteredCategories.map((category, index) => {
-                    const Icon = getIconForCategory(category.name_ar || category.name);
-                    const colorIndex = Math.abs(category.id.charCodeAt(0) % categoryColors.length);
-                    const isSelected = category.id === value;
+            <div className="max-h-80 overflow-y-auto custom-scrollbar p-2">
+              {hierarchicalCategories.length > 0 ? (
+                hierarchicalCategories.map((category, index) => {
+                  const isSelected = category.id === value;
+                  const colorIndex = Math.abs(category.id.charCodeAt(0) % categoryColors.length);
+                  const isSub = (category as any).isSub;
 
-                    return (
-                      <motion.button
-                        key={category.id}
-                        type="button"
-                        onClick={() => handleSelect(category.id)}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.03 }}
-                        className={`w-full p-3 rounded-xl flex items-center gap-3 transition-all duration-200 mb-1 group/item ${
-                          isSelected
-                            ? 'bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg scale-[1.02]'
-                            : 'hover:bg-white/5 hover:scale-[1.01]'
-                        }`}
-                      >
-                        {/* أيقونة التصنيف */}
-                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${categoryColors[colorIndex]} flex items-center justify-center shadow-md group-hover/item:scale-110 transition-transform duration-300 ${isSelected ? 'ring-2 ring-white/30' : ''}`}>
-                          <Icon className="w-6 h-6 text-white" />
+                  return (
+                    <button
+                      key={category.id}
+                      type="button"
+                      onClick={() => handleSelect(category.id)}
+                      className={`w-full p-3 rounded-xl flex items-center gap-3 transition-all duration-200 mb-1 group ${
+                        isSub ? 'mr-6 w-[calc(100%-1.5rem)]' : ''
+                      } ${
+                        isSelected
+                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg'
+                          : 'hover:bg-white/5'
+                      }`}
+                    >
+                      {!isSub ? (
+                        <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${categoryColors[colorIndex]} flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform`}>
+                          {getIcon(category.icon)}
                         </div>
-
-                        {/* معلومات التصنيف */}
-                        <div className="flex-1 text-right">
-                          <div className="font-semibold text-white flex items-center gap-2">
-                            {category.name_ar || category.name}
-                            {isSelected && <Check className="w-4 h-4 text-white" />}
-                          </div>
-                          {showApprovalBadge && category.requires_approval && (
-                            <div className="flex items-center gap-1 mt-1">
-                              <Sparkles className="w-3 h-3 text-yellow-300" />
-                              <span className="text-xs text-yellow-300">يحتاج موافقة الإدارة</span>
-                            </div>
-                          )}
+                      ) : (
+                        <ChevronLeft className="w-4 h-4 text-purple-500/50" />
+                      )}
+                      
+                      <div className="flex-1 text-right">
+                        <div className={`font-bold ${isSelected ? 'text-white' : 'text-purple-100'} flex items-center gap-2`}>
+                          {category.name_ar || category.name}
+                          {isSelected && <Check className="w-4 h-4 text-white" />}
                         </div>
-
-                        {/* Hover Effect */}
-                        {!isSelected && (
-                          <div className="w-2 h-2 rounded-full bg-purple-400 opacity-0 group-hover/item:opacity-100 transition-opacity" />
+                        {!isSub && category.description_ar && (
+                          <p className="text-[10px] text-purple-300/40 line-clamp-1">{category.description_ar}</p>
                         )}
-                      </motion.button>
-                    );
-                  })}
-                </div>
+                      </div>
+                    </button>
+                  );
+                })
               ) : (
                 <div className="p-8 text-center">
                   <Package className="w-12 h-12 text-purple-400/30 mx-auto mb-3" />
-                  <p className="text-purple-300/60 text-sm">لا توجد تصنيفات مطابقة</p>
+                  <p className="text-purple-300/60 text-sm">لا توجد نتائج</p>
                 </div>
               )}
             </div>
@@ -254,22 +236,10 @@ export default function PremiumCategorySelect({
         )}
       </AnimatePresence>
 
-      {/* Custom Scrollbar Styles */}
       <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(139, 92, 246, 0.05);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(139, 92, 246, 0.3);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(139, 92, 246, 0.5);
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(168,85,247,0.2); border-radius: 10px; }
       `}</style>
     </div>
   );

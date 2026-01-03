@@ -15,7 +15,8 @@ import {
   TrendingUp,
   FileText,
   Truck,
-  AlertCircle
+  AlertCircle,
+  LayoutGrid
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
@@ -86,8 +87,8 @@ const getAdminNavItems = (badges: any): NavItem[] => [
   },
   {
     title: 'التصنيفات',
-    href: '/admin/categories',
-    icon: FileText,
+    href: '/dashboard/admin/categories',
+    icon: LayoutGrid,
   },
   {
     title: 'الإعدادات العامة',
