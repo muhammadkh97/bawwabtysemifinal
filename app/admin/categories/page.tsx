@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+
+export const dynamic = 'force-dynamic';
 import AdminLayout from '@/components/AdminLayout';
 import { 
   Plus, 
