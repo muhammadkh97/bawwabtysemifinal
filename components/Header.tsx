@@ -321,6 +321,13 @@ export default function Header() {
                   </span>
                 )}
               </Link>
+
+              {/* طلباتي - متاح للجميع سواء مسجلين أو لا */}
+              {isLoggedIn && (
+                <Link href="/orders" className="relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-50 rounded-xl md:rounded-2xl transition-all duration-300 group" title="طلباتي">
+                  <Package className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 group-hover:text-green-600 transition-colors" />
+                </Link>
+              )}
             </div>
 
             <div className="h-8 w-[1px] bg-gray-100 hidden md:block"></div>
@@ -418,6 +425,21 @@ export default function Header() {
                             <div className="flex-1 text-right">
                               <p className="text-sm font-bold text-gray-900">حسابي</p>
                               <p className="text-xs text-gray-500">البيانات الشخصية</p>
+                            </div>
+                          </Link>
+
+                          {/* طلباتي */}
+                          <Link
+                            href="/orders"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100"
+                          >
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                              <Package className="w-5 h-5 text-white" />
+                            </div>
+                            <div className="flex-1 text-right">
+                              <p className="text-sm font-bold text-gray-900">طلباتي</p>
+                              <p className="text-xs text-gray-500">متابعة الطلبات</p>
                             </div>
                           </Link>
 
