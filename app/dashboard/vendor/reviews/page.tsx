@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { Star, ThumbsUp, MessageCircle, Calendar, User, Package, Loader2 } from 'lucide-react';
+import { Star, Calendar, Package, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -15,15 +15,12 @@ interface Review {
   rating: number;
   comment: string;
   created_at: string;
-  response?: string;
 }
 
 export default function VendorReviewsPage() {
   const router = useRouter();
   const { userId } = useAuth();
   const [selectedRating, setSelectedRating] = useState<number | 'all'>('all');
-  const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [replyText, setReplyText] = useState('');
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -72,7 +69,6 @@ export default function VendorReviewsPage() {
           rating,
           comment,
           created_at,
-          response,
           customer_id,
           product_id
         `)
@@ -112,7 +108,6 @@ export default function VendorReviewsPage() {
         rating: review.rating,
         comment: review.comment,
         created_at: review.created_at,
-        response: review.response,
       })) || [];
 
       setReviews(formattedReviews);
@@ -138,23 +133,6 @@ export default function VendorReviewsPage() {
       ? (reviews.filter(r => r.rating === rating).length / reviews.length) * 100 
       : 0,
   }));
-
-  const handleReply = async (reviewId: string) => {
-    if (replyText.trim()) {
-      try {
-        await supabase
-          .from('reviews')
-          .update({ response: replyText })
-          .eq('id', reviewId);
-        
-        setReplyingTo(null);
-        setReplyText('');
-        fetchVendorReviews();
-      } catch (error) {
-        console.error('Error replying to review:', error);
-      }
-    }
-  };
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-[#0A0515] transition-colors duration-300">
@@ -318,64 +296,6 @@ export default function VendorReviewsPage() {
                       ))}
                     </div>
                     <p className="text-white leading-relaxed mb-3">{review.comment}</p>
-                    
-                    {review.response && (
-                      <div className="p-4 rounded-xl mb-3" style={{ background: 'rgba(98, 54, 255, 0.1)' }}>
-                        <p className="text-xs text-purple-300 mb-1">ردك:</p>
-                        <p className="text-white text-sm">{review.response}</p>
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-4">
-                      {!review.response && (
-                        <button
-                          onClick={() => setReplyingTo(review.id)}
-                          className="flex items-center gap-1 text-purple-300 hover:text-white transition text-sm"
-                        >
-                          <MessageCircle className="w-4 h-4" />
-                          <span>الرد</span>
-                        </button>
-                      )}
-                    </div>
-
-                    {replyingTo === review.id && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        className="mt-4"
-                      >
-                        <textarea
-                          value={replyText}
-                          onChange={(e) => setReplyText(e.target.value)}
-                          placeholder="اكتب ردك هنا..."
-                          className="w-full p-4 rounded-xl text-white resize-none"
-                          style={{
-                            background: 'rgba(255,255,255,0.05)',
-                            border: '1px solid rgba(98, 54, 255, 0.3)',
-                          }}
-                          rows={3}
-                        />
-                        <div className="flex gap-2 mt-2">
-                          <button
-                            onClick={() => handleReply(review.id)}
-                            className="px-4 py-2 rounded-xl text-white font-bold transition-all hover:shadow-lg"
-                            style={{ background: 'linear-gradient(135deg, #6236FF, #FF219D)' }}
-                          >
-                            إرسال
-                          </button>
-                          <button
-                            onClick={() => {
-                              setReplyingTo(null);
-                              setReplyText('');
-                            }}
-                            className="px-4 py-2 rounded-xl text-white transition-all"
-                            style={{ background: 'rgba(255,255,255,0.1)' }}
-                          >
-                            إلغاء
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
                   </div>
                 </div>
               </motion.div>
