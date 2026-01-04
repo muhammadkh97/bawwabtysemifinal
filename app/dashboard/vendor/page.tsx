@@ -60,14 +60,14 @@ function VendorDashboardContent() {
     try {
       setLoading(true);
 
-      // Get vendor ID
-      const { data: vendorData } = await supabase
-        .from('vendors')
+      // Get store ID (vendor_id)
+      const { data: storeData } = await supabase
+        .from('stores')
         .select('id')
         .eq('user_id', userId)
         .single();
 
-      if (!vendorData) {
+      if (!storeData) {
         setLoading(false);
         return;
       }
@@ -76,7 +76,7 @@ function VendorDashboardContent() {
       const { data: productsData } = await supabase
         .from('products')
         .select('*')
-        .eq('vendor_id', vendorData.id)
+        .eq('vendor_id', storeData.id)
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(10);
@@ -89,7 +89,7 @@ function VendorDashboardContent() {
       const { data: ordersData } = await supabase
         .from('orders')
         .select('*')
-        .eq('vendor_id', vendorData.id);
+        .eq('vendor_id', storeData.id);
 
       // Calculate stats
       const totalOrders = ordersData?.length || 0;
@@ -100,7 +100,7 @@ function VendorDashboardContent() {
       const { data: reviewsData } = await supabase
         .from('reviews')
         .select('rating')
-        .eq('vendor_id', vendorData.id);
+        .eq('vendor_id', storeData.id);
 
       const averageRating = reviewsData && reviewsData.length > 0
         ? reviewsData.reduce((sum, review) => sum + review.rating, 0) / reviewsData.length
