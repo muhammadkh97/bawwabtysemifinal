@@ -55,33 +55,33 @@ export default function VendorProductsPage() {
       setLoading(true);
       console.log('📡 [VendorProducts] Fetching vendor for userId:', userId);
 
-      // Get vendor ID
-      const { data: vendorData, error: vendorError } = await supabase
-        .from('vendors')
-        .select('id, shop_name')
+      // Get store ID (vendor_id)
+      const { data: storeData, error: storeError } = await supabase
+        .from('stores')
+        .select('id, name')
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (vendorError) {
-        console.error('❌ [VendorProducts] Error fetching vendor:', vendorError);
-        throw vendorError;
+      if (storeError) {
+        console.error('❌ [VendorProducts] Error fetching store:', storeError);
+        throw storeError;
       }
 
-      if (!vendorData) {
-        console.error('❌ [VendorProducts] Vendor not found for user:', userId);
+      if (!storeData) {
+        console.error('❌ [VendorProducts] Store not found for user:', userId);
         setLoading(false);
         return;
       }
 
-      console.log('✅ [VendorProducts] Found vendor:', vendorData);
-      setVendorId(vendorData.id);
+      console.log('✅ [VendorProducts] Found store:', storeData);
+      setVendorId(storeData.id);
 
-      // Fetch vendor's products
-      console.log('📡 [VendorProducts] Fetching products for vendorId:', vendorData.id);
+      // Fetch store's products
+      console.log('📡 [VendorProducts] Fetching products for vendor_id:', storeData.id);
       const { data: productsData, error: productsError } = await supabase
         .from('products')
         .select('id, name, price, stock, status, total_sales, images, featured_image')
-        .eq('vendor_id', vendorData.id)
+        .eq('vendor_id', storeData.id)
         .order('created_at', { ascending: false });
 
       if (productsError) {
