@@ -50,7 +50,7 @@ export default function ApprovalsPage() {
             name,
             name_ar
           ),
-          stores!products_vendor_id_fkey (
+          stores!products_vendor_id_stores_fkey (
             id,
             name,
             name_ar,
