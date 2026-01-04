@@ -8,6 +8,7 @@ import FloatingAddButton from '@/components/dashboard/FloatingAddButton';
 import { Package, Clock, CheckCircle, XCircle, Eye, Truck, Calendar, DollarSign, User, Phone, Loader2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { updateOrderStatus, OrderStatus } from '@/lib/orderHelpers';
 import toast from 'react-hot-toast';
 
@@ -38,6 +39,7 @@ export default function VendorOrdersPageImproved() {
   const [loading, setLoading] = useState(true);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const { userId } = useAuth();
+  const { formatPrice } = useCurrency();
 
   useEffect(() => {
     if (userId) {
@@ -94,7 +96,7 @@ export default function VendorOrdersPageImproved() {
             id,
             order_number,
             customer_id,
-            total_amount,
+            total,
             status,
             created_at,
             updated_at
@@ -115,6 +117,7 @@ export default function VendorOrdersPageImproved() {
         if (!ordersMap.has(order.id)) {
           ordersMap.set(order.id, {
             ...order,
+            total_amount: order.total, // Map total to total_amount for consistency
             order_items: [],
             customer: { full_name: '', phone: '' }
           });
@@ -146,14 +149,18 @@ export default function VendorOrdersPageImproved() {
       if (uniqueOrderIds.length > 0) {
         const { data: itemsData } = await supabase
           .from('order_items')
-          .select('id, order_id, product_name, quantity, unit_price, total_price')
+          .select('id, order_id, product_name, name, name_ar, quantity, price, total')
           .eq('vendor_id', vendorData.id)
           .in('order_id', uniqueOrderIds);
 
         itemsData?.forEach((item: any) => {
           const order = ordersMap.get(item.order_id);
           if (order) {
-            order.order_items.push(item);
+            order.order_items.push({
+              ...item,
+              unit_price: item.price, // Map for consistency
+              total_price: item.total  // Map for consistency
+            });
           }
         });
       }
@@ -398,7 +405,7 @@ export default function VendorOrdersPageImproved() {
                         >
                           {getStatusText(order.status)}
                         </span>
-                        <span className="text-2xl font-bold text-white">{order.total_amount.toFixed(2)} ر.س</span>
+                        <span className="text-2xl font-bold text-white">{formatPrice(order.total_amount)}</span>
                       </div>
                     </div>
 
@@ -406,9 +413,9 @@ export default function VendorOrdersPageImproved() {
                     <div className="mb-4 space-y-2">
                       {order.order_items?.slice(0, 3).map((item) => (
                         <div key={item.id} className="flex justify-between text-sm">
-                          <span className="text-purple-200">{item.product_name}</span>
+                          <span className="text-purple-200">{item.name_ar || item.product_name || item.name}</span>
                           <span className="text-white">
-                            {item.quantity} × {item.unit_price.toFixed(2)} = {item.total_price.toFixed(2)} ر.س
+                            {item.quantity} × {formatPrice(item.unit_price)} = {formatPrice(item.total_price)}
                           </span>
                         </div>
                       ))}
