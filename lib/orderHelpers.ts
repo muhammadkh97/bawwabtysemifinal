@@ -142,11 +142,8 @@ export async function updateOrderStatus(
       updated_at: new Date().toISOString(),
     };
 
-    // إضافة الحقل الزمني المناسب
-    const timestampField = STATUS_TIMESTAMP_FIELDS[newStatus];
-    if (timestampField) {
-      updateData[timestampField] = new Date().toISOString();
-    }
+    // Note: Timestamp fields (confirmed_at, processing_at, etc.) are not in orders table
+    // We track status changes in order_status_history instead
 
     // 4. توليد أكواد التحقق إذا كانت الحالة ready_for_pickup
     if (newStatus === 'ready_for_pickup') {
