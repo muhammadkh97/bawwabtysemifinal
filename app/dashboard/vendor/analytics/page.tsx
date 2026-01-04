@@ -89,12 +89,12 @@ export default function VendorAnalyticsPage() {
       // Fetch vendor's orders through order_items (current period)
       const { data: orderItemsData } = await supabase
         .from('order_items')
-        .select('order_id, total_price, orders!inner(status, total_amount, created_at)')
+        .select('order_id, total, orders!inner(status, total_amount, created_at)')
         .eq('vendor_id', vendorData.id)
         .in('orders.status', ['delivered'])
         .gte('orders.created_at', startDate.toISOString());
 
-      const totalSales = orderItemsData?.reduce((sum, item) => sum + item.total_price, 0) || 0;
+      const totalSales = orderItemsData?.reduce((sum, item) => sum + item.total, 0) || 0;
       const uniqueOrders = new Set(orderItemsData?.map(item => item.order_id) || []);
       const totalOrders = uniqueOrders.size;
       const avgOrderValue = totalOrders > 0 ? totalSales / totalOrders : 0;
@@ -102,7 +102,7 @@ export default function VendorAnalyticsPage() {
       // Fetch previous period data for growth calculation
       const { data: previousOrderItemsData } = await supabase
         .from('order_items')
-        .select('order_id, total_price, orders!inner(status, total_amount, created_at)')
+        .select('order_id, total, orders!inner(status, total_amount, created_at)')
         .eq('vendor_id', vendorData.id)
         .in('orders.status', ['delivered'])
         .gte('orders.created_at', previousStartDate.toISOString())
