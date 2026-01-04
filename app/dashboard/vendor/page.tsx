@@ -21,9 +21,11 @@ interface Product {
   id: string;
   name: string;
   price: number;
-  category: string;
+  category?: string;
   stock: number;
   sales?: number;
+  featured_image?: string;
+  images?: string[];
 }
 
 interface Stats {
@@ -75,7 +77,7 @@ function VendorDashboardContent() {
       // Fetch products
       const { data: productsData } = await supabase
         .from('products')
-        .select('*')
+        .select('id, name, price, stock, featured_image, images')
         .eq('vendor_id', storeData.id)
         .eq('is_active', true)
         .order('created_at', { ascending: false })
@@ -358,9 +360,10 @@ function VendorDashboardContent() {
                   id={product.id}
                   name={product.name}
                   price={product.price}
-                  category={product.category || 'عام'}
+                  image={product.featured_image || (product.images && product.images[0])}
+                  category={'عام'}
                   stock={product.stock}
-                  sales={product.sales || 0}
+                  sales={0}
                   delay={0.9 + index * 0.1}
                 />
               ))}
