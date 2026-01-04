@@ -135,9 +135,9 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
             className="object-cover group-hover:scale-110 transition-transform duration-300"
           />
           {/* Discount Badge - Compact on mobile */}
-          {displayOldPrice && (
+          {product.oldPrice && (
             <div className="absolute top-2 md:top-4 right-2 md:right-4 px-1.5 md:px-3 py-0.5 md:py-1 bg-gradient-to-r from-red-500 to-pink-600 rounded-full text-white text-[10px] md:text-sm font-bold shadow-lg">
-              {Math.round(((displayOldPrice - displayPrice) / displayOldPrice) * 100)}%
+              {Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}%
             </div>
           )}
           {/* Wishlist Button - Smaller on mobile */}
