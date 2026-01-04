@@ -226,7 +226,7 @@ export default function VendorMyStorePage() {
       setBannerFile(null);
       
       // Refetch data to ensure preview is updated
-      await fetchVendorData();
+      await fetchStoreData();
       
     } catch (error: any) {
       console.error('Error saving store:', error);
