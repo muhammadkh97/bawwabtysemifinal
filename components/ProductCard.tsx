@@ -7,6 +7,7 @@ import type { Product } from '@/types';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { useState, useEffect } from 'react';
 
 interface ProductCardProps {
   product: Product;
@@ -18,9 +19,30 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { selectedCurrency, formatPrice, convertPrice } = useCurrency();
   
-  // تحويل السعر للعملة المختارة
-  const displayPrice = convertPrice(product.price, product.original_currency || 'SAR');
-  const displayOldPrice = product.oldPrice ? convertPrice(product.oldPrice, product.original_currency || 'SAR') : null;
+  // حالة للأسعار المحولة
+  const [displayPrice, setDisplayPrice] = useState<number>(product.price);
+  const [displayOldPrice, setDisplayOldPrice] = useState<number | null>(product.oldPrice || null);
+  const [formattedPrice, setFormattedPrice] = useState<string>('');
+  const [formattedOldPrice, setFormattedOldPrice] = useState<string>('');
+  
+  // تحويل الأسعار عند تغيير العملة
+  useEffect(() => {
+    async function convertPrices() {
+      const price = await convertPrice(product.price, product.original_currency || 'SAR');
+      const formatted = await formatPrice(product.price, product.original_currency || 'SAR');
+      setDisplayPrice(price);
+      setFormattedPrice(formatted);
+      
+      if (product.oldPrice) {
+        const oldPrice = await convertPrice(product.oldPrice, product.original_currency || 'SAR');
+        const formattedOld = await formatPrice(product.oldPrice, product.original_currency || 'SAR');
+        setDisplayOldPrice(oldPrice);
+        setFormattedOldPrice(formattedOld);
+      }
+    }
+    
+    convertPrices();
+  }, [product.price, product.oldPrice, product.original_currency, selectedCurrency, convertPrice, formatPrice]);
   
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -70,11 +92,11 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <span className="text-xl md:text-2xl font-bold text-gray-800">
-                    {formatPrice(product.price, product.original_currency || 'SAR')}
+                    {formattedPrice}
                   </span>
                   {product.oldPrice && (
                     <span className="text-gray-400 line-through">
-                      {formatPrice(product.oldPrice, product.original_currency || 'SAR')}
+                      {formattedOldPrice}
                     </span>
                   )}
                 </div>
@@ -165,11 +187,11 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
           <div className="flex items-end justify-between mb-2 md:mb-4">
             <div>
               <div className="text-sm sm:text-lg md:text-2xl font-black bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent leading-tight">
-                {formatPrice(product.price, product.original_currency || 'SAR')}
+                {formattedPrice}
               </div>
               {product.oldPrice && (
                 <div className="text-[9px] sm:text-xs md:text-sm text-gray-400 line-through">
-                  {formatPrice(product.oldPrice, product.original_currency || 'SAR')}
+                  {formattedOldPrice}
                 </div>
               )}
             </div>

@@ -5,18 +5,18 @@ import { Globe, Search, RefreshCw } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
 export default function CurrencySelector() {
-  const { selectedCurrency, changeCurrency, lastUpdated, isLoading, refreshRates } = useCurrency();
+  const { selectedCurrency, changeCurrency, isLoading, refreshCurrencies, currencies: allCurrencies } = useCurrency();
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // تحويل SUPPORTED_CURRENCIES إلى مصفوفة
-  const currencies = Object.values(SUPPORTED_CURRENCIES).map(curr => ({
+  const currencies = allCurrencies.map(curr => ({
     code: curr.code as CurrencyCode,
-    label: curr.arabicName,
+    label: curr.name_ar,
     symbol: curr.symbol,
-    flag: curr.flag,
-    name: curr.name,
+    flag: curr.flag || '',
+    name: curr.name_en,
   }));
 
   const currentCurrency = currencies.find(c => c.code === selectedCurrency) || currencies[0];

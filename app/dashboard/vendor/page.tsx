@@ -48,15 +48,25 @@ function VendorDashboardContent() {
     revenueTrend: 0,
     ordersTrend: 0,
   });
+  const [formattedRevenue, setFormattedRevenue] = useState<string>('');
 
   const { userId } = useAuth();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, selectedCurrency } = useCurrency();
 
   useEffect(() => {
     if (userId) {
       fetchDashboardData();
     }
   }, [userId]);
+
+  // Format revenue when stats change
+  useEffect(() => {
+    async function formatRevenue() {
+      const formatted = await formatPrice(stats.totalRevenue, 'SAR');
+      setFormattedRevenue(formatted);
+    }
+    formatRevenue();
+  }, [stats.totalRevenue, selectedCurrency, formatPrice]);
 
   const fetchDashboardData = async () => {
     try {
@@ -129,7 +139,7 @@ function VendorDashboardContent() {
   const statsCards = [
     {
       title: 'إجمالي الإيرادات',
-      value: formatPrice(stats.totalRevenue),
+      value: formattedRevenue,
       icon: DollarSign,
       gradient: 'from-emerald-500 to-teal-500',
       trend: stats.revenueTrend ? { value: stats.revenueTrend, isPositive: stats.revenueTrend > 0 } : undefined,

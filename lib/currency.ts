@@ -188,18 +188,3 @@ export async function getProductsWithConvertedPrices() {
     return [];
   }
 }
-
-// تنسيق السعر مع رمز العملة
-export function formatPrice(priceInILS: number, toCurrency?: CurrencyCode): string {
-  const currency = toCurrency || getSavedCurrency();
-  const converted = convertPrice(priceInILS, currency);
-  const symbol = CURRENCIES[currency].symbol;
-  
-  return `${converted.toFixed(2)} ${symbol}`;
-}
-
-// الحصول على معلومات العملة الحالية
-export function getCurrentCurrency() {
-  const code = getSavedCurrency();
-  return CURRENCIES[code];
-}

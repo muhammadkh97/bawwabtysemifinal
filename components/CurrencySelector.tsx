@@ -5,7 +5,7 @@ import { Globe, Search, RefreshCw } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
 export default function CurrencySelector() {
-  const { selectedCurrency, changeCurrency, lastUpdated, isLoading, refreshRates } = useCurrency();
+  const { selectedCurrency, changeCurrency, isLoading, refreshCurrencies, currencies: allCurrencies } = useCurrency();
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
