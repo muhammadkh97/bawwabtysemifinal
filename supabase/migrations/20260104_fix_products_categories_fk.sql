@@ -104,13 +104,9 @@ USING (
 
 -- 7️⃣ التحقق من النتيجة
 SELECT 
-  table_constraints.constraint_name,
-  table_constraints.table_name,
-  key_column_usage.column_name,
-  key_column_usage.foreign_table_name,
-  key_column_usage.foreign_column_name
-FROM information_schema.table_constraints
-JOIN information_schema.key_column_usage 
-  ON table_constraints.constraint_name = key_column_usage.constraint_name
-WHERE table_constraints.table_name = 'products' 
-  AND table_constraints.constraint_type = 'FOREIGN KEY';
+  constraint_name,
+  table_name,
+  column_name
+FROM information_schema.key_column_usage
+WHERE table_name = 'products' 
+  AND constraint_name = 'products_category_id_fkey';
