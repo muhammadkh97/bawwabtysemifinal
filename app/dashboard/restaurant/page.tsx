@@ -57,9 +57,10 @@ export default function RestaurantDashboard() {
 
       // جلب معلومات المطعم
       const { data: restaurantData } = await supabase
-        .from('restaurants')
+        .from('stores')
         .select('*')
-        .eq('owner_id', user.id)
+        .eq('user_id', user.id)
+        .eq('business_type', 'restaurant')
         .single();
 
       if (restaurantData) {
