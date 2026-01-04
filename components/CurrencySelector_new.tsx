@@ -102,7 +102,6 @@ export default function CurrencySelector() {
               >
                 <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
               </button>
-              )}
             </div>
 
             {/* Search Box */}
