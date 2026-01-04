@@ -127,7 +127,24 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
 
   // تنسيق السعر
   const formatPrice = async (price: number, fromCurrency: string = 'SAR'): Promise<string> => {
-    const convertedPrice = await convert]?.symbol || '';
+    const convertedPrice = await convertPrice(price, fromCurrency);
+    const currencyInfo = SUPPORTED_CURRENCIES[selectedCurrency];
+    
+    if (!currencyInfo) {
+      return `${convertedPrice.toFixed(2)}`;
+    }
+
+    const decimalPlaces = currencyInfo.decimal_places || 2;
+    const formattedNumber = convertedPrice.toLocaleString('en-US', {
+      minimumFractionDigits: decimalPlaces,
+      maximumFractionDigits: decimalPlaces,
+    });
+
+    return `${formattedNumber} ${currencyInfo.symbol}`;
+  };
+
+  const getCurrencySymbol = (currency: string): string => {
+    return SUPPORTED_CURRENCIES[currency]?.symbol || '';
   };
 
   const getCurrencyInfo = (currency: string): Currency | undefined => {
@@ -145,24 +162,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         getCurrencyInfo,
         currencies,
         isLoading,
-        refreshCurrenci
-
-  const getCurrencyInfo = (currency: string): { code: string; symbol: string; name: string; arabicName: string; flag: string; rate: number } | undefined => {
-    return SUPPORTED_CURRENCIES[currency as CurrencyCode];
-  };
-
-  return (
-    <CurrencyContext.Provider
-      value={{
-        selectedCurrency,
-        changeCurrency,
-        convertPrice,
-        formatPrice,
-        getCurrencySymbol,
-        getCurrencyInfo,
-        lastUpdated,
-        isLoading,
-        refreshRates,
+        refreshCurrencies,
       }}
     >
       {children}
