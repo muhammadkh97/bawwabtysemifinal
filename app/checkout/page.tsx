@@ -535,6 +535,8 @@ export default function CheckoutPage() {
           .eq('id', appliedCoupon.id);
       }
 
+      // إفراغ السلة من قاعدة البيانات و localStorage
+      await clearCart();
       if (typeof window !== 'undefined') {
         localStorage.removeItem('cartItems');
       }

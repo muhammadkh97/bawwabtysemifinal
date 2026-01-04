@@ -97,13 +97,15 @@ export default function VendorOrdersPageImproved() {
             total_amount,
             status,
             created_at,
-            updated_at,
-            customer:users!customer_id(full_name, phone)
+            updated_at
           )
         `)
         .eq('vendor_id', vendorData.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching order items:', error);
+        throw error;
+      }
 
       // Group by order_id
       const ordersMap = new Map<string, any>();
@@ -113,14 +115,34 @@ export default function VendorOrdersPageImproved() {
         if (!ordersMap.has(order.id)) {
           ordersMap.set(order.id, {
             ...order,
-            order_items: []
+            order_items: [],
+            customer: { full_name: '', phone: '' }
           });
         }
       });
 
-      // Get order_items
+      // Get customer details
       const uniqueOrderIds = Array.from(ordersMap.keys());
-      
+      if (uniqueOrderIds.length > 0) {
+        const customerIds = Array.from(new Set(
+          Array.from(ordersMap.values()).map(o => o.customer_id)
+        ));
+        
+        const { data: customersData } = await supabase
+          .from('users')
+          .select('id, full_name, phone')
+          .in('id', customerIds);
+
+        customersData?.forEach((customer: any) => {
+          Array.from(ordersMap.values()).forEach((order: any) => {
+            if (order.customer_id === customer.id) {
+              order.customer = customer;
+            }
+          });
+        });
+      }
+
+      // Get order_items
       if (uniqueOrderIds.length > 0) {
         const { data: itemsData } = await supabase
           .from('order_items')

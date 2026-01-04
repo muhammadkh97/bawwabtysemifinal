@@ -13,8 +13,9 @@ interface Order {
   created_at: string;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   total: number;
-  vendor?: {
+  stores?: {
     shop_name: string;
+    shop_name_ar: string;
   };
   order_items?: any[];
 }
@@ -39,13 +40,16 @@ export default function OrdersPage() {
         .from('orders')
         .select(`
           *,
-          vendor:vendor_id(shop_name),
+          stores!vendor_id(shop_name, shop_name_ar),
           order_items(id)
         `)
         .eq('customer_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching orders:', error);
+        throw error;
+      }
       setOrders(data || []);
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -149,7 +153,7 @@ export default function OrdersPage() {
                       
                       <div className="text-sm text-gray-600 space-y-1">
                         <p>📅 {new Date(order.created_at).toLocaleDateString('ar-SA')}</p>
-                        {order.vendor && <p>🏪 {order.vendor.shop_name}</p>}
+                        {order.stores && <p>🏪 {order.stores.shop_name_ar || order.stores.shop_name}</p>}
                         {order.order_items && <p>📦 {order.order_items.length} منتج</p>}
                       </div>
                     </div>

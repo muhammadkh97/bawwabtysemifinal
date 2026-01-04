@@ -277,12 +277,20 @@ export default function CartPage() {
                     <ArrowRight className="w-5 h-5" />
                   </Link>
 
-                  <Link
-                    href="/products"
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-purple-600 font-medium mt-3 hover:bg-purple-50 transition border border-purple-200"
-                  >
-                    متابعة التسوق
-                  </Link>
+                  <div className="grid grid-cols-2 gap-3 mt-3">
+                    <Link
+                      href="/products"
+                      className="flex items-center justify-center gap-2 py-3 rounded-2xl text-purple-600 font-medium hover:bg-purple-50 transition border border-purple-200"
+                    >
+                      متابعة التسوق
+                    </Link>
+                    <Link
+                      href="/orders"
+                      className="flex items-center justify-center gap-2 py-3 rounded-2xl text-green-600 font-medium hover:bg-green-50 transition border border-green-200"
+                    >
+                      📦 طلباتي
+                    </Link>
+                  </div>
                 </div>
 
                 {/* كوبون الخصم */}
