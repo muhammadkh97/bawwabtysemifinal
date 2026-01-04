@@ -87,7 +87,7 @@ export default function OrdersMapPage() {
       if (error) throw error;
 
       if (ordersData) {
-        const enrichedOrders: Order[] = ordersData.map((o: any) => ({
+        const enrichedOrders = ordersData.map((o: any): Order => ({
           id: o.id,
           order_number: o.order_number,
           total: o.total,

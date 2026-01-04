@@ -146,7 +146,7 @@ export default function DriverDashboard() {
         .limit(5);
 
       if (!ordersError && ordersData) {
-        const enrichedOrders: DriverOrder[] = ordersData.map((o: any) => ({
+        const enrichedOrders = ordersData.map((o: any): DriverOrder => ({
           id: o.id,
           order_number: o.order_number,
           total: o.total,
