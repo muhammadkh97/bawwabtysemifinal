@@ -59,7 +59,7 @@ export default function FeaturedProducts() {
       const productsWithVendors = await Promise.all(
         (data || []).map(async (product) => {
           const { data: vendorData } = await supabase
-            .from('vendors')
+            .from('stores')
             .select('shop_name')
             .eq('id', product.vendor_id)
             .single();

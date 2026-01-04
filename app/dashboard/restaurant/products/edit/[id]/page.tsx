@@ -86,7 +86,7 @@ export default function EditRestaurantProductPage() {
 
       // Get vendor/restaurant ID
       const { data: vendorData } = await supabase
-        .from('vendors')
+        .from('stores')
         .select('id')
         .eq('user_id', user.id)
         .single();

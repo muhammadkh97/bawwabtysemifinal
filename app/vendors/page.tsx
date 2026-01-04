@@ -31,7 +31,7 @@ export default function VendorsPage() {
       console.log('🔍 Fetching vendors...');
       
       const { data, error } = await supabase
-        .from('vendors')
+        .from('stores')
         .select('*')
         .order('created_at', { ascending: false });
 

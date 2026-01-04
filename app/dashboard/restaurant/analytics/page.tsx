@@ -48,7 +48,7 @@ export default function RestaurantAnalyticsPage() {
 
       // Get vendor ID
       const { data: vendorData } = await supabase
-        .from('vendors')
+        .from('stores')
         .select('id')
         .eq('user_id', user.id)
         .single();

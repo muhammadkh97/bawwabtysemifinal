@@ -499,7 +499,7 @@ async function sendDriverAcceptanceNotifications(orderId: string, order: any): P
 
     if (orderItems && orderItems.length > 0) {
       const { data: vendor } = await supabase
-        .from('vendors')
+        .from('stores')
         .select('user_id')
         .eq('id', orderItems[0].vendor_id)
         .single();

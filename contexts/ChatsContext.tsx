@@ -120,7 +120,7 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
         query = query.eq('customer_id', userId);
       } else if (userRole === 'vendor') {
         const { data: vendorData } = await supabase
-          .from('vendors')
+          .from('stores')
           .select('id')
           .eq('user_id', userId)
           .single();
@@ -350,9 +350,9 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
       if (userRole === 'customer') {
         filter = `customer_id=eq.${userId}`;
       } else if (userRole === 'vendor') {
-        // Get vendor_id from vendors table
+        // Get vendor_id from stores table
         const { data: vendorData, error: vendorError } = await supabase
-          .from('vendors')
+          .from('stores')
           .select('id')
           .eq('user_id', userId)
           .maybeSingle();

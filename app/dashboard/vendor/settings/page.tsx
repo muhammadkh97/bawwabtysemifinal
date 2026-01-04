@@ -78,7 +78,7 @@ export default function VendorSettingsPage() {
 
       // جلب بيانات البائع
       const { data: vendorData, error: vendorError } = await supabase
-        .from('vendors')
+        .from('stores')
         .select('notifications_email, notifications_sms, notifications_orders, notifications_reviews, notifications_messages, bank_name, account_number, iban')
         .eq('user_id', user?.id)
         .single();
@@ -178,7 +178,7 @@ export default function VendorSettingsPage() {
       setSaving(true);
 
       const { error } = await supabase
-        .from('vendors')
+        .from('stores')
         .update({
           notifications_email: emailNotifications,
           notifications_sms: smsNotifications,
@@ -204,7 +204,7 @@ export default function VendorSettingsPage() {
       setSaving(true);
 
       const { error } = await supabase
-        .from('vendors')
+        .from('stores')
         .update({
           bank_name: bankName,
           account_number: accountNumber,

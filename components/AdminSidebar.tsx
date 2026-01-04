@@ -123,7 +123,7 @@ export default function AdminSidebar() {
 
       // البائعون المعلقون
       const { count: pendingVendors } = await supabase
-        .from('vendors')
+        .from('stores')
         .select('*', { count: 'exact', head: true })
         .eq('approval_status', 'pending');
       approvals += pendingVendors || 0;

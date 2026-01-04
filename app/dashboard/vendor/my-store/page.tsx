@@ -40,7 +40,7 @@ export default function VendorMyStorePage() {
     try {
       // Get vendor data
       const { data: vendorData } = await supabase
-        .from('vendors')
+        .from('stores')
         .select('*')
         .eq('user_id', userId)
         .single();
@@ -166,7 +166,7 @@ export default function VendorMyStorePage() {
 
       // Get vendor ID
       const { data: vendorData } = await supabase
-        .from('vendors')
+        .from('stores')
         .select('id')
         .eq('user_id', userId)
         .single();
@@ -175,7 +175,7 @@ export default function VendorMyStorePage() {
 
       // Update vendor data
       const { error } = await supabase
-        .from('vendors')
+        .from('stores')
         .update({
           store_name: storeName,
           description: storeDescription,

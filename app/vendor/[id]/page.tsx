@@ -72,7 +72,7 @@ export default function VendorDetailsPage() {
   const fetchVendorDetails = async () => {
     try {
       const { data, error } = await supabase
-        .from('vendors')
+        .from('stores')
         .select('*')
         .eq('id', vendorId)
         .eq('approval_status', 'approved')
