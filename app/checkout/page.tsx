@@ -390,6 +390,7 @@ export default function CheckoutPage() {
         total: total,
         payment_method: formData.paymentMethod,
         payment_status: formData.paymentMethod === 'cash' ? 'pending' : 'paid',
+        coupon_id: appliedCoupon?.id || null,
         delivery_address: `${formData.address}, ${formData.city}, ${userCountry}`,
         delivery_lat: formData.latitude,
         delivery_lng: formData.longitude,
