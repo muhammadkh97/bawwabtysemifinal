@@ -53,6 +53,7 @@ export default function DriverDashboard() {
   const [activeOrders, setActiveOrders] = useState<DriverOrder[]>([]);
   const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<DriverOrder | null>(null);
+  const [isAvailable, setIsAvailable] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -83,7 +84,7 @@ export default function DriverDashboard() {
       // Get driver ID
       const { data: driverData, error: driverError } = await supabase
         .from('drivers')
-        .select('id')
+        .select('id, is_available')
         .eq('user_id', user.id)
         .single();
 
@@ -94,6 +95,7 @@ export default function DriverDashboard() {
       }
 
       setDriverId(driverData.id);
+      setIsAvailable(driverData.is_available || false);
 
       // Calculate stats manually from orders
       const { data: allOrders } = await supabase
@@ -176,6 +178,27 @@ export default function DriverDashboard() {
       console.error('Error:', error);
       toast.error('حدث خطأ غير متوقع');
       setLoading(false);
+    }
+  };
+
+  const toggleAvailability = async () => {
+    if (!driverId) return;
+    
+    try {
+      const newStatus = !isAvailable;
+      
+      const { error } = await supabase
+        .from('drivers')
+        .update({ is_available: newStatus })
+        .eq('id', driverId);
+      
+      if (error) throw error;
+      
+      setIsAvailable(newStatus);
+      toast.success(newStatus ? '✅ أنت الآن متاح لاستقبال الطلبات' : '⚠️ تم إيقاف استقبال الطلبات');
+    } catch (error) {
+      console.error('Error toggling availability:', error);
+      toast.error('فشل تحديث الحالة');
     }
   };
 
@@ -312,17 +335,36 @@ export default function DriverDashboard() {
       </div>
 
       <div className="relative z-10">
-        {/* Welcome Section */}
+        {/* Welcome Section with Availability Toggle */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
-            <Navigation className="w-10 h-10" />
-            لوحة تحكم المندوب 🚗
-          </h1>
-          <p className="text-purple-200">تابع طلباتك وأرباحك في الوقت الفعلي</p>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
+                <Navigation className="w-10 h-10" />
+                لوحة تحكم المندوب 🚗
+              </h1>
+              <p className="text-purple-200">تابع طلباتك وأرباحك في الوقت الفعلي</p>
+            </div>
+            
+            {/* Availability Toggle */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={toggleAvailability}
+              className={`flex items-center gap-3 px-6 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg ${
+                isAvailable
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white'
+                  : 'bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-gray-200'
+              }`}
+            >
+              <div className={`w-3 h-3 rounded-full ${isAvailable ? 'bg-white animate-pulse' : 'bg-gray-400'}`} />
+              {isAvailable ? 'متاح للطلبات' : 'غير متاح'}
+            </motion.button>
+          </div>
         </motion.div>
 
         {/* Stats Grid */}
