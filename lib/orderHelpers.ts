@@ -169,7 +169,7 @@ export async function updateOrderStatus(
     await supabase.from('order_status_history').insert({
       order_id: orderId,
       status: newStatus,
-      changed_by: userId,
+      created_by: userId,
       notes: notes || null,
       created_at: new Date().toISOString(),
     });
@@ -437,7 +437,8 @@ async function sendOrderStatusNotifications(
       title: 'تحديث حالة الطلب',
       message: `${message} - رقم الطلب: ${order.order_number}`,
       type: 'order_update',
-      related_id: orderId,
+      data: { order_id: orderId, status: newStatus },
+      is_read: false,
       created_at: new Date().toISOString(),
     });
   } catch (error) {
@@ -465,7 +466,8 @@ async function notifyAvailableDrivers(orderId: string): Promise<void> {
       title: 'طلب توصيل جديد',
       message: 'يوجد طلب توصيل جديد متاح في منطقتك',
       type: 'new_order',
-      related_id: orderId,
+      data: { order_id: orderId },
+      is_read: false,
       created_at: new Date().toISOString(),
     }));
 
@@ -486,7 +488,8 @@ async function sendDriverAcceptanceNotifications(orderId: string, order: any): P
       title: 'تم قبول طلبك',
       message: `تم قبول طلبك من قبل مندوب التوصيل - رقم الطلب: ${order.order_number}`,
       type: 'order_update',
-      related_id: orderId,
+      data: { order_id: orderId },
+      is_read: false,
       created_at: new Date().toISOString(),
     });
 
@@ -510,7 +513,8 @@ async function sendDriverAcceptanceNotifications(orderId: string, order: any): P
           title: 'تم قبول الطلب للتوصيل',
           message: `تم قبول الطلب ${order.order_number} من قبل مندوب التوصيل`,
           type: 'order_update',
-          related_id: orderId,
+          data: { order_id: orderId },
+          is_read: false,
           created_at: new Date().toISOString(),
         });
       }
