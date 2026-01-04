@@ -430,25 +430,15 @@ export default function CheckoutPage() {
         delivery_notes: formData.notes,
       };
 
-      const { error: orderError } = await supabase
+      const { data: newOrder, error: orderError } = await supabase
         .from('orders')
-        .insert([orderData]);
-
-      if (orderError) {
-        console.error('Order error:', orderError);
-        alert(`❌ حدث خطأ: ${orderError.message}`);
-        setLoading(false);
-        return;
-      }
-
-      const { data: newOrder, error: fetchError } = await supabase
-        .from('orders')
+        .insert([orderData])
         .select('id, order_number')
-        .eq('order_number', orderNumber)
         .single();
 
-      if (fetchError || !newOrder) {
-        alert('❌ حدث خطأ في استرجاع الطلب');
+      if (orderError || !newOrder) {
+        console.error('Order error:', orderError);
+        alert(`❌ حدث خطأ: ${orderError?.message || 'فشل إنشاء الطلب'}`);
         setLoading(false);
         return;
       }
