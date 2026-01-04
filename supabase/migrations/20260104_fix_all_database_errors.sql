@@ -34,6 +34,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- حذف Trigger إذا كان موجوداً
+DROP TRIGGER IF EXISTS vendor_wallets_updated_at ON vendor_wallets;
+
+-- إنشاء Trigger جديد
 CREATE TRIGGER vendor_wallets_updated_at
 BEFORE UPDATE ON vendor_wallets
 FOR EACH ROW
@@ -54,6 +58,10 @@ WHERE NOT EXISTS (
 
 -- RLS على vendor_wallets
 ALTER TABLE vendor_wallets ENABLE ROW LEVEL SECURITY;
+
+-- حذف السياسات القديمة إن وُجدت
+DROP POLICY IF EXISTS "vendor_wallets_select_own" ON vendor_wallets;
+DROP POLICY IF EXISTS "vendor_wallets_select_admin" ON vendor_wallets;
 
 -- البائعون يمكنهم رؤية محافظهم فقط
 CREATE POLICY "vendor_wallets_select_own"
