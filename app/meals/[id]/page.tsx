@@ -82,7 +82,7 @@ export default function MealDetailsPage() {
         .from('products')
         .select(`
           *,
-          vendors:stores!products_vendor_id_fkey(
+          vendors!products_vendor_id_fkey(
             shop_name,
             shop_name_ar,
             shop_logo,
@@ -96,13 +96,13 @@ export default function MealDetailsPage() {
       if (error) throw error;
       
       // التحقق من أن المنتج من مطعم
-      const { data: storeData } = await supabase
-        .from('stores')
+      const { data: vendorData } = await supabase
+        .from('vendors')
         .select('vendor_type')
         .eq('id', data.vendor_id)
         .single();
 
-      if (storeData?.vendor_type !== 'restaurant') {
+      if (vendorData?.vendor_type !== 'restaurant') {
         // إعادة التوجيه لصفحة المنتج العادية
         router.push(`/products/${mealId}`);
         return;
