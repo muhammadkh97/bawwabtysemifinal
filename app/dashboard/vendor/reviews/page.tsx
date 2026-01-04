@@ -72,14 +72,13 @@ export default function VendorReviewsPage() {
           id,
           rating,
           comment,
-          helpful_count,
           created_at,
           response,
           customer_id,
           product_id
         `)
         .in('product_id', productIds)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false});
 
       if (reviewsError) {
         console.error('خطأ في جلب المراجعات:', reviewsError);
@@ -113,7 +112,6 @@ export default function VendorReviewsPage() {
         product_name: productsMap.get(review.product_id) || 'منتج',
         rating: review.rating,
         comment: review.comment,
-        helpful_count: review.helpful_count || 0,
         created_at: review.created_at,
         response: review.response,
       })) || [];
@@ -330,10 +328,6 @@ export default function VendorReviewsPage() {
                     )}
 
                     <div className="flex items-center gap-4">
-                      <button className="flex items-center gap-1 text-purple-300 hover:text-white transition text-sm">
-                        <ThumbsUp className="w-4 h-4" />
-                        <span>{review.helpful_count} مفيد</span>
-                      </button>
                       {!review.response && (
                         <button
                           onClick={() => setReplyingTo(review.id)}

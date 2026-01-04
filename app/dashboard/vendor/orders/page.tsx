@@ -29,10 +29,6 @@ interface Order {
   status: string;
   created_at: string;
   updated_at: string;
-  pickup_qr_code?: string;
-  pickup_otp?: string;
-  delivery_qr_code?: string;
-  delivery_otp?: string;
 }
 
 export default function VendorOrdersPageImproved() {
@@ -65,22 +61,6 @@ export default function VendorOrdersPageImproved() {
         
         // تحديث القائمة المحلية
         await fetchOrders();
-        
-        // إذا كانت الحالة ready_for_pickup، عرض الأكواد
-        if (newStatus === 'ready_for_pickup') {
-          const { data: updatedOrder } = await supabase
-            .from('orders')
-            .select('pickup_qr_code, pickup_otp')
-            .eq('id', orderId)
-            .single();
-          
-          if (updatedOrder) {
-            toast.success(
-              `تم توليد أكواد الاستلام:\nQR: ${updatedOrder.pickup_qr_code?.substring(0, 20)}...\nOTP: ${updatedOrder.pickup_otp}`,
-              { duration: 10000 }
-            );
-          }
-        }
       } else {
         toast.error(result.error || 'فشل تحديث حالة الطلب');
       }
@@ -118,10 +98,6 @@ export default function VendorOrdersPageImproved() {
             status,
             created_at,
             updated_at,
-            pickup_qr_code,
-            pickup_otp,
-            delivery_qr_code,
-            delivery_otp,
             customer:users!customer_id(full_name, phone)
           )
         `)
@@ -421,31 +397,7 @@ export default function VendorOrdersPageImproved() {
                       )}
                     </div>
 
-                    {/* Verification Codes Button and Display */}
-                    {(order.status === 'ready_for_pickup' || order.status === 'picked_up') && (
-                      <div className="mb-4">
-                        {order.pickup_otp ? (
-                          <div className="p-4 rounded-xl bg-gradient-to-br from-orange-500/20 to-yellow-500/20 border border-orange-500/40">
-                            <div className="flex items-center gap-2 mb-3">
-                              <AlertCircle className="w-5 h-5 text-orange-400" />
-                              <p className="text-sm text-orange-400 font-bold">أكواد الاستلام للمندوب:</p>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="bg-black/30 p-4 rounded-xl">
-                                <p className="text-xs text-orange-300 mb-2">رمز OTP:</p>
-                                <p className="text-3xl font-bold text-white tracking-wider">{order.pickup_otp}</p>
-                                <p className="text-xs text-orange-300/60 mt-2">أعطِ هذا الرمز للمندوب</p>
-                              </div>
-                              <div className="bg-black/30 p-4 rounded-xl">
-                                <p className="text-xs text-orange-300 mb-2">رمز QR:</p>
-                                <div className="bg-white p-2 rounded-lg inline-block">
-                                  <img 
-                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${order.pickup_qr_code}`}
-                                    alt="QR Code"
-                                    className="w-24 h-24"
-                                  />
-                                </div>
-                                <p className="text-xs text-orange-300/60 mt-2">امسح هذا الرمز</p>
+                    {/* Action Buttons */}
                               </div>
                             </div>
                           </div>

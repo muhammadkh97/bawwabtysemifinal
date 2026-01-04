@@ -32,10 +32,6 @@ interface Order {
   status: string;
   created_at: string;
   updated_at: string;
-  pickup_qr_code?: string;
-  pickup_otp?: string;
-  delivery_qr_code?: string;
-  delivery_otp?: string;
 }
 
 export default function VendorOrdersPageImproved() {
@@ -68,22 +64,6 @@ export default function VendorOrdersPageImproved() {
         
         // تحديث القائمة المحلية
         await fetchOrders();
-        
-        // إذا كانت الحالة ready_for_pickup، عرض الأكواد
-        if (newStatus === 'ready_for_pickup') {
-          const { data: updatedOrder } = await supabase
-            .from('orders')
-            .select('pickup_qr_code, pickup_otp')
-            .eq('id', orderId)
-            .single();
-          
-          if (updatedOrder) {
-            toast.success(
-              `تم توليد أكواد الاستلام:\nQR: ${updatedOrder.pickup_qr_code?.substring(0, 20)}...\nOTP: ${updatedOrder.pickup_otp}`,
-              { duration: 10000 }
-            );
-          }
-        }
       } else {
         toast.error(result.error || 'فشل تحديث حالة الطلب');
       }
@@ -121,10 +101,6 @@ export default function VendorOrdersPageImproved() {
             status,
             created_at,
             updated_at,
-            pickup_qr_code,
-            pickup_otp,
-            delivery_qr_code,
-            delivery_otp,
             customer:users!customer_id(name, phone)
           )
         `)
@@ -423,23 +399,6 @@ export default function VendorOrdersPageImproved() {
                         </p>
                       )}
                     </div>
-
-                    {/* Verification Codes (if ready_for_pickup) */}
-                    {order.status === 'ready_for_pickup' && order.pickup_otp && (
-                      <div className="mb-4 p-4 rounded-xl bg-orange-500/10 border border-orange-500/30">
-                        <p className="text-sm text-orange-400 font-bold mb-2">أكواد الاستلام للمندوب:</p>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-xs text-orange-300 mb-1">رمز OTP:</p>
-                            <p className="text-2xl font-bold text-white">{order.pickup_otp}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-orange-300 mb-1">رمز QR:</p>
-                            <p className="text-xs text-white break-all">{order.pickup_qr_code?.substring(0, 30)}...</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
 
                     {/* Action Buttons */}
                     {availableActions.length > 0 && (

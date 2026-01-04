@@ -13,7 +13,6 @@ interface Review {
   comment: string;
   images: string[];
   is_verified_purchase: boolean;
-  helpful_count: number;
   created_at: string;
   users: {
     name: string;
@@ -323,15 +322,6 @@ export default function ReviewsList({ productId }: ReviewsListProps) {
                       ))}
                     </div>
                   )}
-
-                  {/* زر مفيد - محسن */}
-                  <button
-                    onClick={() => handleHelpful(review.id)}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20 rounded-xl transition-all text-gray-300 hover:text-white border border-purple-500/20 hover:border-purple-500/40 group"
-                  >
-                    <ThumbsUp className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                    <span className="text-sm font-semibold">مفيد ({review.helpful_count})</span>
-                  </button>
                 </div>
               </div>
             </div>
