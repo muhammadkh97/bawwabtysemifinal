@@ -58,20 +58,20 @@ export default function VendorPromotionsPage() {
     try {
       setLoading(true);
       
-      // Get vendor ID first
-      const { data: vendorData } = await supabase
-        .from('vendors')
+      // Get store ID (vendor_id) first
+      const { data: storeData } = await supabase
+        .from('stores')
         .select('id')
         .eq('user_id', userId)
         .single();
 
-      if (!vendorData) return;
+      if (!storeData) return;
 
       // Fetch coupons
       const { data, error } = await supabase
         .from('coupons')
         .select('*')
-        .eq('vendor_id', vendorData.id)
+        .eq('vendor_id', storeData.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -152,15 +152,15 @@ export default function VendorPromotionsPage() {
     try {
       setSaving(true);
 
-      // Get vendor ID
-      const { data: vendorData } = await supabase
-        .from('vendors')
+      // Get store ID (vendor_id)
+      const { data: storeData } = await supabase
+        .from('stores')
         .select('id')
         .eq('user_id', userId)
         .single();
 
-      if (!vendorData) {
-        alert('خطأ: لم يتم العثور على بيانات البائع');
+      if (!storeData) {
+        alert('خطأ: لم يتم العثور على بيانات المتجر');
         return;
       }
 
@@ -168,7 +168,7 @@ export default function VendorPromotionsPage() {
       const { error } = await supabase
         .from('coupons')
         .insert([{
-          vendor_id: vendorData.id,
+          vendor_id: storeData.id,
           name: formData.code.toUpperCase(), // استخدام الكود كاسم
           code: formData.code.toUpperCase(),
           description: formData.description,
