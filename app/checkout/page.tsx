@@ -387,24 +387,13 @@ export default function CheckoutPage() {
         delivery_fee: shipping,
         tax: tax,
         discount: discount,
-        coupon_discount: discount,
         total: total,
         payment_method: formData.paymentMethod,
         payment_status: formData.paymentMethod === 'cash' ? 'pending' : 'paid',
-        coupon_id: appliedCoupon?.id || null,
-        delivery_address_snapshot: {
-          name: formData.fullName,
-          phone: formData.phone,
-          email: formData.email,
-          address: formData.address,
-          city: formData.city,
-          postal_code: formData.postalCode,
-          country: userCountry,
-          latitude: formData.latitude,
-          longitude: formData.longitude,
-        },
-        customer_notes: formData.notes,
-        delivery_instructions: formData.notes,
+        delivery_address: `${formData.address}, ${formData.city}, ${userCountry}`,
+        delivery_lat: formData.latitude,
+        delivery_lng: formData.longitude,
+        delivery_notes: formData.notes,
       };
 
       if (firstVendorId) {
