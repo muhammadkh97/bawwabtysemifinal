@@ -401,10 +401,22 @@ export default function CheckoutPage() {
         return;
       }
 
+      // بناء items من السلة
+      const orderItems = cartItems.map(item => ({
+        product_id: item.product?.id,
+        name: item.product?.name || '',
+        name_ar: item.product?.name_ar || '',
+        quantity: item.quantity,
+        price: item.product?.price || 0,
+        currency: item.product?.currency || 'SAR',
+        image: item.product?.image_url || '',
+      }));
+
       const orderData: any = {
         order_number: orderNumber,
         customer_id: user.id,
         vendor_id: firstVendorId,
+        items: orderItems,
         status: 'pending',
         subtotal: subtotal,
         delivery_fee: shipping,
