@@ -14,6 +14,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCart } from '@/contexts/CartContext';
+import { useRestaurantCart } from '@/contexts/RestaurantCartContext';
 
 interface Vendor {
   id: string;
@@ -55,12 +56,14 @@ export default function VendorDetailsPage() {
   const vendorId = params.id as string;
   const { formatPrice } = useCurrency();
   const { addToCart } = useCart();
+  const { addToRestaurantCart } = useRestaurantCart();
 
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'products' | 'about'>('products');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isRestaurant, setIsRestaurant] = useState(false);
 
   useEffect(() => {
     if (vendorId) {
@@ -80,6 +83,7 @@ export default function VendorDetailsPage() {
 
       if (error) throw error;
       setVendor(data);
+      setIsRestaurant(data?.vendor_type === 'restaurant');
     } catch (error) {
       console.error('Error fetching vendor:', error);
       router.push('/404');
@@ -109,6 +113,15 @@ export default function VendorDetailsPage() {
     (p.description_ar || p.description || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // دالة لإضافة المنتج للسلة المناسبة
+  const handleAddToCart = async (productId: string) => {
+    if (isRestaurant && vendorId) {
+      await addToRestaurantCart(productId, vendorId, 1);
+    } else {
+      await addToCart(productId, 1);
+    }
+  };
+
   if (loading) {
     return (
       <main className="min-h-screen bg-white">
@@ -126,7 +139,6 @@ export default function VendorDetailsPage() {
 
   if (!vendor) return null;
 
-  const isRestaurant = vendor.vendor_type === 'restaurant';
   const themeGradient = isRestaurant 
     ? 'from-orange-600 via-red-600 to-pink-600' 
     : 'from-purple-600 via-indigo-600 to-blue-600';
@@ -355,7 +367,7 @@ export default function VendorDetailsPage() {
 
                         {/* Quick Add Button - Floating */}
                         <button 
-                          onClick={() => addToCart(product.id, 1)}
+                          onClick={() => handleAddToCart(product.id)}
                           disabled={product.stock === 0}
                           className={`absolute bottom-4 left-4 w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-white shadow-xl flex items-center justify-center text-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-300 transform translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 disabled:opacity-50`}
                         >
@@ -394,7 +406,7 @@ export default function VendorDetailsPage() {
                           
                           {/* Mobile Add Button */}
                           <button 
-                            onClick={() => addToCart(product.id, 1)}
+                            onClick={() => handleAddToCart(product.id)}
                             disabled={product.stock === 0}
                             className={`md:hidden w-10 h-10 rounded-xl ${accentBg} flex items-center justify-center text-white shadow-lg`}
                           >
