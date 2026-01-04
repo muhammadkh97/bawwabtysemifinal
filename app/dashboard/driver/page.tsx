@@ -87,7 +87,7 @@ export default function DriverDashboard() {
 
       if (driverError || !driverData) {
         toast.error('⚠️ يجب أن تكون مندوب توصيل');
-        router.push('/dashboard');
+        router.push('/');
         return;
       }
 
