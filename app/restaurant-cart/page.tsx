@@ -6,6 +6,8 @@ import { UtensilsCrossed, Plus, Minus, Trash2, Clock, ShoppingBag, Store, AlertC
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
+import Header from '@/components/Header'
+import Footer from '@/components/Footer'
 
 export default function RestaurantCartPage() {
   const { 
@@ -46,34 +48,40 @@ export default function RestaurantCartPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen pt-32 pb-20 px-4">
-        <div className="max-w-6xl mx-auto text-center">
+      <>
+        <Header />
+        <div className="min-h-screen pt-32 pb-20 px-4">
+          <div className="max-w-6xl mx-auto text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto"></div>
           <p className="mt-4 text-gray-600">جاري تحميل سلة المطاعم...</p>
         </div>
+        <Footer />
       </div>
+      </>
     )
   }
 
   if (restaurantCartItems.length === 0) {
     return (
-      <div className="min-h-screen pt-32 pb-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-white rounded-3xl shadow-lg p-8 md:p-12 text-center">
-            <div className="w-24 h-24 mx-auto bg-gradient-to-br from-orange-100 to-red-100 rounded-full flex items-center justify-center mb-6">
-              <UtensilsCrossed className="w-12 h-12 text-orange-500" />
-            </div>
-            <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">
-              سلة المطاعم فارغة
-            </h1>
-            <p className="text-gray-600 text-lg mb-8">
-              لم تقم بإضافة أي وجبات من المطاعم بعد
-            </p>
-            <div className="flex gap-4 justify-center">
-              <Link
-                href="/restaurants"
-                className="px-8 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-2xl font-bold hover:shadow-xl transition-all"
-              >
+      <>
+        <Header />
+        <div className="min-h-screen pt-32 pb-20 px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="bg-white rounded-3xl shadow-lg p-8 md:p-12 text-center">
+              <div className="w-24 h-24 mx-auto bg-gradient-to-br from-orange-100 to-red-100 rounded-full flex items-center justify-center mb-6">
+                <UtensilsCrossed className="w-12 h-12 text-orange-500" />
+              </div>
+              <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">
+                سلة المطاعم فارغة
+              </h1>
+              <p className="text-gray-600 text-lg mb-8">
+                لم تقم بإضافة أي وجبات من المطاعم بعد
+              </p>
+              <div className="flex gap-4 justify-center">
+                <Link
+                  href="/restaurants"
+                  className="px-8 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-2xl font-bold hover:shadow-xl transition-all"
+                >
                 <span className="flex items-center gap-2">
                   <UtensilsCrossed className="w-5 h-5" />
                   تصفح المطاعم
@@ -88,18 +96,22 @@ export default function RestaurantCartPage() {
             </div>
           </div>
         </div>
+        <Footer />
       </div>
+      </>
     )
   }
 
   return (
-    <div className="min-h-screen pt-32 pb-20 px-4 bg-gradient-to-b from-orange-50 to-white">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-black text-gray-900 flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center">
+    <>
+      <Header />
+      <div className="min-h-screen pt-32 pb-20 px-4 bg-gradient-to-b from-orange-50 to-white">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-black text-gray-900 flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center">
                 <UtensilsCrossed className="w-6 h-6 text-white" />
               </div>
               سلة المطاعم
@@ -325,6 +337,8 @@ export default function RestaurantCartPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
+    </>
   )
 }

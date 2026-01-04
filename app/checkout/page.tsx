@@ -377,11 +377,34 @@ export default function CheckoutPage() {
 
     try {
       const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-      const firstVendorId = cartItems[0]?.product?.vendor_id || null;
+      
+      // جلب vendor_id من أول منتج في السلة
+      let firstVendorId = cartItems[0]?.product?.vendor_id;
+      
+      // إذا لم يكن موجوداً في الكاش، نجلبه من قاعدة البيانات
+      if (!firstVendorId && cartItems.length > 0) {
+        const firstProductId = cartItems[0]?.product?.id;
+        if (firstProductId) {
+          const { data: productData } = await supabase
+            .from('products')
+            .select('vendor_id')
+            .eq('id', firstProductId)
+            .single();
+          firstVendorId = productData?.vendor_id;
+        }
+      }
+
+      // التأكد من وجود vendor_id
+      if (!firstVendorId) {
+        alert('❌ خطأ: لا يمكن تحديد البائع للطلب');
+        setLoading(false);
+        return;
+      }
 
       const orderData: any = {
         order_number: orderNumber,
         customer_id: user.id,
+        vendor_id: firstVendorId,
         status: 'pending',
         subtotal: subtotal,
         delivery_fee: shipping,
@@ -396,10 +419,6 @@ export default function CheckoutPage() {
         delivery_lng: formData.longitude,
         delivery_notes: formData.notes,
       };
-
-      if (firstVendorId) {
-        orderData.vendor_id = firstVendorId;
-      }
 
       const { error: orderError } = await supabase
         .from('orders')
