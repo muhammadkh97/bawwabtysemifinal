@@ -71,7 +71,7 @@ export default function RestaurantCartPage() {
             </p>
             <div className="flex gap-4 justify-center">
               <Link
-                href="/categories/restaurants"
+                href="/restaurants"
                 className="px-8 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-2xl font-bold hover:shadow-xl transition-all"
               >
                 <span className="flex items-center gap-2">
