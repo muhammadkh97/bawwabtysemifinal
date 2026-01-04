@@ -1,52 +1,192 @@
-// نظام العملات للدول العربية
-export const CURRENCIES = {
-  ILS: { symbol: '₪', name: 'شيكل فلسطيني', code: 'ILS', flag: '🇵🇸', rate: 1 },
-  JOD: { symbol: 'د.أ', name: 'دينار أردني', code: 'JOD', flag: '🇯🇴', rate: 0.19 },
-  SAR: { symbol: 'ر.س', name: 'ريال سعودي', code: 'SAR', flag: '🇸🇦', rate: 1.36 },
-  AED: { symbol: 'د.إ', name: 'درهم إماراتي', code: 'AED', flag: '🇦🇪', rate: 1.0 },
-  EGP: { symbol: 'ج.م', name: 'جنيه مصري', code: 'EGP', flag: '🇪🇬', rate: 8.5 },
-  KWD: { symbol: 'د.ك', name: 'دينار كويتي', code: 'KWD', flag: '🇰🇼', rate: 0.083 },
-  QAR: { symbol: 'ر.ق', name: 'ريال قطري', code: 'QAR', flag: '🇶🇦', rate: 0.99 },
-  OMR: { symbol: 'ر.ع', name: 'ريال عماني', code: 'OMR', flag: '🇴🇲', rate: 0.10 },
-  BHD: { symbol: 'د.ب', name: 'دينار بحريني', code: 'BHD', flag: '🇧🇭', rate: 0.10 },
-  LBP: { symbol: 'ل.ل', name: 'ليرة لبنانية', code: 'LBP', flag: '🇱🇧', rate: 4100 },
-  SYP: { symbol: 'ل.س', name: 'ليرة سورية', code: 'SYP', flag: '🇸🇾', rate: 6850 },
-  IQD: { symbol: 'د.ع', name: 'دينار عراقي', code: 'IQD', flag: '🇮🇶', rate: 356 },
-  YER: { symbol: 'ر.ي', name: 'ريال يمني', code: 'YER', flag: '🇾🇪', rate: 68 },
-  TND: { symbol: 'د.ت', name: 'دينار تونسي', code: 'TND', flag: '🇹🇳', rate: 0.84 },
-  DZD: { symbol: 'د.ج', name: 'دينار جزائري', code: 'DZD', flag: '🇩🇿', rate: 36 },
-  MAD: { symbol: 'د.م', name: 'درهم مغربي', code: 'MAD', flag: '🇲🇦', rate: 2.7 },
-  LYD: { symbol: 'د.ل', name: 'دينار ليبي', code: 'LYD', flag: '🇱🇾', rate: 1.3 },
-  SDG: { symbol: 'ج.س', name: 'جنيه سوداني', code: 'SDG', flag: '🇸🇩', rate: 164 },
-  MRU: { symbol: 'أ.م', name: 'أوقية موريتانية', code: 'MRU', flag: '🇲🇷', rate: 10.2 },
-  USD: { symbol: '$', name: 'دولار أمريكي', code: 'USD', flag: '🇺🇸', rate: 0.27 },
-  EUR: { symbol: '€', name: 'يورو', code: 'EUR', flag: '🇪🇺', rate: 0.25 },
-};
+import { supabase } from '@/lib/supabase';
 
-export type CurrencyCode = keyof typeof CURRENCIES;
-
-// الحصول على العملة المحفوظة
-export function getSavedCurrency(): CurrencyCode {
-  if (typeof window === 'undefined') return 'ILS';
-  
-  const saved = localStorage.getItem('selectedCurrency');
-  return (saved as CurrencyCode) || 'ILS';
+/**
+ * واجهة العملة
+ */
+export interface Currency {
+  code: string;
+  name_en: string;
+  name_ar: string;
+  symbol: string;
+  flag: string;
+  decimal_places: number;
+  is_active: boolean;
+  display_order: number;
 }
 
-// حفظ العملة المختارة
-export function saveCurrency(code: CurrencyCode) {
-  if (typeof window === 'undefined') return;
-  
-  localStorage.setItem('selectedCurrency', code);
-  // إعادة تحميل الصفحة لتطبيق العملة الجديدة
-  window.location.reload();
+/**
+ * واجهة سعر الصرف
+ */
+export interface ExchangeRate {
+  base_currency: string;
+  target_currency: string;
+  rate: number;
+  last_updated: string;
 }
 
-// تحويل السعر من الشيكل إلى العملة المختارة
-export function convertPrice(priceInILS: number, toCurrency?: CurrencyCode): number {
-  const currency = toCurrency || getSavedCurrency();
-  const rate = CURRENCIES[currency].rate;
-  return Math.round(priceInILS * rate * 100) / 100;
+/**
+ * جلب جميع العملات النشطة من قاعدة البيانات
+ */
+export async function getCurrencies(): Promise<Currency[]> {
+  try {
+    const { data, error } = await supabase
+      .from('currencies')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_order');
+
+    if (error) {
+      console.error('Error fetching currencies:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error in getCurrencies:', error);
+    return [];
+  }
+}
+
+/**
+ * تحويل السعر من عملة لأخرى باستخدام دالة قاعدة البيانات
+ */
+export async function convertCurrency(
+  amount: number,
+  fromCurrency: string,
+  toCurrency: string
+): Promise<number> {
+  try {
+    const { data, error } = await supabase.rpc('convert_currency', {
+      amount,
+      from_curr: fromCurrency,
+      to_curr: toCurrency,
+    });
+
+    if (error) {
+      console.error('Error converting currency:', error);
+      return amount; // إرجاع المبلغ الأصلي في حالة الخطأ
+    }
+
+    return data || amount;
+  } catch (error) {
+    console.error('Error in convertCurrency:', error);
+    return amount;
+  }
+}
+
+/**
+ * جلب سعر الصرف المباشر بين عملتين
+ */
+export async function getExchangeRate(
+  fromCurrency: string,
+  toCurrency: string
+): Promise<number | null> {
+  try {
+    const { data, error } = await supabase
+      .from('exchange_rates')
+      .select('rate')
+      .eq('base_currency', fromCurrency)
+      .eq('target_currency', toCurrency)
+      .single();
+
+    if (error) {
+      console.error('Error fetching exchange rate:', error);
+      return null;
+    }
+
+    return data?.rate || null;
+  } catch (error) {
+    console.error('Error in getExchangeRate:', error);
+    return null;
+  }
+}
+
+/**
+ * تنسيق السعر بالعملة المحددة
+ */
+export function formatPrice(
+  amount: number,
+  currencyCode: string,
+  currencyInfo?: Currency
+): string {
+  const decimalPlaces = currencyInfo?.decimal_places || 2;
+  const symbol = currencyInfo?.symbol || currencyCode;
+
+  const formattedAmount = amount.toLocaleString('en-US', {
+    minimumFractionDigits: decimalPlaces,
+    maximumFractionDigits: decimalPlaces,
+  });
+
+  return `${formattedAmount} ${symbol}`;
+}
+
+/**
+ * جلب العملة المفضلة للمستخدم من قاعدة البيانات
+ */
+export async function getUserPreferredCurrency(userId: string): Promise<string | null> {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('preferred_currency')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching user preferred currency:', error);
+      return null;
+    }
+
+    return data?.preferred_currency || null;
+  } catch (error) {
+    console.error('Error in getUserPreferredCurrency:', error);
+    return null;
+  }
+}
+
+/**
+ * تحديث العملة المفضلة للمستخدم في قاعدة البيانات
+ */
+export async function updateUserPreferredCurrency(
+  userId: string,
+  currencyCode: string
+): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('users')
+      .update({ preferred_currency: currencyCode })
+      .eq('id', userId);
+
+    if (error) {
+      console.error('Error updating user preferred currency:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in updateUserPreferredCurrency:', error);
+    return false;
+  }
+}
+
+/**
+ * جلب المنتجات مع الأسعار المحولة من View
+ */
+export async function getProductsWithConvertedPrices() {
+  try {
+    const { data, error } = await supabase
+      .from('products_with_converted_prices')
+      .select('*');
+
+    if (error) {
+      console.error('Error fetching products with converted prices:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error in getProductsWithConvertedPrices:', error);
+    return [];
+  }
 }
 
 // تنسيق السعر مع رمز العملة

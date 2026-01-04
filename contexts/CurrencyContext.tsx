@@ -1,153 +1,151 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getLatestExchangeRates, updateExchangeRatesFromAPI, getExchangeRatesAge } from '@/lib/exchange-rates';
+import { getCurrencies, convertCurrency as dbConvertCurrency, getUserPreferredCurrency, updateUserPreferredCurrency, Currency } from '@/lib/currency';
+import { useAuth } from '@/contexts/AuthContext';
 
-// العملات المدعومة مع أسعار الصرف الافتراضية (بالنسبة للريال السعودي SAR)
-// هذه الأسعار تُستخدم فقط كاحتياطي إذا فشل جلب الأسعار من قاعدة البيانات
-const DEFAULT_RATES = {
-  SAR: { code: 'SAR', symbol: 'ر.س', name: 'ريال سعودي', arabicName: 'ريال', flag: '🇸🇦', rate: 1.0 },
-  USD: { code: 'USD', symbol: '$', name: 'دولار أمريكي', arabicName: 'دولار', flag: '🇺🇸', rate: 0.27 },
-  ILS: { code: 'ILS', symbol: '₪', name: 'شيكل إسرائيلي', arabicName: 'شيكل', flag: '🇮🇱', rate: 0.95 },
-  EUR: { code: 'EUR', symbol: '€', name: 'يورو', arabicName: 'يورو', flag: '🇪🇺', rate: 0.24 },
-  GBP: { code: 'GBP', symbol: '£', name: 'جنيه إسترليني', arabicName: 'جنيه', flag: '🇬🇧', rate: 0.21 },
-  AED: { code: 'AED', symbol: 'د.إ', name: 'درهم إماراتي', arabicName: 'درهم', flag: '🇦🇪', rate: 0.98 },
-  EGP: { code: 'EGP', symbol: 'ج.م', name: 'جنيه مصري', arabicName: 'جنيه', flag: '🇪🇬', rate: 13.2 },
-  JOD: { code: 'JOD', symbol: 'د.أ', name: 'دينار أردني', arabicName: 'دينار', flag: '🇯🇴', rate: 0.19 },
-  KWD: { code: 'KWD', symbol: 'د.ك', name: 'دينار كويتي', arabicName: 'دينار', flag: '🇰🇼', rate: 0.08 },
-  QAR: { code: 'QAR', symbol: 'ر.ق', name: 'ريال قطري', arabicName: 'ريال', flag: '🇶🇦', rate: 0.97 },
-  OMR: { code: 'OMR', symbol: 'ر.ع', name: 'ريال عماني', arabicName: 'ريال', flag: '🇴🇲', rate: 0.10 },
-  BHD: { code: 'BHD', symbol: 'د.ب', name: 'دينار بحريني', arabicName: 'دينار', flag: '🇧🇭', rate: 0.10 },
-  LBP: { code: 'LBP', symbol: 'ل.ل', name: 'ليرة لبنانية', arabicName: 'ليرة', flag: '🇱🇧', rate: 400.0 },
-  SYP: { code: 'SYP', symbol: 'ل.س', name: 'ليرة سورية', arabicName: 'ليرة', flag: '🇸🇾', rate: 6700.0 },
-  IQD: { code: 'IQD', symbol: 'د.ع', name: 'دينار عراقي', arabicName: 'دينار', flag: '🇮🇶', rate: 350.0 },
-  YER: { code: 'YER', symbol: 'ر.ي', name: 'ريال يمني', arabicName: 'ريال', flag: '🇾🇪', rate: 66.5 },
-} as const;
+// العملات المدعومة - سيتم تحميلها من قاعدة البيانات
+export let SUPPORTED_CURRENCIES: Record<string, Currency> = {};
 
-export let SUPPORTED_CURRENCIES: Record<string, { code: string; symbol: string; name: string; arabicName: string; flag: string; rate: number }> = { ...DEFAULT_RATES };
-
-export type CurrencyCode = keyof typeof DEFAULT_RATES;
+export type CurrencyCode = string;
 
 interface CurrencyContextType {
   selectedCurrency: string;
-  changeCurrency: (currency: string) => void;
-  convertPrice: (price: number, fromCurrency?: string) => number;
-  formatPrice: (price: number, fromCurrency?: string) => string;
+  changeCurrency: (currency: string) => Promise<void>;
+  convertPrice: (price: number, fromCurrency?: string) => Promise<number>;
+  formatPrice: (price: number, fromCurrency?: string) => Promise<string>;
   getCurrencySymbol: (currency: string) => string;
-  getCurrencyInfo: (currency: string) => { code: string; symbol: string; name: string; arabicName: string; flag: string; rate: number } | undefined;
-  lastUpdated: Date | null;
+  getCurrencyInfo: (currency: string) => Currency | undefined;
+  currencies: Currency[];
   isLoading: boolean;
-  refreshRates: () => Promise<void>;
+  refreshCurrencies: () => Promise<void>;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
 export function CurrencyProvider({ children }: { children: ReactNode }) {
-  const [selectedCurrency, setSelectedCurrency] = useState<string>('ILS');
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('JOD');
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
 
-  // تحميل العملة المحفوظة عند بدء التطبيق
+  // تحميل العملات من قاعدة البيانات
   useEffect(() => {
-    const savedCurrency = localStorage.getItem('preferred_currency');
-    if (savedCurrency && SUPPORTED_CURRENCIES[savedCurrency as CurrencyCode]) {
-      setSelectedCurrency(savedCurrency);
-    } else {
-      // إذا لم توجد عملة محفوظة، استخدم ILS كافتراضي
-      setSelectedCurrency('ILS');
-    }
-    
-    // جلب أحدث أسعار الصرف
-    loadExchangeRates();
+    loadCurrencies();
   }, []);
 
-  // جلب أسعار الصرف من قاعدة البيانات
-  const loadExchangeRates = async () => {
+  // تحميل العملة المفضلة للمستخدم
+  useEffect(() => {
+    if (user?.id) {
+      loadUserPreferredCurrency();
+    } else {
+      // إذا لم يكن المستخدم مسجلاً الدخول، استخدم localStorage
+      const savedCurrency = localStorage.getItem('preferred_currency');
+      if (savedCurrency) {
+        setSelectedCurrency(savedCurrency);
+      }
+    }
+  }, [user]);
+
+  // جلب العملات من قاعدة البيانات
+  const loadCurrencies = async () => {
     try {
       setIsLoading(true);
+      const currenciesData = await getCurrencies();
       
-      // التحقق من عمر آخر تحديث
-      const age = await getExchangeRatesAge();
-      
-      // إذا مر أكثر من 24 ساعة، حدّث من API
-      if (!age || age.needsUpdate) {
-        console.log('⏰ أسعار الصرف قديمة، جاري التحديث من API...');
-        await updateExchangeRatesFromAPI();
-      }
-      
-      // جلب الأسعار من قاعدة البيانات
-      const rates = await getLatestExchangeRates();
-      
-      if (rates) {
-        // تحديث SUPPORTED_CURRENCIES بالأسعار الجديدة
-        Object.keys(rates).forEach((currency) => {
-          if (SUPPORTED_CURRENCIES[currency as CurrencyCode]) {
-            SUPPORTED_CURRENCIES[currency as CurrencyCode] = {
-              ...SUPPORTED_CURRENCIES[currency as CurrencyCode],
-              rate: rates[currency].rate,
-            };
-          }
+      if (currenciesData.length > 0) {
+        setCurrencies(currenciesData);
+        
+        // تحديث SUPPORTED_CURRENCIES
+        SUPPORTED_CURRENCIES = {};
+        currenciesData.forEach((currency) => {
+          SUPPORTED_CURRENCIES[currency.code] = currency;
         });
         
-        setLastUpdated(new Date(rates[Object.keys(rates)[0]]?.lastUpdated || Date.now()));
-        console.log('✅ تم تحديث أسعار الصرف بنجاح');
+        console.log(`✅ تم تحميل ${currenciesData.length} عملة من قاعدة البيانات`);
       }
     } catch (error) {
-      console.error('❌ خطأ في تحميل أسعار الصرف:', error);
-      console.log('⚠️ سيتم استخدام الأسعار الافتراضية');
+      console.error('❌ خطأ في تحميل العملات:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // دالة لتحديث الأسعار يدوياً
-  const refreshRates = async () => {
-    console.log('🔄 تحديث أسعار الصرف يدوياً...');
-    await loadExchangeRates();
-  };
-
-  const changeCurrency = (currency: string) => {
-    if (SUPPORTED_CURRENCIES[currency as CurrencyCode]) {
-      setSelectedCurrency(currency);
-      localStorage.setItem('preferred_currency', currency);
+  // جلب العملة المفضلة للمستخدم من قاعدة البيانات
+  const loadUserPreferredCurrency = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const preferredCurrency = await getUserPreferredCurrency(user.id);
+      if (preferredCurrency && SUPPORTED_CURRENCIES[preferredCurrency]) {
+        setSelectedCurrency(preferredCurrency);
+        localStorage.setItem('preferred_currency', preferredCurrency);
+      }
+    } catch (error) {
+      console.error('Error loading user preferred currency:', error);
     }
   };
 
-  const convertPrice = (price: number, fromCurrency: string = 'SAR'): number => {
+  // دالة لتحديث العملات يدوياً
+  const refreshCurrencies = async () => {
+    console.log('🔄 تحديث العملات يدوياً...');
+    await loadCurrencies();
+  };
+
+  // تغيير العملة المفضلة
+  const changeCurrency = async (currency: string) => {
+    if (!SUPPORTED_CURRENCIES[currency]) return;
+    
+    setSelectedCurrency(currency);
+    localStorage.setItem('preferred_currency', currency);
+    
+    // إذا كان المستخدم مسجلاً الدخول، حفظ في قاعدة البيانات
+    if (user?.id) {
+      try {
+        await updateUserPreferredCurrency(user.id, currency);
+        console.log(`✅ تم حفظ العملة المفضلة: ${currency}`);
+      } catch (error) {
+        console.error('Error updating preferred currency in database:', error);
+      }
+    }
+  };
+
+  // تحويل السعر باستخدام دالة قاعدة البيانات
+  const convertPrice = async (price: number, fromCurrency: string = 'SAR'): Promise<number> => {
     if (!fromCurrency || fromCurrency === selectedCurrency) {
       return price;
     }
 
-    const fromRate = SUPPORTED_CURRENCIES[fromCurrency as CurrencyCode]?.rate || 1;
-    const toRate = SUPPORTED_CURRENCIES[selectedCurrency as CurrencyCode]?.rate || 1;
-    
-    // تحويل عبر SAR كعملة وسيطة
-    const priceInSAR = price / fromRate;
-    const convertedPrice = priceInSAR * toRate;
-    
-    return Math.round(convertedPrice * 100) / 100;
-  };
-
-  const formatPrice = (price: number, fromCurrency: string = 'SAR'): string => {
-    const convertedPrice = convertPrice(price, fromCurrency);
-    const currencyInfo = SUPPORTED_CURRENCIES[selectedCurrency as CurrencyCode];
-    
-    if (!currencyInfo) {
-      return `${convertedPrice.toFixed(2)}`;
+    try {
+      const converted = await dbConvertCurrency(price, fromCurrency, selectedCurrency);
+      return converted;
+    } catch (error) {
+      console.error('Error converting price:', error);
+      return price; // إرجاع السعر الأصلي في حالة الخطأ
     }
-
-    // تنسيق السعر مع فواصل الآلاف
-    const formattedNumber = convertedPrice.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-
-    return `${formattedNumber} ${currencyInfo.symbol}`;
   };
 
-  const getCurrencySymbol = (currency: string): string => {
-    return SUPPORTED_CURRENCIES[currency as CurrencyCode]?.symbol || '';
+  // تنسيق السعر
+  const formatPrice = async (price: number, fromCurrency: string = 'SAR'): Promise<string> => {
+    const convertedPrice = await convert]?.symbol || '';
   };
+
+  const getCurrencyInfo = (currency: string): Currency | undefined => {
+    return SUPPORTED_CURRENCIES[currency];
+  };
+
+  return (
+    <CurrencyContext.Provider
+      value={{
+        selectedCurrency,
+        changeCurrency,
+        convertPrice,
+        formatPrice,
+        getCurrencySymbol,
+        getCurrencyInfo,
+        currencies,
+        isLoading,
+        refreshCurrenci
 
   const getCurrencyInfo = (currency: string): { code: string; symbol: string; name: string; arabicName: string; flag: string; rate: number } | undefined => {
     return SUPPORTED_CURRENCIES[currency as CurrencyCode];
