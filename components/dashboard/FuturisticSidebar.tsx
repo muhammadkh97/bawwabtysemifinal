@@ -79,14 +79,14 @@ export default function FuturisticSidebar({ role }: FuturisticSidebarProps) {
 
   const fetchCounts = async () => {
     try {
-      // Get vendor ID
-      const { data: vendorData } = await supabase
-        .from('vendors')
+      // Get store ID (vendor_id)
+      const { data: storeData } = await supabase
+        .from('stores')
         .select('id')
         .eq('user_id', userId)
         .single();
 
-      if (!vendorData) return;
+      if (!storeData) return;
 
       // Get unread notifications count
       const { count: notifCount } = await supabase
@@ -101,7 +101,7 @@ export default function FuturisticSidebar({ role }: FuturisticSidebarProps) {
       const { data: orderItemsData } = await supabase
         .from('order_items')
         .select('order_id')
-        .eq('vendor_id', vendorData.id);
+        .eq('vendor_id', storeData.id);
 
       const uniqueOrderIds = Array.from(new Set(orderItemsData?.map(item => item.order_id) || []));
 
