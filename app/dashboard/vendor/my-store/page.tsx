@@ -171,25 +171,43 @@ export default function VendorMyStorePage() {
         .eq('user_id', userId)
         .single();
 
-      if (!vendorData) throw new Error('Vendor not found');
+      if (!vendorData) {
+        // إنشاء سجل جديد للمتجر إذا لم يكن موجوداً
+        const { error: insertError } = await supabase
+          .from('stores')
+          .insert({
+            user_id: userId,
+            store_name: storeName,
+            name: storeName,
+            description: storeDescription,
+            address: storeAddress,
+            phone: phone,
+            email: email,
+            logo_url: newLogoUrl,
+            banner_url: newBannerUrl,
+            is_active: true,
+            approval_status: 'pending'
+          });
 
-      // Update vendor data
-      const { error } = await supabase
-        .from('stores')
-        .update({
-          store_name: storeName,
-          description: storeDescription,
-          address: storeAddress,
-          phone: phone,
-          email: email,
-          website: website,
-          logo_url: newLogoUrl,
-          banner_url: newBannerUrl,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', vendorData.id);
+        if (insertError) throw insertError;
+      } else {
+        // Update vendor data
+        const { error } = await supabase
+          .from('stores')
+          .update({
+            store_name: storeName,
+            description: storeDescription,
+            address: storeAddress,
+            phone: phone,
+            email: email,
+            logo_url: newLogoUrl,
+            banner_url: newBannerUrl,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', vendorData.id);
 
-      if (error) throw error;
+        if (error) throw error;
+      }
 
       // Update preview URLs with the new URLs
       if (newLogoUrl) {
