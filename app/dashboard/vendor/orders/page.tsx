@@ -398,20 +398,6 @@ export default function VendorOrdersPageImproved() {
                     </div>
 
                     {/* Action Buttons */}
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="p-4 rounded-xl bg-gray-500/10 border border-gray-500/30 text-center">
-                            <AlertCircle className="w-6 h-6 text-gray-400 mx-auto mb-2" />
-                            <p className="text-sm text-gray-400">لا توجد أكواد استلام بعد</p>
-                            <p className="text-xs text-gray-500 mt-1">سيتم إنشاؤها تلقائياً عند تحديث الحالة</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Action Buttons */}
                     {availableActions.length > 0 && (
                       <div className="flex gap-3 flex-wrap">
                         {availableActions.map((action) => (
