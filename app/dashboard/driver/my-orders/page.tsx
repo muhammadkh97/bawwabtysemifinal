@@ -54,7 +54,7 @@ export default function MyOrdersPage() {
           delivery_address,
           status,
           created_at,
-          users!orders_user_id_fkey (name)
+          users!orders_customer_id_fkey (name)
         `)
         .eq('driver_id', driverData.id)
         .in('status', ['confirmed', 'preparing', 'ready', 'out_for_delivery'])

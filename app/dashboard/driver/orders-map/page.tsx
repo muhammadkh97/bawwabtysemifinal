@@ -79,8 +79,8 @@ export default function OrdersMapPage() {
           created_at,
           delivery_latitude,
           delivery_longitude,
-          users!orders_user_id_fkey (id, name, phone),
-          restaurants!orders_restaurant_id_fkey (id, name, latitude, longitude, address)
+          users!orders_customer_id_fkey (id, name, phone),
+          stores!orders_vendor_id_fkey (id, name, latitude, longitude, address)
         `)
         .eq('driver_id', driverData.id)
         .in('status', ['confirmed', 'preparing', 'ready', 'out_for_delivery'])
