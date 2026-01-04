@@ -236,7 +236,7 @@ export default function DriverDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0A0515]">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-purple-300 text-lg">جاري التحميل...</p>
@@ -246,7 +246,7 @@ export default function DriverDashboard() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-[#0A0515]">
+    <div className="relative">
       {/* Animated Background Gradients */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -292,7 +292,7 @@ export default function DriverDashboard() {
         />
       </div>
 
-      <main className="relative z-10 max-w-[1800px] mx-auto px-4 md:px-8 lg:px-10 py-8">
+      <div className="relative z-10">
         {/* Welcome Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -513,7 +513,7 @@ export default function DriverDashboard() {
             </div>
           </div>
         </motion.div>
-      </main>
+      </div>
     </div>
   );
 }
