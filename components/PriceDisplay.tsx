@@ -17,7 +17,7 @@ export default function PriceDisplay({
   showOriginalPrice = false,
   size = 'md'
 }: PriceDisplayProps) {
-  const { formatPrice, selectedCurrency, convertPrice } = useCurrency();
+  const { formatPrice, selectedCurrency } = useCurrency();
 
   const sizeClasses = {
     sm: 'text-sm',
@@ -26,7 +26,6 @@ export default function PriceDisplay({
     xl: 'text-xl sm:text-2xl'
   };
 
-  const convertedPrice = convertPrice(price, originalCurrency);
   const formattedPrice = formatPrice(price, originalCurrency);
 
   return (

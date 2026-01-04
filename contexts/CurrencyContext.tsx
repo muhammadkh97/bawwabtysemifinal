@@ -12,13 +12,14 @@ export type CurrencyCode = string;
 interface CurrencyContextType {
   selectedCurrency: string;
   changeCurrency: (currency: string) => Promise<void>;
-  convertPrice: (price: number, fromCurrency?: string) => Promise<number>;
-  formatPrice: (price: number, fromCurrency?: string) => Promise<string>;
+  convertPrice: (price: number, fromCurrency?: string) => number;
+  formatPrice: (price: number, fromCurrency?: string) => string;
   getCurrencySymbol: (currency: string) => string;
   getCurrencyInfo: (currency: string) => Currency | undefined;
   currencies: Currency[];
   isLoading: boolean;
   refreshCurrencies: () => Promise<void>;
+  exchangeRatesLoaded: boolean;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
@@ -27,12 +28,22 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [selectedCurrency, setSelectedCurrency] = useState<string>('JOD');
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({});
+  const [exchangeRatesLoaded, setExchangeRatesLoaded] = useState(false);
   const { user } = useAuth();
 
-  // تحميل العملات من قاعدة البيانات
+  // تحميل العملات وأسعار الصرف من قاعدة البيانات
   useEffect(() => {
     loadCurrencies();
+    loadExchangeRates();
   }, []);
+
+  // تحميل أسعار الصرف عند تغيير العملة المختارة
+  useEffect(() => {
+    if (selectedCurrency) {
+      loadExchangeRates();
+    }
+  }, [selectedCurrency]);
 
   // تحميل العملة المفضلة للمستخدم
   useEffect(() => {
@@ -68,6 +79,36 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       console.error('❌ خطأ في تحميل العملات:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // جلب أسعار الصرف من قاعدة البيانات
+  const loadExchangeRates = async () => {
+    try {
+      const { data, error } = await import('@/lib/supabase').then(m => m.supabase
+        .from('exchange_rates')
+        .select('base_currency, target_currency, rate')
+        .eq('target_currency', selectedCurrency)
+      );
+      
+      if (error) {
+        console.error('Error loading exchange rates:', error);
+        return;
+      }
+
+      const rates: Record<string, number> = {};
+      data?.forEach(rate => {
+        rates[rate.base_currency] = rate.rate;
+      });
+      
+      // إضافة سعر 1 للعملة نفسها
+      rates[selectedCurrency] = 1;
+      
+      setExchangeRates(rates);
+      setExchangeRatesLoaded(true);
+      console.log(`✅ تم تحميل ${Object.keys(rates).length} سعر صرف للعملة ${selectedCurrency}`);
+    } catch (error) {
+      console.error('❌ خطأ في تحميل أسعار الصرف:', error);
     }
   };
 
@@ -110,24 +151,25 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // تحويل السعر باستخدام دالة قاعدة البيانات
-  const convertPrice = async (price: number, fromCurrency: string = 'SAR'): Promise<number> => {
+  // تحويل السعر باستخدام أسعار الصرف المحملة مسبقاً
+  const convertPrice = (price: number, fromCurrency: string = 'SAR'): number => {
     if (!fromCurrency || fromCurrency === selectedCurrency) {
       return price;
     }
 
-    try {
-      const converted = await dbConvertCurrency(price, fromCurrency, selectedCurrency);
-      return converted;
-    } catch (error) {
-      console.error('Error converting price:', error);
-      return price; // إرجاع السعر الأصلي في حالة الخطأ
+    // إذا كان السعر مساوياً للعملة المستهدفة، إرجاعه مباشرة
+    const rate = exchangeRates[fromCurrency];
+    if (!rate || rate === 0) {
+      console.warn(`⚠️ لا يوجد سعر صرف للعملة ${fromCurrency} إلى ${selectedCurrency}`);
+      return price; // إرجاع السعر الأصلي
     }
+
+    return price * rate;
   };
 
-  // تنسيق السعر
-  const formatPrice = async (price: number, fromCurrency: string = 'SAR'): Promise<string> => {
-    const convertedPrice = await convertPrice(price, fromCurrency);
+  // تنسيق السعر (متزامن الآن)
+  const formatPrice = (price: number, fromCurrency: string = 'SAR'): string => {
+    const convertedPrice = convertPrice(price, fromCurrency);
     const currencyInfo = SUPPORTED_CURRENCIES[selectedCurrency];
     
     if (!currencyInfo) {
@@ -163,6 +205,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         currencies,
         isLoading,
         refreshCurrencies,
+        exchangeRatesLoaded,
       }}
     >
       {children}
