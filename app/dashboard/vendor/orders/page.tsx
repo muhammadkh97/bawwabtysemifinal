@@ -277,7 +277,7 @@ export default function VendorOrdersPageImproved() {
   ];
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-white transition-colors duration-300">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 transition-colors duration-300">
       <FuturisticSidebar role="vendor" />
       
       <div className="md:mr-[280px] transition-all duration-300">
@@ -289,8 +289,8 @@ export default function VendorOrdersPageImproved() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
           >
-            <h1 className="text-4xl font-bold text-white mb-2">إدارة الطلبات</h1>
-            <p className="text-purple-300 text-lg">تتبع ومعالجة طلبات العملاء</p>
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">إدارة الطلبات</h1>
+            <p className="text-gray-600 text-lg">تتبع ومعالجة طلبات العملاء</p>
           </motion.div>
 
           {/* Statistics */}

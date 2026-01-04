@@ -1,6 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import { Loader2 } from 'lucide-react';
 
 interface OrderStatus {
   status: string;
@@ -16,13 +22,11 @@ interface DriverLocation {
 }
 
 export default function OrderTrackingPage() {
-  // سيتم جلب البيانات من Supabase
-  const [order] = useState<any>({
-    subtotal: 500,
-    delivery_fee: 5,
-    tax: 80,
-    total: 585,
-  });
+  const params = useParams();
+  const router = useRouter();
+  const { formatPrice } = useCurrency();
+  const [order, setOrder] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   const [driverLocation, setDriverLocation] = useState<DriverLocation>({
     lat: 31.9454,
@@ -32,9 +36,62 @@ export default function OrderTrackingPage() {
 
   const [estimatedTime, setEstimatedTime] = useState(15); // دقائق
 
+  // Fetch order details
+  useEffect(() => {
+    if (params.id) {
+      fetchOrderDetails();
+    }
+  }, [params.id]);
+
+  const fetchOrderDetails = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/login');
+        return;
+      }
+
+      // Fetch order with store info
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          stores!vendor_id(shop_name, shop_name_ar, phone)
+        `)
+        .eq('id', params.id)
+        .eq('customer_id', user.id)
+        .single();
+
+      if (orderError) {
+        console.error('Error fetching order:', orderError);
+        router.push('/orders');
+        return;
+      }
+
+      // Fetch order items
+      const { data: itemsData, error: itemsError } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('order_id', params.id);
+
+      if (itemsError) {
+        console.error('Error fetching items:', itemsError);
+      }
+
+      setOrder({
+        ...orderData,
+        items: itemsData || []
+      });
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // محاكاة تحديث موقع المندوب Real-time
   useEffect(() => {
-    if (order.status === 'shipped') {
+    if (order?.status === 'shipped' && order?.delivery_lat && order?.delivery_lng) {
       const interval = setInterval(() => {
         // تحريك المندوب تدريجياً نحو العنوان
         setDriverLocation(prev => ({
@@ -49,38 +106,84 @@ export default function OrderTrackingPage() {
 
       return () => clearInterval(interval);
     }
-  }, [order.status]);
+  }, [order?.status, order?.delivery_lat, order?.delivery_lng]);
 
   const statuses: OrderStatus[] = [
     { status: 'pending', label: 'تم الطلب', icon: '📝', completed: true },
-    { status: 'processing', label: 'قيد التجهيز', icon: '📦', completed: true },
-    { status: 'ready', label: 'جاهز للشحن', icon: '✅', completed: true },
-    { status: 'shipped', label: 'قيد التوصيل', icon: '🚚', completed: order.status === 'shipped' || order.status === 'delivered' },
-    { status: 'delivered', label: 'تم التوصيل', icon: '🎉', completed: order.status === 'delivered' },
+    { status: 'processing', label: 'قيد التحضير', icon: '📦', completed: order?.status === 'processing' || order?.status === 'ready_for_pickup' || order?.status === 'shipped' || order?.status === 'out_for_delivery' || order?.status === 'delivered' },
+    { status: 'ready_for_pickup', label: 'جاهز للشحن', icon: '✅', completed: order?.status === 'ready_for_pickup' || order?.status === 'shipped' || order?.status === 'out_for_delivery' || order?.status === 'delivered' },
+    { status: 'shipped', label: 'قيد التوصيل', icon: '🚚', completed: order?.status === 'shipped' || order?.status === 'out_for_delivery' || order?.status === 'delivered' },
+    { status: 'delivered', label: 'تم التوصيل', icon: '🎉', completed: order?.status === 'delivered' },
   ];
 
   const getCurrentStatusIndex = () => {
-    return statuses.findIndex(s => s.status === order.status);
+    return statuses.findIndex(s => s.status === order?.status);
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 py-4 md:py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        {/* Header */}
-        <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-4 md:mb-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-1">
-                تتبع الطلب
-              </h1>
-              <p className="text-gray-600">رقم الطلب: <span className="font-bold text-indigo-600">{order.order_number}</span></p>
-            </div>
-            <div className="flex flex-col items-start md:items-end gap-1">
-              <span className="text-sm text-gray-600">تاريخ الطلب</span>
-              <span className="font-semibold text-gray-800">{order.created_at}</span>
-            </div>
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="w-16 h-16 text-blue-500 animate-spin mx-auto mb-4" />
+            <p className="text-xl text-gray-600">جاري تحميل تفاصيل الطلب...</p>
           </div>
         </div>
+        <Footer />
+      </>
+    );
+  }
+
+  if (!order) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen bg-gray-50 py-8">
+          <div className="max-w-4xl mx-auto px-4 text-center">
+            <p className="text-6xl mb-4">❌</p>
+            <h1 className="text-2xl font-bold text-gray-800 mb-4">الطلب غير موجود</h1>
+            <button 
+              onClick={() => router.push('/orders')}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              العودة للطلبات
+            </button>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Header />
+      <div className="min-h-screen bg-gray-50 py-4 md:py-8">
+        <div className="max-w-4xl mx-auto px-4" dir="rtl">
+          {/* Header */}
+          <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-4 md:mb-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-1">
+                  تتبع الطلب
+                </h1>
+                <p className="text-gray-600">رقم الطلب: <span className="font-bold text-indigo-600">{order.order_number}</span></p>
+              </div>
+              <div className="flex flex-col items-start md:items-end gap-1">
+                <span className="text-sm text-gray-600">تاريخ الطلب</span>
+                <span className="font-semibold text-gray-800">
+                  {new Date(order.created_at).toLocaleDateString('ar-SA', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </span>
+              </div>
+            </div>
+          </div>
 
         {/* Status Timeline - Responsive */}
         <div className="bg-white rounded-xl shadow-sm p-4 md:p-8 mb-4 md:mb-6">
@@ -117,7 +220,7 @@ export default function OrderTrackingPage() {
                     </p>
                     {status.completed && (
                       <p className="text-xs text-gray-500 mt-1">
-                        {index === 0 && order.created_at}
+                      {index === 0 && new Date(order.created_at).toLocaleDateString('ar-SA')}
                         {index === getCurrentStatusIndex() && order.status !== 'delivered' && 'الآن'}
                         {status.status === 'delivered' && order.status === 'delivered' && 'مكتمل'}
                       </p>
@@ -156,7 +259,7 @@ export default function OrderTrackingPage() {
                   </p>
                   {status.completed && (
                     <p className="text-xs text-gray-500 mt-1">
-                      {index === 0 && order.created_at}
+                      {index === 0 && new Date(order.created_at).toLocaleDateString('ar-SA')}
                       {index === getCurrentStatusIndex() && order.status !== 'delivered' && 'جاري التنفيذ الآن'}
                     </p>
                   )}
@@ -338,29 +441,52 @@ export default function OrderTrackingPage() {
           <div className="flex items-start gap-3">
             <span className="text-2xl">📍</span>
             <div>
-              <p className="font-medium text-gray-800">{order.customer_name}</p>
-              <p className="text-gray-600">{order.customer_phone}</p>
               <p className="text-gray-600 mt-2">{order.delivery_address}</p>
+              {order.delivery_notes && (
+                <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-gray-600 mb-1">ملاحظات:</p>
+                  <p className="text-gray-700">{order.delivery_notes}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Order Items - Responsive Grid */}
         <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-4 md:mb-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">المنتجات</h3>
+          <h3 className="text-lg font-bold text-gray-800 mb-4">المنتجات ({order.items?.length || 0})</h3>
+          
+          {order.stores && (
+            <div className="mb-4 p-4 bg-blue-50 rounded-lg flex items-center gap-3">
+              <span className="text-2xl">🏪</span>
+              <div>
+                <p className="text-sm text-gray-600">المتجر</p>
+                <p className="font-bold text-gray-800">
+                  {order.stores.shop_name_ar || order.stores.shop_name}
+                </p>
+                {order.stores.phone && (
+                  <p className="text-sm text-gray-600">{order.stores.phone}</p>
+                )}
+              </div>
+            </div>
+          )}
           
           <div className="space-y-4">
-            {order.items.map((item: any) => (
+            {order.items?.map((item: any) => (
               <div key={item.id} className="flex gap-4 pb-4 border-b border-gray-100 last:border-0">
-                <div className="w-16 h-16 md:w-20 md:h-20 bg-gray-100 rounded-lg flex items-center justify-center text-3xl md:text-4xl flex-shrink-0">
-                  {item.product_image}
-                </div>
+                {item.product_image && (
+                  <img
+                    src={item.product_image}
+                    alt={item.name_ar || item.name}
+                    className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg flex-shrink-0"
+                  />
+                )}
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-gray-800 truncate">{item.product_name}</h4>
-                  <p className="text-sm text-gray-600">{item.vendor_name}</p>
+                  <h4 className="font-semibold text-gray-800">{item.name_ar || item.name}</h4>
+                  <p className="text-sm text-gray-600">{item.product_name_ar || item.product_name}</p>
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-sm text-gray-600">الكمية: {item.quantity}</span>
-                    <span className="font-bold text-green-600">{item.price * item.quantity} د.أ</span>
+                    <span className="font-bold text-green-600">{formatPrice(item.total)}</span>
                   </div>
                 </div>
               </div>
@@ -371,27 +497,50 @@ export default function OrderTrackingPage() {
           <div className="mt-6 pt-6 border-t border-gray-200 space-y-2">
             <div className="flex justify-between text-gray-600">
               <span>المجموع الفرعي:</span>
-              <span>{order.subtotal} د.أ</span>
+              <span>{formatPrice(order.subtotal)}</span>
             </div>
             <div className="flex justify-between text-gray-600">
               <span>رسوم التوصيل:</span>
-              <span>{order.delivery_fee} د.أ</span>
+              <span>{formatPrice(order.delivery_fee)}</span>
             </div>
             <div className="flex justify-between text-gray-600">
-              <span>الضريبة (16%):</span>
-              <span>{order.tax} د.أ</span>
+              <span>الضريبة:</span>
+              <span>{formatPrice(order.tax)}</span>
             </div>
+            {order.discount > 0 && (
+              <div className="flex justify-between text-green-600">
+                <span>الخصم:</span>
+                <span>-{formatPrice(order.discount)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-xl font-bold text-gray-800 pt-2 border-t border-gray-200">
               <span>المجموع الكلي:</span>
-              <span className="text-green-600">{order.total} د.أ</span>
+              <span className="text-green-600">{formatPrice(order.total)}</span>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-3 mt-4">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">طريقة الدفع</span>
+                <span className="font-bold text-gray-800">
+                  {order.payment_method === 'cash' ? '💵 نقداً عند الاستلام' : '💳 بطاقة ائتمانية'}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm mt-2">
+                <span className="text-gray-600">حالة الدفع</span>
+                <span className={`font-bold ${order.payment_status === 'paid' ? 'text-green-600' : 'text-yellow-600'}`}>
+                  {order.payment_status === 'paid' ? '✅ مدفوع' : '⏳ غير مدفوع'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Actions - Responsive */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-          <button className="w-full px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium">
-            💬 تواصل مع البائع
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4">
+          <button 
+            onClick={() => router.push('/orders')}
+            className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+          >
+            ← العودة للطلبات
           </button>
           <button className="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">
             📄 تحميل الفاتورة
@@ -411,5 +560,7 @@ export default function OrderTrackingPage() {
         )}
       </div>
     </div>
+    <Footer />
+    </>
   );
 }
