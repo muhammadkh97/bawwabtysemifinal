@@ -264,9 +264,6 @@ export default function ProfilePage() {
         country: country || undefined,
         avatar_url: avatarUrl,
       });
-        phone: phone,
-        avatar_url: avatarUrl,
-      });
 
       setAvatarPreview(avatarUrl || null);
       alert('✅ تم تحديث الملف الشخصي بنجاح!');
