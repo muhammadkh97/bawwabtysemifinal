@@ -212,9 +212,11 @@ export default function VendorMyStorePage() {
       // Update preview URLs with the new URLs
       if (newLogoUrl) {
         setLogoPreview(newLogoUrl);
+        setLogoUrl(newLogoUrl);
       }
       if (newBannerUrl) {
         setBannerPreview(newBannerUrl);
+        setBannerUrl(newBannerUrl);
       }
 
       alert('✅ تم حفظ التغييرات بنجاح!');
@@ -222,6 +224,9 @@ export default function VendorMyStorePage() {
       // Clear file states
       setLogoFile(null);
       setBannerFile(null);
+      
+      // Refetch data to ensure preview is updated
+      await fetchData();
       
     } catch (error: any) {
       console.error('Error saving store:', error);
@@ -233,7 +238,7 @@ export default function VendorMyStorePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen relative overflow-hidden bg-white transition-colors duration-300">
+      <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 transition-colors duration-300">
         <div className="md:mr-[280px] flex items-center justify-center h-screen">
           <Loader2 className="w-12 h-12 text-purple-500 animate-spin" />
         </div>
@@ -242,7 +247,7 @@ export default function VendorMyStorePage() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-white transition-colors duration-300">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 transition-colors duration-300">
       
       <div className="md:mr-[280px] transition-all duration-300">
         

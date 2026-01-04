@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import BulkUploadModal from '@/components/BulkUploadModal';
+import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
+import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import { Package, Plus, Search, Edit, TrendingUp, Trash2, FileUp, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -119,19 +121,21 @@ export default function VendorProductsPage() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-[#0A0515] transition-colors duration-300">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 transition-colors duration-300">
+      <FuturisticSidebar role="vendor" />
       
       <div className="md:mr-[280px] transition-all duration-300">
+        <FuturisticNavbar userName="" userRole="بائع" />
         
-        <main className="pt-24 px-4 md:px-8 lg:px-10 pb-10 relative z-10 max-w-[1800px] mx-auto">
+        <main className="pt-24 px-4 md:px-6 lg:px-8 pb-10 relative z-10 max-w-[1800px] mx-auto">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="mb-8 flex items-center justify-between"
           >
             <div>
-              <h1 className="text-4xl font-bold text-white mb-2">إدارة المنتجات</h1>
-              <p className="text-purple-300 text-lg">أضف وعدل منتجاتك</p>
+              <h1 className="text-4xl font-bold text-gray-800 mb-2">إدارة المنتجات</h1>
+              <p className="text-gray-600 text-lg">أضف وعدل منتجاتك</p>
             </div>
             <a
               href="/dashboard/vendor/products/new"

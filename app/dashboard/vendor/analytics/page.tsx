@@ -169,7 +169,7 @@ export default function VendorAnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white transition-colors duration-300">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 transition-colors duration-300">
         <div className="text-center">
           <Loader2 className="w-16 h-16 text-purple-500 animate-spin mx-auto mb-4" />
           <p className="text-gray-700 dark:text-purple-300 text-lg">جاري تحميل التحليلات...</p>
@@ -180,7 +180,7 @@ export default function VendorAnalyticsPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative overflow-hidden bg-white transition-colors duration-300">
+      <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 transition-colors duration-300">
         <FuturisticSidebar role="vendor" />
         
         <div className="md:mr-[280px] transition-all duration-300">

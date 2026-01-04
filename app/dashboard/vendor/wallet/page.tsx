@@ -90,9 +90,7 @@ export default function VendorWalletPage() {
         });
       }
 
-      // Get transactions (disabled - table doesn't exist yet)
-      // TODO: Create wallet_transactions table
-      /*
+      // Get transactions
       const { data: transactionsData } = await supabase
         .from('wallet_transactions')
         .select('*')
@@ -103,11 +101,8 @@ export default function VendorWalletPage() {
       if (transactionsData) {
         setTransactions(transactionsData);
       }
-      */
 
-      // Get payout requests (disabled - table doesn't exist yet)
-      // TODO: Create payout_requests table
-      /*
+      // Get payout requests
       const { data: payoutsData } = await supabase
         .from('payout_requests')
         .select('*')
@@ -117,7 +112,6 @@ export default function VendorWalletPage() {
       if (payoutsData) {
         setPayouts(payoutsData);
       }
-      */
 
     } catch (error) {
       console.error('Error fetching wallet data:', error);
