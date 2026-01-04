@@ -70,7 +70,7 @@ export default function RestaurantWalletPage() {
         .from('orders')
         .select('total_amount')
         .eq('vendor_id', vId)
-        .in('status', ['pending', 'preparing', 'ready', 'on_the_way']);
+        .in('status', ['pending', 'preparing', 'ready', 'out_for_delivery']);
 
       // Calculate balances (assuming platform takes 10% commission)
       const completedBalance = completedOrders?.reduce((sum, order) => sum + (order.total_amount * 0.9), 0) || 0;

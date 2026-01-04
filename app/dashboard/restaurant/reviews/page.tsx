@@ -62,8 +62,8 @@ export default function RestaurantReviewsPage() {
         .from('reviews')
         .select(`
           *,
-          users:user_id(full_name),
-          orders:order_id(order_number)
+          users!reviews_customer_id_fkey(full_name),
+          orders!reviews_order_id_fkey(order_number)
         `)
         .eq('vendor_id', vId)
         .order('created_at', { ascending: false });

@@ -62,16 +62,16 @@ export default function RestaurantMessagesPage() {
         .from('orders')
         .select(`
           *,
-          users:user_id(full_name)
+          users!orders_customer_id_fkey(full_name)
         `)
         .eq('vendor_id', vId)
-        .not('notes', 'is', null)
+        .not('delivery_notes', 'is', null)
         .order('created_at', { ascending: false });
 
       const formattedMessages: Message[] = ordersData?.map((order: any) => ({
         id: order.id,
         customer_name: order.users?.full_name || 'عميل',
-        message: order.notes || '',
+        message: order.delivery_notes || '',
         order_number: order.order_number || order.id,
         created_at: new Date(order.created_at).toLocaleString('ar-EG'),
         read: false
