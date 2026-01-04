@@ -89,8 +89,8 @@ export default function VendorAnalyticsPage() {
       // Fetch vendor's orders through order_items (current period)
       const { data: orderItemsData } = await supabase
         .from('order_items')
-        .select('order_id, total_price, orders!inner(status, total_amount, created_at)')
-        .eq('vendor_id', vendorData.id)
+        .select('order_id, total_price, products!inner(vendor_id), orders!inner(status, total_amount, created_at)')
+        .eq('products.vendor_id', vendorData.id)
         .in('orders.status', ['delivered'])
         .gte('orders.created_at', startDate.toISOString());
 
@@ -102,8 +102,8 @@ export default function VendorAnalyticsPage() {
       // Fetch previous period data for growth calculation
       const { data: previousOrderItemsData } = await supabase
         .from('order_items')
-        .select('order_id, total_price, orders!inner(status, total_amount, created_at)')
-        .eq('vendor_id', vendorData.id)
+        .select('order_id, total_price, products!inner(vendor_id), orders!inner(status, total_amount, created_at)')
+        .eq('products.vendor_id', vendorData.id)
         .in('orders.status', ['delivered'])
         .gte('orders.created_at', previousStartDate.toISOString())
         .lte('orders.created_at', previousEndDate.toISOString());
