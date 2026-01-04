@@ -108,7 +108,7 @@ export default function VendorAnalyticsPage() {
         .gte('orders.created_at', previousStartDate.toISOString())
         .lte('orders.created_at', previousEndDate.toISOString());
 
-      const previousTotalSales = previousOrderItemsData?.reduce((sum, item) => sum + item.total_price, 0) || 0;
+      const previousTotalSales = previousOrderItemsData?.reduce((sum, item) => sum + item.total, 0) || 0;
       const previousUniqueOrders = new Set(previousOrderItemsData?.map(item => item.order_id) || []);
       const previousTotalOrders = previousUniqueOrders.size;
 
