@@ -153,8 +153,8 @@ export default function DriverDashboard() {
           delivery_fee: o.delivery_fee,
           status: o.status,
           created_at: o.created_at,
-          delivery_latitude: null,
-          delivery_longitude: null,
+          delivery_latitude: undefined,
+          delivery_longitude: undefined,
           delivery_address: o.delivery_address,
           customer: {
             id: o.users?.id || '',
