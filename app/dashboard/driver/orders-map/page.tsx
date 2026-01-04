@@ -87,10 +87,11 @@ export default function OrdersMapPage() {
       if (error) throw error;
 
       if (ordersData) {
-        const enrichedOrders = ordersData.map((o: any) => ({
+        const enrichedOrders: Order[] = ordersData.map((o: any) => ({
           id: o.id,
           order_number: o.order_number,
           total: o.total,
+          delivery_fee: o.delivery_fee,
           status: o.status,
           created_at: o.created_at,
           delivery_latitude: null,
@@ -106,7 +107,7 @@ export default function OrdersMapPage() {
             store_name: o.stores?.name || 'غير متوفر',
             store_latitude: o.stores?.latitude,
             store_longitude: o.stores?.longitude,
-            store_address: o.restaurants?.address,
+            store_address: o.stores?.address,
           },
           customer_name: o.users?.name || 'غير متوفر',
         }));
