@@ -43,7 +43,7 @@ export default function UserDetailsPage() {
       // If vendor, fetch vendor details
       if (userData.role === 'vendor') {
         const { data: vendorData } = await supabase
-          .from('vendors')
+          .from('stores')
           .select('*')
           .eq('user_id', userId)
           .single();
@@ -87,7 +87,7 @@ export default function UserDetailsPage() {
     if (!user) return;
     try {
       if (user.role === 'vendor' && vendor) {
-        await supabase.from('vendors').update({ status: newStatus }).eq('id', vendor.id);
+        await supabase.from('stores').update({ status: newStatus }).eq('id', vendor.id);
       } else if (user.role === 'driver' && driver) {
         await supabase.from('drivers').update({ status: newStatus }).eq('id', driver.id);
       }

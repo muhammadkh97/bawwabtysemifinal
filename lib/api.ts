@@ -22,7 +22,7 @@ import type {
  */
 export async function getPendingVendors() {
   const { data, error } = await supabase
-    .from('vendors')
+    .from('stores')
     .select(`
       *,
       user:users(*)
@@ -55,7 +55,7 @@ export async function approveVendor(
   }
 
   const { data, error } = await supabase
-    .from('vendors')
+    .from('stores')
     .update(updates)
     .eq('id', vendorId)
     .select()
@@ -224,7 +224,7 @@ export async function getPlatformAnalytics(period: 'today' | 'week' | 'month' | 
  */
 export async function getTopVendors(limit: number = 10) {
   const { data, error } = await supabase
-    .from('vendors')
+    .from('stores')
     .select(`
       *,
       user:users(*),
@@ -505,7 +505,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
 export async function getVendorAnalytics(vendorId: string) {
   // جلب بيانات البائع
   const { data: vendor, error: vendorError } = await supabase
-    .from('vendors')
+    .from('stores')
     .select('*')
     .eq('id', vendorId)
     .single()

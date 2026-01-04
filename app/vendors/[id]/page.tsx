@@ -131,7 +131,7 @@ export default function VendorStorePage() {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('vendors')
+        .from('stores')
         .select('*')
         .eq('id', vendorId)
         .single();

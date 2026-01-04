@@ -121,7 +121,7 @@ export default function RestaurantDashboard() {
       const newStatus = !isOnline;
       
       const { error } = await supabase
-        .from('vendors')
+        .from('stores')
         .update({ is_online: newStatus })
         .eq('id', restaurantId);
 

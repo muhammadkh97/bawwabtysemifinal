@@ -54,7 +54,7 @@ export default function VendorAnalyticsPage() {
 
       // Get vendor ID
       const { data: vendorData } = await supabase
-        .from('vendors')
+        .from('stores')
         .select('id')
         .eq('user_id', userId)
         .single();

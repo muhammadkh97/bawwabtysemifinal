@@ -42,7 +42,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       
       // التحقق من صلاحيات البائع
       const { data: vendorData } = await supabase
-        .from('vendors')
+        .from('stores')
         .select('id')
         .eq('user_id', userId)
         .single();
@@ -117,7 +117,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
 
       // التحقق من صلاحيات البائع
       const { data: vendorData } = await supabase
-        .from('vendors')
+        .from('stores')
         .select('id')
         .eq('user_id', userId)
         .single();

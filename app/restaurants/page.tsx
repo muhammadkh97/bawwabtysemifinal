@@ -51,7 +51,7 @@ export default function RestaurantsPage() {
   const fetchRestaurants = async () => {
     try {
       const { data, error } = await supabase
-        .from('vendors')
+        .from('stores')
         .select('id, shop_name, shop_name_ar, shop_logo, rating, reviews_count, latitude, longitude, min_order_amount, is_featured')
         .eq('approval_status', 'approved')
         .eq('vendor_type', 'restaurant')

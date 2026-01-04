@@ -129,7 +129,7 @@ export default function Header() {
         setUnreadChatsCount(totalUnread);
       } else if (role === 'vendor') {
         const { data: vendorData, error: vendorError } = await supabase
-          .from('vendors')
+          .from('stores')
           .select('id')
           .eq('user_id', userId)
           .maybeSingle();

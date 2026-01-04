@@ -49,7 +49,7 @@ export default function RestaurantSettingsPage() {
 
       // Fetch restaurant info
       const { data: restaurantData } = await supabase
-        .from('vendors')
+        .from('stores')
         .select('*')
         .eq('user_id', user.id)
         .single();
@@ -93,7 +93,7 @@ export default function RestaurantSettingsPage() {
       };
 
       const { error } = await supabase
-        .from('vendors')
+        .from('stores')
         .update(updateData)
         .eq('id', restaurantInfo.id);
 
@@ -205,7 +205,7 @@ export default function RestaurantSettingsPage() {
     try {
       const newStatus = !formData.is_online;
       const { error } = await supabase
-        .from('vendors')
+        .from('stores')
         .update({ is_online: newStatus })
         .eq('id', restaurantInfo.id);
 
