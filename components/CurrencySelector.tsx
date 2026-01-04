@@ -65,7 +65,7 @@ export default function CurrencySelector() {
 
   const handleRefresh = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    await refreshRates();
+    await refreshCurrencies();
   };
 
   return (
@@ -99,15 +99,14 @@ export default function CurrencySelector() {
           <div className="fixed md:absolute left-1/2 md:left-0 top-1/2 md:top-auto md:mt-2 -translate-x-1/2 md:translate-x-0 -translate-y-1/2 md:translate-y-0 w-[90vw] max-w-sm md:w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 z-50 overflow-hidden">
             <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
               <span>اختر العملة</span>
-              {lastUpdated && (
-                <button
-                  onClick={handleRefresh}
-                  disabled={isLoading}
-                  className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 disabled:opacity-50"
-                  title="تحديث الأسعار"
-                >
-                  <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
-                </button>
+              <button
+                onClick={handleRefresh}
+                disabled={isLoading}
+                className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 disabled:opacity-50"
+                title="تحديث الأسعار"
+              >
+                <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
+              </button>
               )}
             </div>
 
@@ -181,16 +180,6 @@ export default function CurrencySelector() {
             ) : (
               <div className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                 لم يتم العثور على عملة
-              </div>
-            )}
-
-            {/* Last Updated Info */}
-            {lastUpdated && (
-              <div className="px-3 py-2 text-xs text-gray-400 dark:text-gray-500 border-t border-gray-100 dark:border-gray-700 text-center">
-                آخر تحديث: {new Date(lastUpdated).toLocaleTimeString('ar-SA', { 
-                  hour: '2-digit', 
-                  minute: '2-digit' 
-                })}
               </div>
             )}
             </div>
