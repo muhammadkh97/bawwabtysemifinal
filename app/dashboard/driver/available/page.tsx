@@ -62,7 +62,7 @@ export default function AvailableOrdersPage() {
           created_at,
           users!orders_customer_id_fkey (name, phone)
         `)
-        .eq('status', 'pending')
+        .eq('status', 'ready_for_pickup')
         .is('driver_id', null)
         .order('created_at', { ascending: false });
 

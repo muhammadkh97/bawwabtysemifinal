@@ -81,7 +81,7 @@ export default function OrdersMapPage() {
           stores!orders_vendor_id_fkey (id, name, latitude, longitude, address)
         `)
         .eq('driver_id', driverData.id)
-        .in('status', ['confirmed', 'preparing', 'ready', 'out_for_delivery'])
+        .in('status', ['ready_for_pickup', 'picked_up', 'in_transit', 'out_for_delivery'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;

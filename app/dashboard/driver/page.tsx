@@ -105,7 +105,7 @@ export default function DriverDashboard() {
       today.setHours(0, 0, 0, 0);
 
       const totalDeliveries = allOrders?.filter(o => o.status === 'delivered').length || 0;
-      const pendingDeliveries = allOrders?.filter(o => ['confirmed', 'preparing', 'ready', 'out_for_delivery'].includes(o.status)).length || 0;
+      const pendingDeliveries = allOrders?.filter(o => ['ready_for_pickup', 'picked_up', 'in_transit', 'out_for_delivery'].includes(o.status)).length || 0;
       const completedToday = allOrders?.filter(o => {
         const orderDate = new Date(o.created_at);
         return o.status === 'delivered' && orderDate >= today;
@@ -141,7 +141,7 @@ export default function DriverDashboard() {
           stores!orders_vendor_id_fkey (id, name, latitude, longitude)
         `)
         .eq('driver_id', driverData.id)
-        .in('status', ['confirmed', 'preparing', 'ready', 'out_for_delivery'])
+        .in('status', ['ready_for_pickup', 'picked_up', 'in_transit', 'out_for_delivery'])
         .order('created_at', { ascending: false })
         .limit(5);
 
