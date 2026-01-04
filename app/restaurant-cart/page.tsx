@@ -19,7 +19,7 @@ export default function RestaurantCartPage() {
     isLoading
   } = useRestaurantCart()
 
-  const { formatPrice, currentCurrency } = useCurrency()
+  const { formatPrice, selectedCurrency } = useCurrency()
   const [editingInstructions, setEditingInstructions] = useState<string | null>(null)
   const [instructionsText, setInstructionsText] = useState<string>('')
 
@@ -283,7 +283,7 @@ export default function RestaurantCartPage() {
                 </div>
                 <div className="flex justify-between text-gray-700">
                   <span>رسوم التوصيل السريع:</span>
-                  <span className="font-bold text-orange-600">5.00 {currentCurrency}</span>
+                  <span className="font-bold text-orange-600">5.00 {selectedCurrency}</span>
                 </div>
                 <div className="pt-4 border-t border-gray-200">
                   <div className="flex justify-between text-lg font-black text-gray-900">
