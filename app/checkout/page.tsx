@@ -470,6 +470,11 @@ export default function CheckoutPage() {
             console.warn('⚠️ Product without vendor_id:', product.id, product.name);
           }
           
+          const itemTotal = finalPrice * item.quantity;
+          const commissionRate = 10.00; // نسبة عمولة المنصة 10%
+          const commissionAmount = itemTotal * (commissionRate / 100);
+          const vendorEarning = itemTotal - commissionAmount;
+          
           return {
             order_id: newOrder.id,
             product_id: product.id,
@@ -482,8 +487,11 @@ export default function CheckoutPage() {
             quantity: item.quantity,
             price: finalPrice,
             unit_price: finalPrice,
-            total: finalPrice * item.quantity,
-            item_total: finalPrice * item.quantity,
+            total: itemTotal,
+            item_total: itemTotal,
+            commission_rate: commissionRate,
+            commission_amount: commissionAmount,
+            vendor_earning: vendorEarning,
           };
         })
         .filter(item => item.vendor_id); // ✅ تصفية المنتجات التي ليس لها vendor_id
