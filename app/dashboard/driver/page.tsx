@@ -95,15 +95,36 @@ export default function DriverDashboard() {
 
       setDriverId(driverData.id);
 
-      // Get dashboard stats using RPC function
-      const { data: statsData, error: statsError } = await supabase
-        .rpc('get_driver_dashboard_stats', { p_driver_id: driverData.id });
+      // Calculate stats manually from orders
+      const { data: allOrders } = await supabase
+        .from('orders')
+        .select('status, delivery_fee, created_at')
+        .eq('driver_id', driverData.id);
 
-      if (statsError) {
-        console.error('Error loading stats:', statsError);
-      } else if (statsData && statsData.length > 0) {
-        setStats(statsData[0]);
-      }
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const totalDeliveries = allOrders?.filter(o => o.status === 'delivered').length || 0;
+      const pendingDeliveries = allOrders?.filter(o => ['confirmed', 'preparing', 'ready', 'out_for_delivery'].includes(o.status)).length || 0;
+      const completedToday = allOrders?.filter(o => {
+        const orderDate = new Date(o.created_at);
+        return o.status === 'delivered' && orderDate >= today;
+      }).length || 0;
+
+      const totalEarnings = allOrders?.filter(o => o.status === 'delivered').reduce((sum, o) => sum + (o.delivery_fee || 0), 0) || 0;
+      const todayEarnings = allOrders?.filter(o => {
+        const orderDate = new Date(o.created_at);
+        return o.status === 'delivered' && orderDate >= today;
+      }).reduce((sum, o) => sum + (o.delivery_fee || 0), 0) || 0;
+
+      setStats({
+        total_deliveries: totalDeliveries,
+        pending_deliveries: pendingDeliveries,
+        completed_today: completedToday,
+        total_earnings: totalEarnings,
+        today_earnings: todayEarnings,
+        average_rating: 0
+      });
 
       // Load active orders
       const { data: ordersData, error: ordersError } = await supabase
@@ -116,8 +137,6 @@ export default function DriverDashboard() {
           delivery_address,
           status,
           created_at,
-          delivery_latitude,
-          delivery_longitude,
           users!orders_customer_id_fkey (id, name, phone),
           stores!orders_vendor_id_fkey (id, name, latitude, longitude)
         `)
@@ -134,8 +153,8 @@ export default function DriverDashboard() {
           delivery_fee: o.delivery_fee,
           status: o.status,
           created_at: o.created_at,
-          delivery_latitude: o.delivery_latitude,
-          delivery_longitude: o.delivery_longitude,
+          delivery_latitude: null,
+          delivery_longitude: null,
           delivery_address: o.delivery_address,
           customer: {
             id: o.users?.id || '',
@@ -143,10 +162,10 @@ export default function DriverDashboard() {
             phone: o.users?.phone,
           },
           vendor: {
-            id: o.restaurants?.id || '',
-            store_name: o.restaurants?.name || 'غير متوفر',
-            store_latitude: o.restaurants?.latitude,
-            store_longitude: o.restaurants?.longitude,
+            id: o.stores?.id || '',
+            store_name: o.stores?.name || 'غير متوفر',
+            store_latitude: o.stores?.latitude,
+            store_longitude: o.stores?.longitude,
           },
         }));
         setActiveOrders(enrichedOrders);
