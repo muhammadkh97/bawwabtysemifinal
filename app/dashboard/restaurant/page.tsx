@@ -82,17 +82,44 @@ export default function RestaurantDashboard() {
 
   const fetchStats = async (restaurantId: string) => {
     try {
-      const { data: statsData, error: statsError } = await supabase.rpc('get_restaurant_dashboard_stats', { p_restaurant_id: restaurantId });
-      if (statsError) throw statsError;
-      const statsRow = (statsData && statsData[0]) || {};
+      // استخدام استعلامات مباشرة بدلاً من الدالة غير الموجودة
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // إجمالي الطلبات والإيرادات
+      const { data: ordersData } = await supabase
+        .from('orders')
+        .select('total_amount, status, created_at')
+        .eq('vendor_id', restaurantId);
+
+      const totalOrders = ordersData?.length || 0;
+      const totalRevenue = ordersData?.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0) || 0;
+      const todayOrders = ordersData?.filter(o => new Date(o.created_at) >= today).length || 0;
+      const pendingOrders = ordersData?.filter(o => o.status === 'pending').length || 0;
+
+      // عدد المنتجات
+      const { count: productsCount } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true })
+        .eq('vendor_id', restaurantId);
+
+      // متوسط التقييم
+      const { data: reviewsData } = await supabase
+        .from('reviews')
+        .select('rating')
+        .eq('vendor_id', restaurantId);
+
+      const averageRating = reviewsData && reviewsData.length > 0
+        ? reviewsData.reduce((sum, r) => sum + r.rating, 0) / reviewsData.length
+        : 0;
 
       setStats({
-        totalOrders: Number(statsRow.total_orders || 0),
-        totalRevenue: Number(statsRow.total_revenue || 0),
-        totalProducts: Number(statsRow.total_menu_items || 0),
-        averageRating: Number(statsRow.avg_rating || 0),
-        todayOrders: Number(statsRow.today_orders || 0),
-        pendingOrders: Number(statsRow.pending_orders || 0),
+        totalOrders,
+        totalRevenue,
+        totalProducts: productsCount || 0,
+        averageRating,
+        todayOrders,
+        pendingOrders,
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -107,7 +134,7 @@ export default function RestaurantDashboard() {
           *,
           customer:users!orders_customer_id_fkey(name, phone)
         `)
-        .eq('restaurant_id', restaurantId)
+        .eq('vendor_id', restaurantId)
         .order('created_at', { ascending: false })
         .limit(5);
 
