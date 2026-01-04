@@ -77,8 +77,6 @@ export default function OrdersMapPage() {
           delivery_address,
           status,
           created_at,
-          delivery_latitude,
-          delivery_longitude,
           users!orders_customer_id_fkey (id, name, phone),
           stores!orders_vendor_id_fkey (id, name, latitude, longitude, address)
         `)
@@ -95,8 +93,8 @@ export default function OrdersMapPage() {
           total: o.total,
           status: o.status,
           created_at: o.created_at,
-          delivery_latitude: o.delivery_latitude,
-          delivery_longitude: o.delivery_longitude,
+          delivery_latitude: null,
+          delivery_longitude: null,
           delivery_address: o.delivery_address,
           customer: {
             id: o.users?.id || '',
@@ -104,10 +102,10 @@ export default function OrdersMapPage() {
             phone: o.users?.phone || 'غير متوفر',
           },
           vendor: {
-            id: o.restaurants?.id || '',
-            store_name: o.restaurants?.name || 'غير متوفر',
-            store_latitude: o.restaurants?.latitude,
-            store_longitude: o.restaurants?.longitude,
+            id: o.stores?.id || '',
+            store_name: o.stores?.name || 'غير متوفر',
+            store_latitude: o.stores?.latitude,
+            store_longitude: o.stores?.longitude,
             store_address: o.restaurants?.address,
           },
           customer_name: o.users?.name || 'غير متوفر',
