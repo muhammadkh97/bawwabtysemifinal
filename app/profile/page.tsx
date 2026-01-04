@@ -20,6 +20,9 @@ interface UserProfile {
   phone: string;
   avatar_url?: string;
   role: 'customer' | 'vendor' | 'driver' | 'admin';
+  date_of_birth?: string;
+  gender?: 'male' | 'female';
+  country?: string;
   loyalty_points?: number;
   created_at: string;
 }
@@ -67,6 +70,9 @@ export default function ProfilePage() {
   // Form states
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [gender, setGender] = useState<'male' | 'female' | ''>('');
+  const [country, setCountry] = useState('الأردن');
   
   // Password change states
   const [showPasswordChange, setShowPasswordChange] = useState(false);
@@ -117,12 +123,18 @@ export default function ProfilePage() {
         phone: userData.phone || '',
         avatar_url: userData.avatar_url,
         role: userData.role || 'customer',
+        date_of_birth: userData.date_of_birth,
+        gender: userData.gender,
+        country: userData.country,
         loyalty_points: userData.loyalty_points || 0,
         created_at: userData.created_at,
       });
 
       setFullName(userData.name || '');
       setPhone(userData.phone || '');
+      setDateOfBirth(userData.date_of_birth || '');
+      setGender(userData.gender || '');
+      setCountry(userData.country || 'الأردن');
       setAvatarPreview(userData.avatar_url || null);
 
       // Fetch user addresses
@@ -188,28 +200,35 @@ export default function ProfilePage() {
 
       let avatarUrl = profile.avatar_url;
 
-      // Upload avatar to Supabase Storage (if avatars bucket exists)
+      // Upload avatar to Supabase Storage using 'profiles' bucket
       if (avatarFile) {
         try {
           const fileExt = avatarFile.name.split('.').pop();
-          const fileName = `${profile.id}-${Date.now()}.${fileExt}`;
+          const fileName = `avatar-${profile.id}-${Date.now()}.${fileExt}`;
+          
+          console.log('📤 [Profile] رفع الصورة:', fileName);
+          
           const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('avatars')
-            .upload(fileName, avatarFile, { upsert: true });
+            .from('profiles')
+            .upload(fileName, avatarFile, { 
+              upsert: true,
+              contentType: avatarFile.type 
+            });
 
           if (uploadError) {
-            console.warn('⚠️ [Profile] تعذر رفع الصورة:', uploadError.message);
-            // Continue without updating avatar
+            console.error('❌ [Profile] خطأ في رفع الصورة:', uploadError);
+            alert('⚠️ فشل رفع الصورة، سيتم حفظ البيانات الأخرى فقط');
           } else {
             const { data: { publicUrl } } = supabase.storage
-              .from('avatars')
+              .from('profiles')
               .getPublicUrl(fileName);
 
             avatarUrl = publicUrl;
+            console.log('✅ [Profile] تم رفع الصورة بنجاح:', avatarUrl);
           }
         } catch (storageError) {
-          console.warn('⚠️ [Profile] Storage bucket غير متوفر، تم تخطي رفع الصورة');
-          // Continue without avatar upload
+          console.error('❌ [Profile] خطأ غير متوقع في رفع الصورة:', storageError);
+          alert('⚠️ حدث خطأ أثناء رفع الصورة');
         }
       }
 
@@ -220,6 +239,9 @@ export default function ProfilePage() {
         .update({
           name: fullName,
           phone: phone,
+          date_of_birth: dateOfBirth || null,
+          gender: gender || null,
+          country: country || null,
           avatar_url: avatarUrl,
         })
         .eq('id', profile.id);
@@ -236,6 +258,12 @@ export default function ProfilePage() {
       setProfile({
         ...profile,
         name: fullName,
+        phone: phone,
+        date_of_birth: dateOfBirth || undefined,
+        gender: gender || undefined,
+        country: country || undefined,
+        avatar_url: avatarUrl,
+      });
         phone: phone,
         avatar_url: avatarUrl,
       });
@@ -525,6 +553,107 @@ export default function ProfilePage() {
                       />
                     ) : (
                       <p className="text-base sm:text-lg text-gray-800">{profile?.phone || 'غير محدد'}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* الصف الثالث: تاريخ الميلاد + الجنس + البلد */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+                  <div className="relative">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1.5 sm:mb-2">
+                      🎂 تاريخ الميلاد
+                    </label>
+                    {editMode ? (
+                      <div className="relative">
+                        <input
+                          type="date"
+                          value={dateOfBirth}
+                          onChange={(e) => setDateOfBirth(e.target.value)}
+                          autoComplete="bday"
+                          max={new Date().toISOString().split('T')[0]}
+                          className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-purple-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gradient-to-br from-purple-50 to-pink-50 hover:border-purple-300 transition"
+                          style={{
+                            colorScheme: 'light',
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-100 rounded-lg sm:rounded-xl">
+                        <p className="text-sm sm:text-base font-medium text-gray-800">
+                          {profile?.date_of_birth 
+                            ? new Date(profile.date_of_birth).toLocaleDateString('ar-SA', { 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                              })
+                            : 'غير محدد'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="relative">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1.5 sm:mb-2">
+                      ⚧️ الجنس
+                    </label>
+                    {editMode ? (
+                      <select
+                        value={gender}
+                        onChange={(e) => setGender(e.target.value as any)}
+                        autoComplete="sex"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-purple-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gradient-to-br from-purple-50 to-pink-50 hover:border-purple-300 transition appearance-none cursor-pointer"
+                      >
+                        <option value="">اختر الجنس</option>
+                        <option value="male">👨 ذكر</option>
+                        <option value="female">👩 أنثى</option>
+                      </select>
+                    ) : (
+                      <div className="px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-100 rounded-lg sm:rounded-xl">
+                        <p className="text-sm sm:text-base font-medium text-gray-800">
+                          {profile?.gender === 'male' ? '👨 ذكر' : profile?.gender === 'female' ? '👩 أنثى' : 'غير محدد'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="relative">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1.5 sm:mb-2">
+                      🌍 البلد
+                    </label>
+                    {editMode ? (
+                      <select
+                        value={country}
+                        onChange={(e) => setCountry(e.target.value)}
+                        autoComplete="country-name"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-purple-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gradient-to-br from-purple-50 to-pink-50 hover:border-purple-300 transition appearance-none cursor-pointer"
+                      >
+                        <option value="الأردن">🇯🇴 الأردن</option>
+                        <option value="فلسطين">🇵🇸 فلسطين</option>
+                        <option value="السعودية">🇸🇦 السعودية</option>
+                        <option value="الإمارات">🇦🇪 الإمارات</option>
+                        <option value="الكويت">🇰🇼 الكويت</option>
+                        <option value="قطر">🇶🇦 قطر</option>
+                        <option value="البحرين">🇧🇭 البحرين</option>
+                        <option value="عمان">🇴🇲 عمان</option>
+                        <option value="مصر">🇪🇬 مصر</option>
+                        <option value="لبنان">🇱🇧 لبنان</option>
+                        <option value="سوريا">🇸🇾 سوريا</option>
+                        <option value="العراق">🇮🇶 العراق</option>
+                        <option value="اليمن">🇾🇪 اليمن</option>
+                        <option value="ليبيا">🇱🇾 ليبيا</option>
+                        <option value="تونس">🇹🇳 تونس</option>
+                        <option value="الجزائر">🇩🇿 الجزائر</option>
+                        <option value="المغرب">🇲🇦 المغرب</option>
+                        <option value="السودان">🇸🇩 السودان</option>
+                        <option value="الصومال">🇸🇴 الصومال</option>
+                        <option value="جيبوتي">🇩🇯 جيبوتي</option>
+                        <option value="جزر القمر">🇰🇲 جزر القمر</option>
+                        <option value="موريتانيا">🇲🇷 موريتانيا</option>
+                      </select>
+                    ) : (
+                      <div className="px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-100 rounded-lg sm:rounded-xl">
+                        <p className="text-sm sm:text-base font-medium text-gray-800">{country || 'غير محدد'}</p>
+                      </div>
                     )}
                   </div>
                 </div>
