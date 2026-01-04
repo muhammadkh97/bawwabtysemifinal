@@ -2,12 +2,14 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Star, Heart, ShoppingCart } from 'lucide-react';
+import { Star, Heart, ShoppingCart, UtensilsCrossed } from 'lucide-react';
 import type { Product } from '@/types';
 import { useCart } from '@/contexts/CartContext';
+import { useRestaurantCart } from '@/contexts/RestaurantCartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useState, useEffect } from 'react';
+import { getProductCartType } from '@/lib/cartHelpers';
 
 interface ProductCardProps {
   product: Product;
@@ -16,14 +18,31 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
   const { addToCart } = useCart();
+  const { addToRestaurantCart } = useRestaurantCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { selectedCurrency, formatPrice, convertPrice } = useCurrency();
+  
+  // حالة لنوع السلة
+  const [cartType, setCartType] = useState<'restaurant' | 'products'>('products');
+  const [isLoadingCartType, setIsLoadingCartType] = useState(true);
   
   // حالة للأسعار المحولة
   const [displayPrice, setDisplayPrice] = useState<number>(product.price);
   const [displayOldPrice, setDisplayOldPrice] = useState<number | null>(product.oldPrice || null);
   const [formattedPrice, setFormattedPrice] = useState<string>('');
   const [formattedOldPrice, setFormattedOldPrice] = useState<string>('');
+  
+  // تحديد نوع السلة
+  useEffect(() => {
+    async function determineCartType() {
+      setIsLoadingCartType(true);
+      const type = await getProductCartType(product.id);
+      setCartType(type);
+      setIsLoadingCartType(false);
+    }
+    
+    determineCartType();
+  }, [product.id]);
   
   // تحويل الأسعار عند تغيير العملة
   useEffect(() => {
@@ -47,7 +66,12 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    await addToCart(product.id, 1);
+    
+    if (cartType === 'restaurant' && product.vendor_id) {
+      await addToRestaurantCart(product.id, product.vendor_id, 1);
+    } else {
+      await addToCart(product.id, 1);
+    }
   };
 
   const handleToggleWishlist = async (e: React.MouseEvent) => {
@@ -102,10 +126,19 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
                 </div>
                 <button 
                   onClick={handleAddToCart}
-                  className="w-full sm:w-auto px-4 md:px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg text-white font-semibold transition-all flex items-center justify-center gap-2 text-sm md:text-base"
+                  disabled={isLoadingCartType}
+                  className={`w-full sm:w-auto px-4 md:px-6 py-2 rounded-lg text-white font-semibold transition-all flex items-center justify-center gap-2 text-sm md:text-base ${
+                    cartType === 'restaurant' 
+                      ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'
+                      : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
-                  <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
-                  <span>أضف للسلة</span>
+                  {cartType === 'restaurant' ? (
+                    <UtensilsCrossed className="w-4 h-4 md:w-5 md:h-5" />
+                  ) : (
+                    <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
+                  )}
+                  <span>{cartType === 'restaurant' ? 'أضف للطلب' : 'أضف للسلة'}</span>
                 </button>
               </div>
             </div>
@@ -199,11 +232,20 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
 
           {/* Add to Cart Button - Full width, gradient on mobile */}
           <button 
-            className="w-full py-2 md:py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg md:rounded-xl text-white font-bold transition-all flex items-center justify-center gap-1.5 md:gap-2 shadow-lg hover:shadow-xl text-xs md:text-base active:scale-95"
+            className={`w-full py-2 md:py-3 rounded-lg md:rounded-xl text-white font-bold transition-all flex items-center justify-center gap-1.5 md:gap-2 shadow-lg hover:shadow-xl text-xs md:text-base active:scale-95 ${
+              cartType === 'restaurant'
+                ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'
+                : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
             onClick={handleAddToCart}
+            disabled={isLoadingCartType}
           >
-            <ShoppingCart className="w-3.5 h-3.5 md:w-5 md:h-5" />
-            <span>أضف للسلة</span>
+            {cartType === 'restaurant' ? (
+              <UtensilsCrossed className="w-3.5 h-3.5 md:w-5 md:h-5" />
+            ) : (
+              <ShoppingCart className="w-3.5 h-3.5 md:w-5 md:h-5" />
+            )}
+            <span>{cartType === 'restaurant' ? 'أضف للطلب' : 'أضف للسلة'}</span>
           </button>
         </div>
       </div>

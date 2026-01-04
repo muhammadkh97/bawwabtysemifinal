@@ -2,8 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { CurrencyProvider } from '@/contexts/CurrencyContext'
 import { AuthProvider } from '@/contexts/AuthContext'
-import { CartProvider } from '@/contexts/CartContext'
-import { WishlistProvider } from '@/contexts/WishlistContext'
+import { CartProvider } from '@/contexts/CartContext'import { RestaurantCartProvider } from '@/contexts/RestaurantCartContext'import { WishlistProvider } from '@/contexts/WishlistContext'
 import { ChatsProvider } from '@/contexts/ChatsContext'
 import { StoreFollowProvider } from '@/contexts/StoreFollowContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
@@ -27,15 +26,17 @@ export default function RootLayout({
           <AuthProvider>
             <CurrencyProvider>
               <CartProvider>
-                <WishlistProvider>
-                  <ChatsProvider>
-                    <StoreFollowProvider>
-                      {children}
-                      <FloatingChatWidget />
-                      <ToastProvider />
-                    </StoreFollowProvider>
-                  </ChatsProvider>
-                </WishlistProvider>
+                <RestaurantCartProvider>
+                  <WishlistProvider>
+                    <ChatsProvider>
+                      <StoreFollowProvider>
+                        {children}
+                        <FloatingChatWidget />
+                        <ToastProvider />
+                      </StoreFollowProvider>
+                    </ChatsProvider>
+                  </WishlistProvider>
+                </RestaurantCartProvider>
               </CartProvider>
             </CurrencyProvider>
           </AuthProvider>

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ShoppingCart, Heart, User, Search, Menu, Phone, Mail, Globe, LayoutDashboard, LogOut, MessageCircle, ChevronRight, ChevronDown, Package, Zap, Star, Sparkles, AlertTriangle, LifeBuoy, ChefHat } from 'lucide-react'
+import { ShoppingCart, Heart, User, Search, Menu, Phone, Mail, Globe, LayoutDashboard, LogOut, MessageCircle, ChevronRight, ChevronDown, Package, Zap, Star, Sparkles, AlertTriangle, LifeBuoy, ChefHat, UtensilsCrossed } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import CurrencySelector from './CurrencySelector'
@@ -10,6 +10,7 @@ import NotificationDropdown from './NotificationDropdown'
 import { getCurrentUser, signOut } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 import { useCart } from '@/contexts/CartContext'
+import { useRestaurantCart } from '@/contexts/RestaurantCartContext'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -38,6 +39,7 @@ export default function Header() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const router = useRouter();
   const { cartCount } = useCart();
+  const { restaurantItemsCount } = useRestaurantCart();
   const { wishlistCount } = useWishlist();
 
   // التحقق من حالة تسجيل الدخول
@@ -300,6 +302,17 @@ export default function Header() {
                 )}
               </Link>
 
+              {/* سلة المطاعم */}
+              <Link href="/restaurant-cart" className="relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-50 rounded-xl md:rounded-2xl transition-all duration-300 group">
+                <UtensilsCrossed className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 group-hover:text-orange-500 transition-colors" />
+                {restaurantItemsCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 md:top-1.5 md:right-1.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[9px] sm:text-[10px] rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-black shadow-lg border-2 border-white">
+                    {restaurantItemsCount}
+                  </span>
+                )}
+              </Link>
+
+              {/* سلة المنتجات */}
               <Link href="/cart" className="relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-50 rounded-xl md:rounded-2xl transition-all duration-300 group">
                 <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 group-hover:text-purple-600 transition-colors" />
                 {cartCount > 0 && (
