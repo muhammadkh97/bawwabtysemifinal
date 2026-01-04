@@ -71,34 +71,34 @@ export default function NewProductPage() {
       }
 
       try {
-        // Get vendor ID with timeout
+        // Get store ID (vendor_id) with timeout - search in stores table
         const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Timeout')), 5000)
         );
 
         const fetchPromise = supabase
-          .from('vendors')
+          .from('stores')
           .select('id')
           .eq('user_id', userId)
           .eq('is_active', true)
           .single();
 
-        const { data: vendorData, error: vendorError } = await Promise.race([
+        const { data: storeData, error: storeError } = await Promise.race([
           fetchPromise,
           timeoutPromise as any
         ]);
 
-        if (vendorError || !vendorData) {
-          console.error('❌ Vendor error:', vendorError);
-          toast.error('⚠️ لم نتمكن من العثور على حسابك. يرجى تحديث الصفحة أو الاتصال بالدعم');
+        if (storeError || !storeData) {
+          console.error('❌ Store error:', storeError);
+          toast.error('⚠️ لم نتمكن من العثور على متجرك. يرجى تحديث الصفحة أو الاتصال بالدعم');
           setTimeout(() => router.push('/dashboard/vendor'), 2000);
           return;
         }
 
-        setVendorId(vendorData.id);
-        console.log('✅ Vendor ID loaded:', vendorData.id);
+        setVendorId(storeData.id);
+        console.log('✅ Store ID (vendor_id) loaded:', storeData.id);
       } catch (error) {
-        console.error('❌ Error loading vendor data:', error);
+        console.error('❌ Error loading store data:', error);
         toast.error('❌ خطأ في تحميل البيانات. يرجى المحاولة لاحقاً');
         setTimeout(() => router.push('/dashboard/vendor'), 2000);
       }
