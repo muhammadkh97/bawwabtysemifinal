@@ -14,7 +14,6 @@ interface Review {
   product_name: string;
   rating: number;
   comment: string;
-  helpful_count: number;
   created_at: string;
   response?: string;
 }
