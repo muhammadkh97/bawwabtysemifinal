@@ -342,7 +342,7 @@ export default function VendorDetailsPage() {
                     <div className="bg-white rounded-[32px] overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 flex flex-col h-full">
                       {/* Product Image Container */}
                       <div className="relative aspect-square overflow-hidden">
-                        <Link href={`/products/${product.id}`}>
+                        <Link href={isRestaurant ? `/meals/${product.id}` : `/products/${product.id}`}>
                           {product.images && product.images.length > 0 ? (
                             <img
                               src={product.images[0]}
@@ -377,7 +377,7 @@ export default function VendorDetailsPage() {
 
                       {/* Product Info */}
                       <div className="p-4 md:p-6 flex flex-col flex-1">
-                        <Link href={`/products/${product.id}`}>
+                        <Link href={isRestaurant ? `/meals/${product.id}` : `/products/${product.id}`}>
                           <h3 className="text-sm md:text-lg font-black text-gray-900 mb-2 group-hover:text-purple-600 transition-colors line-clamp-1">
                             {product.name_ar || product.name}
                           </h3>
