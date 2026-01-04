@@ -8,17 +8,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface UserLocation {
   id: string;
   user_id: string;
-  title: string;
+  name: string;  // بدلاً من title
   address: string;
-  city?: string;
-  area?: string;
-  street?: string;
-  building?: string;
-  floor?: string;
-  apartment?: string;
-  landmark?: string;
-  latitude?: number;
-  longitude?: number;
+  lat: number;   // بدلاً من latitude
+  lng: number;   // بدلاً من longitude
+  location?: any; // PostGIS point
+  type?: string;  // نوع الموقع
   is_default: boolean;
 }
 
@@ -34,17 +29,11 @@ export default function LocationsManager({ userId }: LocationsManagerProps) {
   const [gettingLocation, setGettingLocation] = useState(false);
 
   const [formData, setFormData] = useState({
-    title: 'منزل',
+    name: 'منزل',
     address: '',
-    city: '',
-    area: '',
-    street: '',
-    building: '',
-    floor: '',
-    apartment: '',
-    landmark: '',
-    latitude: null as number | null,
-    longitude: null as number | null,
+    lat: null as number | null,
+    lng: null as number | null,
+    type: 'home',
     is_default: false,
   });
 
@@ -87,12 +76,9 @@ export default function LocationsManager({ userId }: LocationsManagerProps) {
             if (data.address) {
               setFormData(prev => ({
                 ...prev,
-                latitude,
-                longitude,
+                lat: latitude,
+                lng: longitude,
                 address: data.display_name || '',
-                city: data.address.city || data.address.town || data.address.village || '',
-                area: data.address.suburb || data.address.neighbourhood || '',
-                street: data.address.road || '',
               }));
             }
           } catch (error) {
@@ -100,8 +86,8 @@ export default function LocationsManager({ userId }: LocationsManagerProps) {
             // حتى لو فشل الحصول على العنوان، احفظ الإحداثيات
             setFormData(prev => ({
               ...prev,
-              latitude,
-              longitude,
+              lat: latitude,
+              lng: longitude,
             }));
           } finally {
             setGettingLocation(false);
@@ -145,17 +131,11 @@ export default function LocationsManager({ userId }: LocationsManagerProps) {
       setShowForm(false);
       setEditingLocation(null);
       setFormData({
-        title: 'منزل',
+        name: 'منزل',
         address: '',
-        city: '',
-        area: '',
-        street: '',
-        building: '',
-        floor: '',
-        apartment: '',
-        landmark: '',
-        latitude: null,
-        longitude: null,
+        lat: null,
+        lng: null,
+        type: 'home',
         is_default: false,
       });
     } catch (error) {
@@ -245,11 +225,11 @@ export default function LocationsManager({ userId }: LocationsManagerProps) {
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center text-white">
-                    {getIconForTitle(location.title)}
+                    {getIconForTitle(location.name)}
                   </div>
                   <div>
-                    <h4 className="font-bold text-gray-800">{location.title}</h4>
-                    <p className="text-sm text-gray-500">{location.city || 'غير محدد'}</p>
+                    <h4 className="font-bold text-gray-800">{location.name}</h4>
+                    <p className="text-sm text-gray-500">{location.type || 'غير محدد'}</p>
                   </div>
                 </div>
               </div>
@@ -269,17 +249,11 @@ export default function LocationsManager({ userId }: LocationsManagerProps) {
                   onClick={() => {
                     setEditingLocation(location);
                     setFormData({
-                      title: location.title,
+                      name: location.name,
                       address: location.address,
-                      city: location.city || '',
-                      area: location.area || '',
-                      street: location.street || '',
-                      building: location.building || '',
-                      floor: location.floor || '',
-                      apartment: location.apartment || '',
-                      landmark: location.landmark || '',
-                      latitude: location.latitude || null,
-                      longitude: location.longitude || null,
+                      lat: location.lat,
+                      lng: location.lng,
+                      type: location.type || 'home',
                       is_default: location.is_default,
                     });
                     setShowForm(true);
@@ -343,29 +317,30 @@ export default function LocationsManager({ userId }: LocationsManagerProps) {
                   {gettingLocation ? 'جاري تحديد الموقع...' : 'تحديد موقعي الحالي'}
                 </button>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">نوع الموقع *</label>
                     <select
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      value={formData.type}
+                      onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500"
                       required
                     >
-                      <option value="منزل">🏠 منزل</option>
-                      <option value="عمل">💼 عمل</option>
-                      <option value="آخر">📍 آخر</option>
+                      <option value="home">🏠 منزل</option>
+                      <option value="work">💼 عمل</option>
+                      <option value="other">📍 آخر</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1">المدينة</label>
+                    <label className="block text-sm font-medium mb-1">اسم الموقع *</label>
                     <input
                       type="text"
-                      value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500"
-                      placeholder="عمّان، إربد..."
+                      placeholder="مثال: منزلي، مكتبي..."
+                      required
                     />
                   </div>
                 </div>
@@ -384,67 +359,30 @@ export default function LocationsManager({ userId }: LocationsManagerProps) {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">المنطقة</label>
+                    <label className="block text-sm font-medium mb-1">خط الطول</label>
                     <input
-                      type="text"
-                      value={formData.area}
-                      onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+                      type="number"
+                      step="any"
+                      value={formData.lat || ''}
+                      onChange={(e) => setFormData({ ...formData, lat: e.target.value ? parseFloat(e.target.value) : null })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500"
+                      placeholder="Latitude"
+                      disabled
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1">الشارع</label>
+                    <label className="block text-sm font-medium mb-1">خط العرض</label>
                     <input
-                      type="text"
-                      value={formData.street}
-                      onChange={(e) => setFormData({ ...formData, street: e.target.value })}
+                      type="number"
+                      step="any"
+                      value={formData.lng || ''}
+                      onChange={(e) => setFormData({ ...formData, lng: e.target.value ? parseFloat(e.target.value) : null })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500"
+                      placeholder="Longitude"
+                      disabled
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">رقم المبنى</label>
-                    <input
-                      type="text"
-                      value={formData.building}
-                      onChange={(e) => setFormData({ ...formData, building: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">الطابق</label>
-                    <input
-                      type="text"
-                      value={formData.floor}
-                      onChange={(e) => setFormData({ ...formData, floor: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">الشقة</label>
-                    <input
-                      type="text"
-                      value={formData.apartment}
-                      onChange={(e) => setFormData({ ...formData, apartment: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">معلم مميز</label>
-                  <input
-                    type="text"
-                    value={formData.landmark}
-                    onChange={(e) => setFormData({ ...formData, landmark: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500"
-                    placeholder="بجانب المسجد، أمام البنك..."
-                  />
                 </div>
 
                 <div className="flex items-center gap-2">
