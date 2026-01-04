@@ -82,7 +82,7 @@ export default function MealDetailsPage() {
         .from('products')
         .select(`
           *,
-          vendors!products_vendor_id_fkey(
+          vendors!products_vendor_id_vendors_fkey(
             shop_name,
             shop_name_ar,
             shop_logo,
