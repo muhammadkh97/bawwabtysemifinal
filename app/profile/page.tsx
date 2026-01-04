@@ -20,10 +20,6 @@ interface UserProfile {
   phone: string;
   avatar_url?: string;
   role: 'customer' | 'vendor' | 'driver' | 'admin';
-  gender?: 'male' | 'female';
-  date_of_birth?: string;
-  country?: string;
-  city?: string;
   loyalty_points?: number;
   created_at: string;
 }
@@ -71,10 +67,6 @@ export default function ProfilePage() {
   // Form states
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
-  const [gender, setGender] = useState<'male' | 'female' | ''>('');
-  const [dateOfBirth, setDateOfBirth] = useState('');
-  const [country, setCountry] = useState('الأردن');
-  const [city, setCity] = useState('');
   
   // Password change states
   const [showPasswordChange, setShowPasswordChange] = useState(false);
@@ -125,20 +117,12 @@ export default function ProfilePage() {
         phone: userData.phone || '',
         avatar_url: userData.avatar_url,
         role: userData.role || 'customer',
-        gender: userData.gender,
-        date_of_birth: userData.date_of_birth,
-        country: userData.country,
-        city: userData.city,
         loyalty_points: userData.loyalty_points || 0,
         created_at: userData.created_at,
       });
 
       setFullName(userData.name || '');
       setPhone(userData.phone || '');
-      setGender(userData.gender || '');
-      setDateOfBirth(userData.date_of_birth || '');
-      setCountry(userData.country || 'الأردن');
-      setCity(userData.city || '');
       setAvatarPreview(userData.avatar_url || null);
 
       // Fetch user addresses
@@ -236,10 +220,6 @@ export default function ProfilePage() {
         .update({
           name: fullName,
           phone: phone,
-          gender: gender || null,
-          date_of_birth: dateOfBirth || null,
-          country: country || null,
-          city: city || null,
           avatar_url: avatarUrl,
         })
         .eq('id', profile.id);
@@ -257,10 +237,6 @@ export default function ProfilePage() {
         ...profile,
         name: fullName,
         phone: phone,
-        gender: gender || undefined,
-        date_of_birth: dateOfBirth || undefined,
-        country: country || undefined,
-        city: city || undefined,
         avatar_url: avatarUrl,
       });
 
@@ -504,8 +480,8 @@ export default function ProfilePage() {
 
               {/* Info */}
               <div className="flex-1 w-full space-y-4 sm:space-y-6">
-                {/* الصف الأول: الاسم + البلد + العملة */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+                {/* الصف الأول: الاسم + العملة */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1.5 sm:mb-2">الاسم الكامل</label>
                     {editMode ? (
@@ -518,34 +494,6 @@ export default function ProfilePage() {
                       />
                     ) : (
                       <p className="text-base sm:text-lg font-semibold text-gray-800">{profile?.name}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1.5 sm:mb-2">البلد 🌍</label>
-                    {editMode ? (
-                      <select
-                        value={country}
-                        onChange={(e) => setCountry(e.target.value)}
-                        autoComplete="country-name"
-                        className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      >
-                        <option value="الأردن">الأردن 🇯🇴</option>
-                        <option value="فلسطين">فلسطين 🇵🇸</option>
-                        <option value="السعودية">السعودية 🇸🇦</option>
-                        <option value="الإمارات">الإمارات 🇦🇪</option>
-                        <option value="مصر">مصر 🇪🇬</option>
-                        <option value="لبنان">لبنان 🇱🇧</option>
-                        <option value="سوريا">سوريا 🇸🇾</option>
-                        <option value="العراق">العراق 🇮🇶</option>
-                        <option value="الكويت">الكويت 🇰🇼</option>
-                        <option value="قطر">قطر 🇶🇦</option>
-                        <option value="البحرين">البحرين 🇧🇭</option>
-                        <option value="عمان">عمان 🇴🇲</option>
-                        <option value="اليمن">اليمن 🇾🇪</option>
-                      </select>
-                    ) : (
-                      <p className="text-base sm:text-lg text-gray-800">{country || 'غير محدد'}</p>
                     )}
                   </div>
 
@@ -579,66 +527,6 @@ export default function ProfilePage() {
                       <p className="text-base sm:text-lg text-gray-800">{profile?.phone || 'غير محدد'}</p>
                     )}
                   </div>
-                </div>
-
-                {/* الصف الثالث: الجنس + تاريخ الميلاد */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1.5 sm:mb-2">الجنس</label>
-                    {editMode ? (
-                      <select
-                        value={gender}
-                        onChange={(e) => setGender(e.target.value as any)}
-                        autoComplete="sex"
-                        className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      >
-                        <option value="">اختر الجنس</option>
-                        <option value="male">👨 ذكر</option>
-                        <option value="female">👩 أنثى</option>
-                      </select>
-                    ) : (
-                      <p className="text-base sm:text-lg text-gray-800">
-                        {profile?.gender === 'male' ? '👨 ذكر' : profile?.gender === 'female' ? '👩 أنثى' : 'غير محدد'}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1.5 sm:mb-2">تاريخ الميلاد 🎂</label>
-                    {editMode ? (
-                      <input
-                        type="date"
-                        value={dateOfBirth}
-                        onChange={(e) => setDateOfBirth(e.target.value)}
-                        autoComplete="bday"
-                        className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
-                        style={{
-                          colorScheme: 'light',
-                        }}
-                      />
-                    ) : (
-                      <p className="text-sm sm:text-base md:text-lg text-gray-800">
-                        {profile?.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }) : 'غير محدد'}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* الصف الرابع: المدينة */}
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1.5 sm:mb-2">المدينة 🏙️</label>
-                  {editMode ? (
-                    <input
-                      type="text"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      placeholder="مثال: عمّان، إربد، الزرقاء"
-                      autoComplete="address-level2"
-                      className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    />
-                  ) : (
-                    <p className="text-base sm:text-lg text-gray-800">{city || 'غير محدد'}</p>
-                  )}
                 </div>
 
                 {/* نوع الحساب */}
