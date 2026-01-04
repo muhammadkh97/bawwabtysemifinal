@@ -22,6 +22,8 @@ interface Order {
   order_items: {
     id: string;
     product_name: string;
+    name?: string;
+    name_ar?: string;
     quantity: number;
     unit_price: number;
     total_price: number;
