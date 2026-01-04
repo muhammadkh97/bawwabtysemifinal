@@ -474,15 +474,16 @@ export default function CheckoutPage() {
             order_id: newOrder.id,
             product_id: product.id,
             vendor_id: vendorId,
+            name: product.name,
+            name_ar: (product as any).name_ar || product.name,
             product_name: product.name,
             product_name_ar: (product as any).name_ar || product.name,
             product_image: product.images?.[0] || null,
             quantity: item.quantity,
+            price: finalPrice,
             unit_price: finalPrice,
-            total_price: finalPrice * item.quantity,
-            commission_rate: 10.00,
-            commission_amount: (finalPrice * item.quantity * 0.1),
-            vendor_earning: (finalPrice * item.quantity * 0.9),
+            total: finalPrice * item.quantity,
+            item_total: finalPrice * item.quantity,
           };
         })
         .filter(item => item.vendor_id); // ✅ تصفية المنتجات التي ليس لها vendor_id
