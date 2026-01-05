@@ -12,6 +12,7 @@ import { supabase } from '@/lib/supabase'
 import { useCart } from '@/contexts/CartContext'
 import { useRestaurantCart } from '@/contexts/RestaurantCartContext'
 import { useWishlist } from '@/contexts/WishlistContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface Category {
@@ -30,9 +31,8 @@ interface Category {
 }
 
 export default function Header() {
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const { user, userRole, isLoading } = useAuth(); // استخدام AuthContext للحصول على userRole
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [unreadChatsCount, setUnreadChatsCount] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
@@ -42,27 +42,15 @@ export default function Header() {
   const { restaurantItemsCount } = useRestaurantCart();
   const { wishlistCount } = useWishlist();
 
-  // التحقق من حالة تسجيل الدخول
-  const checkAuthStatus = async () => {
-    try {
-      const { user } = await getCurrentUser();
-      if (user) {
-        setUserRole((user as any).role || 'customer');
-        setIsLoggedIn(true);
-        fetchUnreadChatsCount(user.id, (user as any).role);
-      } else {
-        setUserRole(null);
-        setIsLoggedIn(false);
-        setUnreadChatsCount(0);
-      }
-    } catch (error) {
-      console.error('خطأ في التحقق من حالة تسجيل الدخول:', error);
-      setIsLoggedIn(false);
-      setUserRole(null);
-    } finally {
-      setIsLoading(false);
+  // تحديث حالة تسجيل الدخول عند تغير user
+  useEffect(() => {
+    setIsLoggedIn(!!user);
+    if (user && userRole) {
+      fetchUnreadChatsCount(user.id, userRole);
+    } else {
+      setUnreadChatsCount(0);
     }
-  };
+  }, [user, userRole]);
 
   // جلب التصنيفات مع الفروع
   const fetchCategories = async () => {
@@ -162,28 +150,13 @@ export default function Header() {
   };
 
   useEffect(() => {
-    checkAuthStatus();
     fetchCategories();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        checkAuthStatus();
-      } else if (event === 'SIGNED_OUT') {
-        setIsLoggedIn(false);
-        setUserRole(null);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, []);
 
   const handleLogout = async () => {
     try {
       await signOut();
       setIsLoggedIn(false);
-      setUserRole(null);
       router.push('/auth/login');
       router.refresh();
     } catch (error) {
