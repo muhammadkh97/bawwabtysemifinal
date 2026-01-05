@@ -176,6 +176,21 @@ export default function VendorStaffPage() {
 
         if (staffError) throw staffError;
 
+        // إرسال إشعار للمستخدم
+        const { data: storeData } = await supabase
+          .from('stores')
+          .select('store_name')
+          .eq('id', vendorId)
+          .single();
+
+        await supabase.from('notifications').insert({
+          user_id: result.user_id,
+          type: 'staff_invitation',
+          title: 'دعوة للانضمام كمساعد',
+          message: `تمت إضافتك كمساعد في متجر ${storeData?.store_name || 'المتجر'}`,
+          link: '/invitations'
+        });
+
         toast.success('✅ تمت إضافة المساعد بنجاح!');
       } else {
         // المستخدم غير موجود، تم إرسال دعوة

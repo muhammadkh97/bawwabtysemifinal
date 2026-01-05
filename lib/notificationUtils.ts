@@ -34,6 +34,7 @@ export type NotificationType =
   | 'account_rejected'
   | 'product_approved'
   | 'product_rejected'
+  | 'staff_invitation'
 
 /**
  * Get all notifications for current user
@@ -192,6 +193,7 @@ export function getNotificationIcon(type: NotificationType): string {
     account_rejected: '❌',
     product_approved: '✅',
     product_rejected: '❌',
+    staff_invitation: '👥',
   }
 
   return icons[type] || '🔔'
@@ -205,6 +207,7 @@ export function getNotificationColor(type: NotificationType): string {
   if (type.includes('rejected')) return 'text-red-500'
   if (type.includes('pending')) return 'text-yellow-500'
   if (type.includes('message')) return 'text-blue-500'
+  if (type === 'staff_invitation') return 'text-purple-500'
   return 'text-purple-500'
 }
 
