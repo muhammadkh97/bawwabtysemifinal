@@ -50,7 +50,7 @@ INSERT INTO notifications (
     'staff_invitation',
     'إعادة تفعيل حسابك المساعد',
     'تم إعادة تفعيلك كمساعد في متجر مريم مريم',
-    '/dashboard/vendor',
+    '/invitations',
     'high'
 );
 

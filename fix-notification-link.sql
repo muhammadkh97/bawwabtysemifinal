@@ -4,10 +4,10 @@
 
 -- تحديث الإشعارات الموجودة لتوجيه المساعد للصفحة الصحيحة
 UPDATE notifications
-SET link = '/dashboard/vendor'
+SET link = '/invitations'
 WHERE user_id = '390e50d6-50de-4376-bddc-f394323284d8'
   AND type = 'staff_invitation'
-  AND link = '/dashboard';
+  AND (link = '/dashboard' OR link = '/dashboard/vendor');
 
 -- التحقق من النتيجة
 SELECT 
