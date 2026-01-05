@@ -249,7 +249,7 @@ export default function VendorStaffPage() {
       <FuturisticSidebar role="vendor" />
       
       <div className="md:mr-[280px] transition-all duration-300">
-        <FuturisticNavbar userName={user?.full_name || 'بائع'} userRole="بائع" />
+        <FuturisticNavbar userName={(user as any)?.full_name || 'بائع'} userRole="بائع" />
         
         <main className="pt-24 px-4 md:px-8 lg:px-10 pb-10 relative z-10 max-w-[1800px] mx-auto">
           <motion.div
