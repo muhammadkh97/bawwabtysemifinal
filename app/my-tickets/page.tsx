@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { MessageSquare, Clock, CheckCircle, XCircle, AlertCircle, Calendar, Eye, Plus } from 'lucide-react';
+import { MessageSquare, Clock, CheckCircle, XCircle, AlertCircle, Calendar, Eye, Plus, Send } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { getCurrentUser } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
@@ -51,11 +51,23 @@ export default function MyTicketsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [filter, setFilter] = useState<'all' | 'open' | 'in_progress' | 'resolved' | 'closed'>('all');
+  const [replies, setReplies] = useState<Reply[]>([]);
+  const [replyText, setReplyText] = useState('');
+  const [sendingReply, setSendingReply] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     checkAuthAndFetchTickets();
   }, [filter]);
+
+  useEffect(() => {
+    if (selectedTicket) {
+      fetchReplies(selectedTicket.id);
+    } else {
+      setReplies([]);
+      setReplyText('');
+    }
+  }, [selectedTicket]);
 
   const checkAuthAndFetchTickets = async () => {
     try {
@@ -106,6 +118,69 @@ export default function MyTicketsPage() {
       console.error('خطأ في جلب التذاكر:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchReplies = async (ticketId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('ticket_replies')
+        .select(`
+          *,
+          users!ticket_replies_user_id_fkey (
+            full_name
+          )
+        `)
+        .eq('ticket_id', ticketId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      const formattedReplies: Reply[] = (data || []).map((reply: any) => ({
+        id: reply.id,
+        message: reply.message,
+        is_admin: reply.is_admin || false,
+        user_name: reply.users?.full_name || 'مستخدم',
+        created_at: new Date(reply.created_at).toLocaleString('ar-SA'),
+      }));
+
+      setReplies(formattedReplies);
+    } catch (error) {
+      console.error('Error fetching replies:', error);
+      setReplies([]);
+    }
+  };
+
+  const handleSendReply = async () => {
+    if (!selectedTicket || !replyText.trim()) return;
+
+    try {
+      setSendingReply(true);
+      const { user } = await getCurrentUser();
+      if (!user) {
+        router.push('/auth/login');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('ticket_replies')
+        .insert({
+          ticket_id: selectedTicket.id,
+          user_id: user.id,
+          message: replyText.trim(),
+          is_admin: false,
+        });
+
+      if (error) throw error;
+
+      // إعادة جلب الردود
+      await fetchReplies(selectedTicket.id);
+      setReplyText('');
+    } catch (error) {
+      console.error('Error sending reply:', error);
+      alert('❌ حدث خطأ في إرسال الرد');
+    } finally {
+      setSendingReply(false);
     }
   };
 
@@ -261,6 +336,55 @@ export default function MyTicketsPage() {
                   <h3 className="text-sm font-bold text-gray-500 mb-2">الرسالة</h3>
                   <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{selectedTicket.message}</p>
                 </div>
+
+                {/* الردود */}
+                {replies.length > 0 && (
+                  <div className="space-y-3 pt-4 border-t max-h-[300px] overflow-y-auto">
+                    <h3 className="text-sm font-bold text-gray-500 mb-2">الردود</h3>
+                    {replies.map((reply) => (
+                      <div
+                        key={reply.id}
+                        className={`p-4 rounded-xl ${
+                          reply.is_admin
+                            ? 'bg-gradient-to-r from-purple-100 to-pink-100 ml-8 border-l-4 border-purple-500'
+                            : 'bg-gray-50 mr-8 border-r-4 border-blue-500'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`text-sm font-bold ${reply.is_admin ? 'text-purple-700' : 'text-blue-700'}`}>
+                            {reply.is_admin ? '👨‍💼 المدير' : '👤 ' + reply.user_name}
+                          </span>
+                          <span className="text-xs text-gray-500">{reply.created_at}</span>
+                        </div>
+                        <p className="text-gray-700 text-sm leading-relaxed">{reply.message}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* مربع الرد - يظهر فقط للتذاكر المفتوحة أو قيد المعالجة */}
+                {(selectedTicket.status === 'open' || selectedTicket.status === 'in_progress') && (
+                  <div className="pt-4 border-t">
+                    <h3 className="text-sm font-bold text-gray-500 mb-2">إضافة رد</h3>
+                    <div className="relative">
+                      <textarea
+                        value={replyText}
+                        onChange={(e) => setReplyText(e.target.value)}
+                        placeholder="اكتب ردك هنا..."
+                        rows={4}
+                        className="w-full p-4 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none resize-none"
+                      />
+                      <button
+                        onClick={handleSendReply}
+                        disabled={!replyText.trim() || sendingReply}
+                        className="absolute bottom-4 left-4 px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-bold transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      >
+                        <Send className="w-4 h-4" />
+                        {sendingReply ? 'جاري الإرسال...' : 'إرسال'}
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                   <div>
