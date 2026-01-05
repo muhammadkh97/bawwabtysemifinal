@@ -162,19 +162,63 @@ export default function VendorStaffPage() {
       const result = data as { success: boolean; user_exists: boolean; user_id: string; invitation_code: string };
 
       if (result.user_exists && result.user_id) {
-        // المستخدم موجود، إضافته مباشرة
-        const { error: staffError } = await supabase
+        // التحقق من وجود سجل سابق للمستخدم
+        const { data: existingStaff, error: checkError } = await supabase
           .from('vendor_staff')
-          .insert({
-            vendor_id: vendorId,
-            user_id: result.user_id,
-            permissions: selectedPermissions,
-            status: 'active',
-            invited_by: user.id,
-            accepted_at: new Date().toISOString()
-          });
+          .select('id, status')
+          .eq('vendor_id', vendorId)
+          .eq('user_id', result.user_id)
+          .maybeSingle();
 
-        if (staffError) throw staffError;
+        if (checkError) throw checkError;
+
+        let staffAction = '';
+
+        if (existingStaff) {
+          // السجل موجود - تحديثه
+          if (existingStaff.status === 'removed') {
+            // إعادة تفعيل المساعد المحذوف
+            const { error: updateError } = await supabase
+              .from('vendor_staff')
+              .update({
+                status: 'active',
+                permissions: selectedPermissions,
+                accepted_at: new Date().toISOString(),
+                invited_at: new Date().toISOString(),
+                invited_by: user.id
+              })
+              .eq('id', existingStaff.id);
+
+            if (updateError) throw updateError;
+            staffAction = 'reactivated';
+          } else if (existingStaff.status === 'active') {
+            // المساعد نشط بالفعل - تحديث الصلاحيات فقط
+            const { error: updateError } = await supabase
+              .from('vendor_staff')
+              .update({
+                permissions: selectedPermissions
+              })
+              .eq('id', existingStaff.id);
+
+            if (updateError) throw updateError;
+            staffAction = 'updated';
+          }
+        } else {
+          // السجل غير موجود - إضافة جديد
+          const { error: insertError } = await supabase
+            .from('vendor_staff')
+            .insert({
+              vendor_id: vendorId,
+              user_id: result.user_id,
+              permissions: selectedPermissions,
+              status: 'active',
+              invited_by: user.id,
+              accepted_at: new Date().toISOString()
+            });
+
+          if (insertError) throw insertError;
+          staffAction = 'added';
+        }
 
         // إرسال إشعار للمستخدم
         const { data: storeData } = await supabase
@@ -183,15 +227,28 @@ export default function VendorStaffPage() {
           .eq('id', vendorId)
           .single();
 
+        const notificationMessages = {
+          added: 'تمت إضافتك كمساعد في متجر',
+          reactivated: 'تم إعادة تفعيلك كمساعد في متجر',
+          updated: 'تم تحديث صلاحياتك في متجر'
+        };
+
         await supabase.from('notifications').insert({
           user_id: result.user_id,
           type: 'staff_invitation',
-          title: 'دعوة للانضمام كمساعد',
-          message: `تمت إضافتك كمساعد في متجر ${storeData?.store_name || 'المتجر'}`,
-          link: '/invitations'
+          title: staffAction === 'added' ? 'دعوة للانضمام كمساعد' : 'تحديث حسابك المساعد',
+          message: `${notificationMessages[staffAction as keyof typeof notificationMessages]} ${storeData?.store_name || 'المتجر'}`,
+          link: '/dashboard',
+          priority: 'high'
         });
 
-        toast.success('✅ تمت إضافة المساعد بنجاح!');
+        const successMessages = {
+          added: '✅ تمت إضافة المساعد بنجاح!',
+          reactivated: '✅ تم إعادة تفعيل المساعد بنجاح!',
+          updated: '✅ تم تحديث صلاحيات المساعد بنجاح!'
+        };
+
+        toast.success(successMessages[staffAction as keyof typeof successMessages]);
       } else {
         // المستخدم غير موجود، تم إرسال دعوة
         toast.success('📧 تم إرسال دعوة للبريد الإلكتروني. سيتم إضافته عند التسجيل.');
@@ -207,7 +264,13 @@ export default function VendorStaffPage() {
 
     } catch (error: any) {
       console.error('Error adding staff:', error);
-      toast.error(error.message || 'حدث خطأ في إضافة المساعد');
+      
+      // رسائل خطأ مخصصة
+      if (error.code === '23505') {
+        toast.error('⚠️ هذا المستخدم مضاف بالفعل كمساعد في متجرك');
+      } else {
+        toast.error(error.message || 'حدث خطأ في إضافة المساعد');
+      }
     } finally {
       setSubmitting(false);
     }
