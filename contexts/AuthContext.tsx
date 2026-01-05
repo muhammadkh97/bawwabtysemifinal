@@ -112,9 +112,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       console.log('✅ [AuthContext] البيانات المسترجعة من get_current_user:', data);
       // نوع بيانات الدالة rpc غير معرف افتراضيًا، نستخدم assertion
-      const userData = data as { role?: string; full_name?: string };
-      // استخدام role من الدالة
-      const userRoleValue = userData?.role || 'customer';
+      const userData = data as { 
+        role?: string; 
+        full_name?: string;
+        is_vendor_staff?: boolean;
+        is_restaurant_staff?: boolean;
+        staff_vendor_id?: string;
+        staff_permissions?: any;
+      };
+      
+      // إذا كان المستخدم مساعد، استخدم دور vendor أو restaurant
+      let userRoleValue = userData?.role || 'customer';
+      
+      if (userData?.is_vendor_staff) {
+        userRoleValue = 'vendor';
+        console.log('🎭 [AuthContext] المستخدم هو مساعد بائع');
+        console.log('🏪 [AuthContext] معرف المتجر:', userData?.staff_vendor_id);
+        console.log('🔑 [AuthContext] الصلاحيات:', userData?.staff_permissions);
+      } else if (userData?.is_restaurant_staff) {
+        userRoleValue = 'restaurant';
+        console.log('🎭 [AuthContext] المستخدم هو مساعد مطعم');
+      }
+      
       const fullName = userData?.full_name || null;
       console.log('🎭 [AuthContext] الدور النهائي:', userRoleValue);
       console.log('👤 [AuthContext] الاسم:', fullName);
