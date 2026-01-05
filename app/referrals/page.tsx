@@ -22,7 +22,7 @@ interface Referral {
   id: string;
   referred_name: string;
   referred_email: string;
-  points_awarded: number;
+  reward_points: number;
   status: string;
   created_at: string;
   completed_at: string | null;
@@ -84,7 +84,7 @@ export default function ReferralPage() {
     const total = referralsData?.length || 0;
     const pending = referralsData?.filter(r => r.status === 'pending').length || 0;
     const completed = referralsData?.filter(r => r.status === 'completed').length || 0;
-    const earned = referralsData?.reduce((sum, r) => sum + (r.points_awarded || 0), 0) || 0;
+    const earned = referralsData?.reduce((sum, r) => sum + (r.reward_points || 0), 0) || 0;
 
     setStats({
       totalReferrals: total,
@@ -100,7 +100,7 @@ export default function ReferralPage() {
       .from('referrals')
       .select(`
         id,
-        points_awarded,
+        reward_points,
         status,
         created_at,
         completed_at,
@@ -121,7 +121,7 @@ export default function ReferralPage() {
       id: r.id,
       referred_name: r.referred?.full_name || r.referred?.[0]?.full_name || 'مستخدم جديد',
       referred_email: r.referred?.email || r.referred?.[0]?.email || '',
-      points_awarded: r.points_awarded,
+      reward_points: r.reward_points,
       status: r.status,
       created_at: r.created_at,
       completed_at: r.completed_at,
@@ -381,7 +381,7 @@ export default function ReferralPage() {
                     </div>
                   </div>
                   <div className="text-left">
-                    <div className="text-2xl font-bold text-green-400">+{referral.points_awarded}</div>
+                    <div className="text-2xl font-bold text-green-400">+{referral.reward_points}</div>
                     <div className={`text-sm font-medium ${
                       referral.status === 'completed' ? 'text-green-400' : 'text-yellow-400'
                     }`}>

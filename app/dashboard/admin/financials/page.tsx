@@ -12,6 +12,14 @@ interface FinancialSummary {
   totalTaxes: number;
 }
 
+interface FinancialSettings {
+  default_commission_rate: number;
+  tax_rate: number;
+  min_payout_amount: number;
+  base_delivery_fee: number;
+  per_km_delivery_fee: number;
+}
+
 export default function AdminFinancialsPage() {
   const [activeTab, setActiveTab] = useState<'commissions' | 'payouts' | 'settings'>('commissions');
   const [financialSummary, setFinancialSummary] = useState<FinancialSummary>({
@@ -22,7 +30,15 @@ export default function AdminFinancialsPage() {
   });
   const [commissions, setCommissions] = useState<any[]>([]);
   const [payouts, setPayouts] = useState<any[]>([]);
+  const [settings, setSettings] = useState<FinancialSettings>({
+    default_commission_rate: 10,
+    tax_rate: 16,
+    min_payout_amount: 100,
+    base_delivery_fee: 20,
+    per_km_delivery_fee: 2
+  });
   const [loading, setLoading] = useState(true);
+  const [savingSettings, setSavingSettings] = useState(false);
 
   useEffect(() => {
     fetchFinancialData();
@@ -31,6 +47,23 @@ export default function AdminFinancialsPage() {
   const fetchFinancialData = async () => {
     setLoading(true);
     try {
+      // 0. جلب الإعدادات المالية
+      const { data: settingsData } = await supabase
+        .from('financial_settings')
+        .select('*')
+        .eq('is_active', true)
+        .single();
+
+      if (settingsData) {
+        setSettings({
+          default_commission_rate: settingsData.default_commission_rate || 10,
+          tax_rate: settingsData.tax_rate || 16,
+          min_payout_amount: settingsData.min_payout_amount || 100,
+          base_delivery_fee: settingsData.base_delivery_fee || 20,
+          per_km_delivery_fee: settingsData.per_km_delivery_fee || 2
+        });
+      }
+
       // 1. جلب الطلبات المكتملة لحساب العمولات
       const { data: orders } = await supabase
         .from('orders')
@@ -124,6 +157,56 @@ export default function AdminFinancialsPage() {
       console.error('خطأ في جلب البيانات المالية:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    setSavingSettings(true);
+    try {
+      // تحديث أو إدراج الإعدادات
+      const { data: existing } = await supabase
+        .from('financial_settings')
+        .select('id')
+        .eq('is_active', true)
+        .single();
+
+      if (existing) {
+        // تحديث
+        const { error } = await supabase
+          .from('financial_settings')
+          .update({
+            default_commission_rate: settings.default_commission_rate,
+            tax_rate: settings.tax_rate,
+            min_payout_amount: settings.min_payout_amount,
+            base_delivery_fee: settings.base_delivery_fee,
+            per_km_delivery_fee: settings.per_km_delivery_fee,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existing.id);
+
+        if (error) throw error;
+      } else {
+        // إدراج جديد
+        const { error } = await supabase
+          .from('financial_settings')
+          .insert({
+            default_commission_rate: settings.default_commission_rate,
+            tax_rate: settings.tax_rate,
+            min_payout_amount: settings.min_payout_amount,
+            base_delivery_fee: settings.base_delivery_fee,
+            per_km_delivery_fee: settings.per_km_delivery_fee,
+            is_active: true
+          });
+
+        if (error) throw error;
+      }
+
+      alert('✅ تم حفظ الإعدادات المالية بنجاح');
+    } catch (error) {
+      console.error('خطأ في حفظ الإعدادات:', error);
+      alert('حدث خطأ في حفظ الإعدادات');
+    } finally {
+      setSavingSettings(false);
     }
   };
 
@@ -426,7 +509,8 @@ export default function AdminFinancialsPage() {
                       </label>
                       <input
                         type="number"
-                        defaultValue="10"
+                        value={settings.default_commission_rate}
+                        onChange={(e) => setSettings({...settings, default_commission_rate: Number(e.target.value)})}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         min="0"
                         max="100"
@@ -440,7 +524,8 @@ export default function AdminFinancialsPage() {
                       </label>
                       <input
                         type="number"
-                        defaultValue="16"
+                        value={settings.tax_rate}
+                        onChange={(e) => setSettings({...settings, tax_rate: Number(e.target.value)})}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         min="0"
                         max="100"
@@ -454,7 +539,8 @@ export default function AdminFinancialsPage() {
                       </label>
                       <input
                         type="number"
-                        defaultValue="100"
+                        value={settings.min_payout_amount}
+                        onChange={(e) => setSettings({...settings, min_payout_amount: Number(e.target.value)})}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         min="0"
                         step="1"
@@ -467,7 +553,8 @@ export default function AdminFinancialsPage() {
                       </label>
                       <input
                         type="number"
-                        defaultValue="5"
+                        value={settings.base_delivery_fee}
+                        onChange={(e) => setSettings({...settings, base_delivery_fee: Number(e.target.value)})}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         min="0"
                         step="0.1"
@@ -480,7 +567,8 @@ export default function AdminFinancialsPage() {
                       </label>
                       <input
                         type="number"
-                        defaultValue="0.5"
+                        value={settings.per_km_delivery_fee}
+                        onChange={(e) => setSettings({...settings, per_km_delivery_fee: Number(e.target.value)})}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         min="0"
                         step="0.1"
@@ -488,8 +576,12 @@ export default function AdminFinancialsPage() {
                     </div>
                   </div>
 
-                  <button className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium">
-                    💾 حفظ الإعدادات
+                  <button 
+                    onClick={handleSaveSettings}
+                    disabled={savingSettings}
+                    className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {savingSettings ? '⏳ جاري الحفظ...' : '💾 حفظ الإعدادات'}
                   </button>
                 </div>
               )}

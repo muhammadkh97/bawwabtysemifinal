@@ -11,7 +11,7 @@ export default function ShippingSettingsPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   
   const [settings, setSettings] = useState({
-    base_fee: 20,
+    base_rate: 20,
     free_shipping_threshold: 200,
     is_free: false,
   });
@@ -34,7 +34,7 @@ export default function ShippingSettingsPage() {
 
       if (data) {
         setSettings({
-          base_fee: data.base_fee || 20,
+          base_rate: data.base_rate || 20,
           free_shipping_threshold: data.free_shipping_threshold || 200,
           is_free: data.is_free || false,
         });
@@ -64,7 +64,7 @@ export default function ShippingSettingsPage() {
         const result = await supabase
           .from('shipping_settings')
           .update({
-            base_fee: settings.base_fee,
+            base_rate: settings.base_rate,
             free_shipping_threshold: settings.free_shipping_threshold,
             is_free: settings.is_free,
             updated_at: new Date().toISOString(),
@@ -76,7 +76,7 @@ export default function ShippingSettingsPage() {
         const result = await supabase
           .from('shipping_settings')
           .insert([{
-            base_fee: settings.base_fee,
+            base_rate: settings.base_rate,
             free_shipping_threshold: settings.free_shipping_threshold,
             is_free: settings.is_free,
           }]);
@@ -110,7 +110,7 @@ export default function ShippingSettingsPage() {
     {
       name: 'إعدادات افتراضية',
       icon: <RefreshCw className="w-5 h-5" />,
-      apply: () => setSettings({ base_fee: 20, free_shipping_threshold: 200, is_free: false }),
+      apply: () => setSettings({ base_rate: 20, free_shipping_threshold: 200, is_free: false }),
     },
   ];
 
@@ -214,8 +214,8 @@ export default function ShippingSettingsPage() {
                   <div className="relative">
                     <input
                       type="number"
-                      value={settings.base_fee}
-                      onChange={(e) => setSettings({ ...settings, base_fee: Number(e.target.value) })}
+                      value={settings.base_rate}
+                      onChange={(e) => setSettings({ ...settings, base_rate: Number(e.target.value) })}
                       disabled={settings.is_free}
                       className="w-full px-6 py-4 text-2xl font-bold border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all"
                       min="0"
@@ -270,7 +270,7 @@ export default function ShippingSettingsPage() {
                       <>
                         <div className="flex items-center justify-between p-4 bg-white rounded-lg">
                           <span className="text-gray-700">رسوم الشحن الأساسية:</span>
-                          <span className="font-bold text-blue-600 text-xl">{settings.base_fee} ₪</span>
+                          <span className="font-bold text-blue-600 text-xl">{settings.base_rate} ₪</span>
                         </div>
                         <div className="flex items-center justify-between p-4 bg-white rounded-lg">
                           <span className="text-gray-700">شحن مجاني للطلبات فوق:</span>

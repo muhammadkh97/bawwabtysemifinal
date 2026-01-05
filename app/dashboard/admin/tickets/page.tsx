@@ -35,17 +35,23 @@ export default function TicketsPage() {
       setLoading(true);
       const { data, error } = await supabase
         .from('support_tickets')
-        .select('*')
+        .select(`
+          *,
+          users!support_tickets_user_id_fkey (
+            full_name,
+            email
+          )
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
       const formattedTickets: Ticket[] = (data || []).map((ticket: any) => ({
         id: ticket.id,
-        user_name: ticket.user_name || 'مستخدم',
-        user_email: ticket.user_email || 'غير محدد',
+        user_name: ticket.users?.full_name || 'مستخدم',
+        user_email: ticket.users?.email || 'غير محدد',
         subject: ticket.subject || 'بدون عنوان',
-        message: ticket.message || '',
+        message: ticket.description || '',
         category: ticket.category || 'عام',
         priority: ticket.priority || 'medium',
         status: ticket.status || 'open',

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, Store, Truck, ShieldCheck, ArrowRight, CheckCircle2, 
-  Mail, Lock, Eye, EyeOff, Upload, FileText, Car, CreditCard, ChefHat 
+  Mail, Lock, Eye, EyeOff, Upload, FileText, Car, CreditCard, ChefHat, Gift 
 } from 'lucide-react';
 import { signUp, signInWithGoogle, signInWithFacebook, signInWithApple } from '@/lib/auth';
 import CountryPhoneInput from '@/components/CountryPhoneInput';
@@ -16,6 +16,9 @@ function RegisterForm() {
   const searchParams = useSearchParams();
   const [step, setStep] = useState(1);
   const [userType, setUserType] = useState<'customer' | 'vendor' | 'restaurant' | 'driver' | null>(null);
+  
+  // Referral Code
+  const [referralCode, setReferralCode] = useState(searchParams?.get('ref') || '');
   
   // Basic Info
   const [name, setName] = useState('');
@@ -207,6 +210,46 @@ function RegisterForm() {
         setError(signUpError);
         setLoading(false);
         return;
+      }
+      
+      // معالجة كود الإحالة إذا كان موجوداً
+      if (referralCode && referralCode.trim()) {
+        try {
+          const { supabase } = await import('@/lib/supabase');
+          
+          // البحث عن المستخدم الذي يملك هذا الكود
+          const { data: referrer } = await supabase
+            .from('users')
+            .select('id')
+            .eq('referral_code', referralCode.toUpperCase())
+            .single();
+          
+          if (referrer) {
+            // الحصول على ID المستخدم الجديد
+            const { data: { user: newUser } } = await supabase.auth.getUser();
+            
+            if (newUser) {
+              // إنشاء سجل إحالة
+              await supabase
+                .from('referrals')
+                .insert({
+                  referrer_id: referrer.id,
+                  referred_id: newUser.id,
+                  status: 'pending',
+                  reward_points: 100
+                });
+              
+              // إضافة نقاط للمستخدم الجديد
+              await supabase
+                .from('users')
+                .update({ loyalty_points: 100 })
+                .eq('id', newUser.id);
+            }
+          }
+        } catch (refError) {
+          console.error('خطأ في معالجة كود الإحالة:', refError);
+          // لا نوقف عملية التسجيل
+        }
       }
       
       setUploadProgress(100);
@@ -544,6 +587,35 @@ function RegisterForm() {
                   label=""
                   className="phone-input-dark"
                 />
+
+                {/* Referral Code Field */}
+                <div>
+                  <label className="block text-sm font-medium text-purple-200 mb-2">
+                    كود الدعوة (اختياري)
+                  </label>
+                  <div className="relative">
+                    <Gift className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
+                    <input
+                      type="text"
+                      value={referralCode}
+                      onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                      className="w-full pr-12 pl-4 py-3 rounded-xl text-white placeholder-purple-400/50 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all uppercase"
+                      style={{
+                        background: 'rgba(98, 54, 255, 0.1)',
+                        border: '1px solid rgba(98, 54, 255, 0.3)',
+                      }}
+                      placeholder="XXXXXXXX"
+                      maxLength={8}
+                      disabled={loading}
+                    />
+                  </div>
+                  {referralCode && (
+                    <p className="text-xs text-green-400 mt-2 flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" />
+                      ستحصل على 100 نقطة عند التسجيل!
+                    </p>
+                  )}
+                </div>
 
                 {/* Vendor-specific fields */}
                 {userType === 'vendor' && (
