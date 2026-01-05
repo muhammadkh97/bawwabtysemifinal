@@ -65,6 +65,7 @@ export default function AdminFinancialsPage() {
       }
 
       // 1. جلب الطلبات المكتملة لحساب العمولات
+      // جلب الطلبات المكتملة مع معلومات المتاجر
       const { data: orders } = await supabase
         .from('orders')
         .select(`
@@ -75,29 +76,37 @@ export default function AdminFinancialsPage() {
           stores!orders_vendor_id_fkey (
             id,
             name,
-            name_ar,
-            commission_rate
+            name_ar
           )
         `)
         .eq('status', 'delivered')
         .order('created_at', { ascending: false })
         .limit(50);
 
-      // حساب العمولات
-      const commissionsData = orders?.map(order => {
-        const store = order.stores as any;
-        const commissionRate = store?.commission_rate || 10;
-        const commissionAmount = (order.total_amount * commissionRate) / 100;
-        const vendorEarning = order.total_amount - commissionAmount;
+      // جلب العمولات من جدول commissions
+      const { data: commissionsFromDB } = await supabase
+        .from('commissions')
+        .select(`
+          *,
+          orders!commissions_order_id_fkey (
+            order_number
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      // تنسيق بيانات العمولات
+      const commissionsData = commissionsFromDB?.map(commission => {
+        const order = commission.orders as any;
         
         return {
-          order_id: order.order_number || order.id.slice(0, 8),
-          vendor_name: store?.name_ar || store?.name || 'بائع',
-          order_total: order.total_amount,
-          commission_rate: commissionRate,
-          commission_amount: commissionAmount,
-          vendor_earning: vendorEarning,
-          date: new Date(order.created_at).toLocaleDateString('ar-JO')
+          order_id: order?.order_number || commission.order_id.slice(0, 8),
+          vendor_name: 'بائع', // سنحتاج JOIN إضافي للحصول على اسم البائع
+          order_total: commission.order_amount,
+          commission_rate: commission.commission_rate * 100, // تحويل من 0.10 إلى 10
+          commission_amount: commission.commission_amount,
+          vendor_earning: commission.order_amount - commission.commission_amount,
+          date: new Date(commission.created_at).toLocaleDateString('ar-JO'),
+          status: commission.status
         };
       }) || [];
 

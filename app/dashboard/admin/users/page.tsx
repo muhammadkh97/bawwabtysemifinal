@@ -28,16 +28,19 @@ export default function AdminUsersPage() {
     try {
       setLoading(true);
       
-      // جلب جميع المستخدمين من auth.users
-      const { data: { users: authUsers }, error: usersError } = await supabase.auth.admin.listUsers();
+      // جلب جميع المستخدمين من public.users
+      const { data: usersData, error: usersError } = await supabase
+        .from('users')
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (usersError) throw usersError;
 
-      const formattedUsers = (authUsers || []).map((user: any) => ({
+      const formattedUsers = (usersData || []).map((user: any) => ({
         id: user.id,
-        name: user.raw_user_meta_data?.name || user.email?.split('@')[0] || 'مستخدم',
+        name: user.name || user.full_name || user.email?.split('@')[0] || 'مستخدم',
         email: user.email || 'غير محدد',
-        role: user.raw_user_meta_data?.role || 'customer',
+        role: user.role || 'customer',
         joined: user.created_at,
       }));
 
