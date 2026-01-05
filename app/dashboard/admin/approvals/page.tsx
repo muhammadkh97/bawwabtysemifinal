@@ -106,13 +106,13 @@ export default function ApprovalsPage() {
         // 🆕 إشعار البائع بقبول المنتج
         const { data: product } = await supabase
           .from('products')
-          .select('name, stores!inner(user_id, name, name_ar)')
+          .select('name, store_id, stores!inner(user_id, name, name_ar)')
           .eq('id', id)
           .single();
 
-        if (product?.stores?.user_id) {
+        if (product?.stores && Array.isArray(product.stores) && product.stores[0]?.user_id) {
           await supabase.from('notifications').insert({
-            user_id: product.stores.user_id,
+            user_id: product.stores[0].user_id,
             type: 'product_approved',
             title: '✅ تم قبول المنتج',
             message: `تم قبول منتج "${product.name}" وأصبح متاحاً للبيع`,
@@ -152,13 +152,13 @@ export default function ApprovalsPage() {
         // 🆕 إشعار البائع برفض المنتج
         const { data: product } = await supabase
           .from('products')
-          .select('name, stores!inner(user_id, name, name_ar)')
+          .select('name, store_id, stores!inner(user_id, name, name_ar)')
           .eq('id', id)
           .single();
 
-        if (product?.stores?.user_id) {
+        if (product?.stores && Array.isArray(product.stores) && product.stores[0]?.user_id) {
           await supabase.from('notifications').insert({
-            user_id: product.stores.user_id,
+            user_id: product.stores[0].user_id,
             type: 'product_rejected',
             title: '❌ تم رفض المنتج',
             message: `تم رفض منتج "${product.name}". السبب: ${reason}`,
