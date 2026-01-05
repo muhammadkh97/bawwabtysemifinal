@@ -238,7 +238,7 @@ export default function VendorStaffPage() {
           type: 'staff_invitation',
           title: staffAction === 'added' ? 'دعوة للانضمام كمساعد' : 'تحديث حسابك المساعد',
           message: `${notificationMessages[staffAction as keyof typeof notificationMessages]} ${storeData?.store_name || 'المتجر'}`,
-          link: '/dashboard',
+          link: '/dashboard/vendor',
           priority: 'high'
         });
 
