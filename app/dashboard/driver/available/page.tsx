@@ -66,6 +66,9 @@ export default function AvailableOrdersPage() {
         .is('driver_id', null)
         .order('created_at', { ascending: false });
 
+      console.log('🔍 [Available Orders] Query result:', { ordersData, error });
+      console.log('📊 [Available Orders] Number of orders:', ordersData?.length || 0);
+
       if (!error && ordersData) {
         setOrders(ordersData.map((o: any) => ({
           ...o,
