@@ -50,19 +50,14 @@ export default function ApprovalsPage() {
             name,
             name_ar
           ),
-          stores!products_vendor_id_stores_fkey (
+          stores!products_vendor_id_fkey (
             id,
             name,
             name_ar,
-            user_id,
-            users (
-              id,
-              name,
-              full_name
-            )
+            user_id
           )
         `)
-        .eq('status', 'pending')
+        .eq('approval_status', 'pending')
         .order('created_at', { ascending: false });
 
       console.log('📦 المنتجات المعلقة:', products);
@@ -72,7 +67,7 @@ export default function ApprovalsPage() {
         setPendingProducts(products.map((p: any) => ({
           id: p.id,
           name: p.name,
-          vendor_name: p.stores?.name_ar || p.stores?.name || p.stores?.users?.name || p.stores?.users?.full_name || 'بائع',
+          vendor_name: p.stores?.name_ar || p.stores?.name || 'بائع',
           price: p.price,
           category: p.categories?.name_ar || p.categories?.name || 'غير محدد',
           images: p.images || [],
@@ -100,7 +95,10 @@ export default function ApprovalsPage() {
       if (type === 'product') {
         const { error } = await supabase
           .from('products')
-          .update({ status: 'approved' })
+          .update({ 
+            approval_status: 'approved',
+            is_active: true 
+          })
           .eq('id', id);
 
         if (error) throw error;
@@ -124,8 +122,9 @@ export default function ApprovalsPage() {
         const { error } = await supabase
           .from('products')
           .update({ 
-            status: 'rejected',
-            rejection_reason: reason 
+            approval_status: 'rejected',
+            rejection_reason: reason,
+            is_active: false
           })
           .eq('id', id);
 

@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase';
 
 export default function AdminUsersPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'all' | 'customers' | 'vendors' | 'drivers'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'customers' | 'vendors' | 'drivers' | 'restaurants'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -16,7 +16,8 @@ export default function AdminUsersPage() {
     total: 0,
     customers: 0,
     vendors: 0,
-    drivers: 0
+    drivers: 0,
+    restaurants: 0
   });
 
   useEffect(() => {
@@ -27,19 +28,16 @@ export default function AdminUsersPage() {
     try {
       setLoading(true);
       
-      // جلب جميع المستخدمين
-      const { data: usersData, error: usersError } = await supabase
-        .from('users')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // جلب جميع المستخدمين من auth.users
+      const { data: { users: authUsers }, error: usersError } = await supabase.auth.admin.listUsers();
 
       if (usersError) throw usersError;
 
-      const formattedUsers = (usersData || []).map((user: any) => ({
+      const formattedUsers = (authUsers || []).map((user: any) => ({
         id: user.id,
-        name: user.name || 'مستخدم',
+        name: user.raw_user_meta_data?.name || user.email?.split('@')[0] || 'مستخدم',
         email: user.email || 'غير محدد',
-        role: user.role || 'customer',
+        role: user.raw_user_meta_data?.role || 'customer',
         joined: user.created_at,
       }));
 
@@ -47,11 +45,12 @@ export default function AdminUsersPage() {
 
       // حساب الإحصائيات
       const total = formattedUsers.length;
-      const customers = formattedUsers.filter((u: any) => u.role === 'customer').length;
+      const customers = formattedUsers.filter((u: any) => !u.role || u.role === 'customer').length;
       const vendors = formattedUsers.filter((u: any) => u.role === 'vendor').length;
       const drivers = formattedUsers.filter((u: any) => u.role === 'driver').length;
+      const restaurants = formattedUsers.filter((u: any) => u.role === 'restaurant').length;
 
-      setStats({ total, customers, vendors, drivers });
+      setStats({ total, customers, vendors, drivers, restaurants });
     } catch (error) {
       console.error('Error fetching users:', error);
       setUsers([]);
@@ -66,9 +65,10 @@ export default function AdminUsersPage() {
     if (activeTab === 'customers') roleToMatch = 'customer';
     else if (activeTab === 'vendors') roleToMatch = 'vendor';
     else if (activeTab === 'drivers') roleToMatch = 'driver';
+    else if (activeTab === 'restaurants') roleToMatch = 'restaurant';
     
-    const matchesTab = activeTab === 'all' || user.role === roleToMatch;
-    const matchesSearch = user.name.includes(searchTerm) || user.email.includes(searchTerm);
+    const matchesTab = activeTab === 'all' || user.role === roleToMatch || (activeTab === 'customers' && !user.role);
+    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesTab && matchesSearch;
   });
 
@@ -97,7 +97,7 @@ export default function AdminUsersPage() {
           ) : (
             <>
               {/* Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
                 <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                   <p className="text-sm text-gray-600 mb-1">إجمالي المستخدمين</p>
                   <h3 className="text-3xl font-bold text-gray-800">{stats.total.toLocaleString('ar-SA')}</h3>
@@ -109,6 +109,10 @@ export default function AdminUsersPage() {
                 <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                   <p className="text-sm text-gray-600 mb-1">البائعون</p>
                   <h3 className="text-3xl font-bold text-purple-600">{stats.vendors.toLocaleString('ar-SA')}</h3>
+                </div>
+                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                  <p className="text-sm text-gray-600 mb-1">المطاعم</p>
+                  <h3 className="text-3xl font-bold text-orange-600">{stats.restaurants.toLocaleString('ar-SA')}</h3>
                 </div>
                 <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                   <p className="text-sm text-gray-600 mb-1">المناديب</p>
@@ -128,8 +132,8 @@ export default function AdminUsersPage() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
-              <div className="flex gap-2">
-                {['all', 'customers', 'vendors', 'drivers'].map((tab) => (
+              <div className="flex gap-2 flex-wrap">
+                {['all', 'customers', 'vendors', 'restaurants', 'drivers'].map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab as any)}
@@ -142,6 +146,7 @@ export default function AdminUsersPage() {
                     {tab === 'all' && 'الكل'}
                     {tab === 'customers' && 'العملاء'}
                     {tab === 'vendors' && 'البائعون'}
+                    {tab === 'restaurants' && 'المطاعم'}
                     {tab === 'drivers' && 'المناديب'}
                   </button>
                 ))}
@@ -179,13 +184,18 @@ export default function AdminUsersPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-gray-600">{user.email}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          user.role === 'customer' ? 'bg-blue-100 text-blue-800' :
+                          !user.role || user.role === 'customer' ? 'bg-blue-100 text-blue-800' :
                           user.role === 'vendor' ? 'bg-purple-100 text-purple-800' :
-                          'bg-green-100 text-green-800'
+                          user.role === 'restaurant' ? 'bg-orange-100 text-orange-800' :
+                          user.role === 'driver' ? 'bg-green-100 text-green-800' :
+                          user.role === 'admin' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
                         }`}>
-                          {user.role === 'customer' && '🛍️ عميل'}
+                          {(!user.role || user.role === 'customer') && '🛍️ عميل'}
                           {user.role === 'vendor' && '🏪 بائع'}
+                          {user.role === 'restaurant' && '🍽️ مطعم'}
                           {user.role === 'driver' && '🚗 مندوب'}
+                          {user.role === 'admin' && '👑 مدير'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
