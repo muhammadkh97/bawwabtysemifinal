@@ -75,8 +75,12 @@ function AdminDashboardContent() {
       const statsRow = (adminStats && adminStats[0]) || {};
       
       // 🔍 Debug: طباعة البيانات للتشخيص
-      console.log('📊 Dashboard Stats:', statsRow);
-      console.log('💰 Total Revenue:', statsRow.total_revenue);
+      console.log('� Raw adminStats:', adminStats);
+      console.log('🔍 First row:', adminStats?.[0]);
+      console.log('📊 Dashboard Stats Object:', JSON.stringify(statsRow, null, 2));
+      console.log('💰 Total Revenue:', statsRow.total_revenue, '| Type:', typeof statsRow.total_revenue);
+      console.log('📈 Avg Order Value:', statsRow.avg_order_value, '| Type:', typeof statsRow.avg_order_value);
+      console.log('👥 Total Users:', statsRow.total_users, '| Type:', typeof statsRow.total_users);
 
       // تحديث الكروت الرئيسية
       setStats([
