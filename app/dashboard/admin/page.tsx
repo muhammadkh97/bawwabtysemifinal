@@ -73,6 +73,10 @@ function AdminDashboardContent() {
       if (statsError) throw statsError;
 
       const statsRow = (adminStats && adminStats[0]) || {};
+      
+      // 🔍 Debug: طباعة البيانات للتشخيص
+      console.log('📊 Dashboard Stats:', statsRow);
+      console.log('💰 Total Revenue:', statsRow.total_revenue);
 
       // تحديث الكروت الرئيسية
       setStats([
