@@ -94,6 +94,20 @@ export default function InvitationsPage() {
           businessName = restaurantData?.name || 'مطعم';
         }
 
+        // تحويل permissions من string إلى array إذا لزم الأمر
+        let permissionsArray = [];
+        if (inv.permissions) {
+          if (typeof inv.permissions === 'string') {
+            try {
+              permissionsArray = JSON.parse(inv.permissions);
+            } catch (e) {
+              permissionsArray = [];
+            }
+          } else if (Array.isArray(inv.permissions)) {
+            permissionsArray = inv.permissions;
+          }
+        }
+
         formattedInvitations.push({
           id: inv.id,
           invitation_code: inv.invitation_code,
@@ -101,7 +115,7 @@ export default function InvitationsPage() {
           business_id: inv.business_id,
           business_name: businessName,
           invited_by_name: inv.invited_by?.full_name || 'مستخدم',
-          permissions: inv.permissions || [],
+          permissions: permissionsArray,
           expires_at: new Date(inv.expires_at).toLocaleDateString('ar-SA'),
           created_at: new Date(inv.created_at).toLocaleDateString('ar-SA'),
         });
