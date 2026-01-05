@@ -213,11 +213,10 @@ export default function InvitationsPage() {
 
       toast.success('✅ تم قبول الدعوة بنجاح! يمكنك الآن الوصول إلى لوحة التحكم');
       
-      // إعادة جلب الدعوات
-      const { user: currentUser } = await getCurrentUser();
-      if (currentUser) {
-        await fetchInvitations(currentUser.email);
-      }
+      // إعادة تحميل الصفحة بعد ثانية لتحديث كل شيء
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
 
     } catch (error: any) {
       console.error('Error accepting invitation:', error);
