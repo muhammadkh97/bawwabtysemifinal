@@ -31,7 +31,7 @@ interface Category {
 }
 
 export default function Header() {
-  const { user, userRole, isLoading } = useAuth(); // استخدام AuthContext للحصول على userRole
+  const { user, userRole, loading: isLoading } = useAuth(); // استخدام AuthContext للحصول على userRole
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [unreadChatsCount, setUnreadChatsCount] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
