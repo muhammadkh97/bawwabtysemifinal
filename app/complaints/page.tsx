@@ -89,11 +89,7 @@ export default function ComplaintsPage() {
           message: formData.description,
           category: 'complaint',
           priority: formData.priority,
-          status: 'open',
-          metadata: {
-            complaint_type: formData.complaint_type,
-            order_id: formData.order_id || null
-          }
+          status: 'open'
         });
 
       if (insertError) throw insertError;
