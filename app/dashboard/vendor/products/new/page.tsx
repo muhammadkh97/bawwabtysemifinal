@@ -303,6 +303,27 @@ export default function NewProductPage() {
         toast.success('✅ تم حفظ المنتج كمسودة!');
       } else if (productStatus === 'pending') {
         toast.success('⏳ تم إرسال المنتج للمراجعة!');
+        
+        // 🆕 إشعار Admin بمنتج جديد للمراجعة
+        // تحتاج إلى إضافة ADMIN_USER_ID في .env أو config
+        const adminId = process.env.NEXT_PUBLIC_ADMIN_USER_ID;
+        if (adminId) {
+          const { data: store } = await supabase
+            .from('stores')
+            .select('name, name_ar')
+            .eq('id', vendorId)
+            .single();
+
+          await supabase.from('notifications').insert({
+            user_id: adminId,
+            type: 'product_pending',
+            title: '📦 منتج جديد للمراجعة',
+            message: `أضاف ${store?.name_ar || store?.name || 'متجر'} منتج "${productName}" للمراجعة`,
+            link: '/dashboard/admin/approvals?tab=products',
+            priority: 'normal',
+            category: 'admin'
+          });
+        }
       } else {
         toast.success('🎉 تم نشر المنتج بنجاح!');
       }

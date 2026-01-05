@@ -102,6 +102,25 @@ export default function ApprovalsPage() {
           .eq('id', id);
 
         if (error) throw error;
+
+        // 🆕 إشعار البائع بقبول المنتج
+        const { data: product } = await supabase
+          .from('products')
+          .select('name, stores!inner(user_id, name, name_ar)')
+          .eq('id', id)
+          .single();
+
+        if (product?.stores?.user_id) {
+          await supabase.from('notifications').insert({
+            user_id: product.stores.user_id,
+            type: 'product_approved',
+            title: '✅ تم قبول المنتج',
+            message: `تم قبول منتج "${product.name}" وأصبح متاحاً للبيع`,
+            link: '/dashboard/vendor/products',
+            priority: 'normal',
+            category: 'products'
+          });
+        }
         
         alert('✅ تمت الموافقة على المنتج بنجاح!');
         fetchPendingItems(); // إعادة تحميل القائمة
@@ -129,6 +148,26 @@ export default function ApprovalsPage() {
           .eq('id', id);
 
         if (error) throw error;
+
+        // 🆕 إشعار البائع برفض المنتج
+        const { data: product } = await supabase
+          .from('products')
+          .select('name, stores!inner(user_id, name, name_ar)')
+          .eq('id', id)
+          .single();
+
+        if (product?.stores?.user_id) {
+          await supabase.from('notifications').insert({
+            user_id: product.stores.user_id,
+            type: 'product_rejected',
+            title: '❌ تم رفض المنتج',
+            message: `تم رفض منتج "${product.name}". السبب: ${reason}`,
+            link: '/dashboard/vendor/products',
+            priority: 'high',
+            category: 'products',
+            data: { rejection_reason: reason }
+          });
+        }
         
         alert('❌ تم رفض المنتج');
         fetchPendingItems();

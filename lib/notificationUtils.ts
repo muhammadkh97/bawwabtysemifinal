@@ -12,10 +12,12 @@ export interface Notification {
   title: string
   message: string
   link?: string
-  metadata?: Record<string, any>
+  data?: Record<string, any>  // تم تغيير metadata إلى data (يطابق قاعدة البيانات)
+  priority?: 'low' | 'normal' | 'high' | 'urgent'  // جديد
+  category?: 'orders' | 'products' | 'messages' | 'system' | 'staff' | 'admin'  // جديد
   is_read: boolean
   created_at: string
-  read_at?: string
+  read_at?: string  // جديد - تم إضافته في قاعدة البيانات
 }
 
 export type NotificationType =
@@ -126,15 +128,19 @@ export async function createNotification(
   title: string,
   message: string,
   link?: string,
-  metadata?: Record<string, any>
+  data?: Record<string, any>,
+  priority: 'low' | 'normal' | 'high' | 'urgent' = 'normal',
+  category?: 'orders' | 'products' | 'messages' | 'system' | 'staff' | 'admin'
 ): Promise<string | null> {
-  const { data, error } = await supabase.rpc('create_notification', {
+  const { data: notificationId, error } = await supabase.rpc('create_notification', {
     p_user_id: userId,
     p_type: type,
     p_title: title,
     p_message: message,
     p_link: link,
-    p_metadata: metadata || {},
+    p_metadata: data || {},
+    p_priority: priority,
+    p_category: category,
   })
 
   if (error) {
@@ -142,7 +148,7 @@ export async function createNotification(
     return null
   }
 
-  return data
+  return notificationId
 }
 
 /**

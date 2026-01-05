@@ -81,7 +81,7 @@ export default function ComplaintsPage() {
       }
 
       // إنشاء تذكرة شكوى
-      const { error: insertError } = await supabase
+      const { data: ticketData, error: insertError } = await supabase
         .from('support_tickets')
         .insert({
           user_id: userId,
@@ -90,9 +90,31 @@ export default function ComplaintsPage() {
           category: 'complaint',
           priority: formData.priority,
           status: 'open'
-        });
+        })
+        .select()
+        .single();
 
       if (insertError) throw insertError;
+
+      // 🆕 إشعار Admin بالشكوى الجديدة
+      const adminId = process.env.NEXT_PUBLIC_ADMIN_USER_ID;
+      if (adminId && ticketData) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('full_name')
+          .eq('id', userId)
+          .single();
+
+        await supabase.from('notifications').insert({
+          user_id: adminId,
+          type: 'new_complaint',
+          title: '📢 شكوى جديدة',
+          message: `قام ${userData?.full_name || 'مستخدم'} بإرسال شكوى: ${formData.subject}`,
+          link: `/dashboard/admin/support?ticket=${ticketData.id}`,
+          priority: formData.priority === 'high' ? 'urgent' : 'high',
+          category: 'admin'
+        });
+      }
 
       setSuccess(true);
       setFormData({
