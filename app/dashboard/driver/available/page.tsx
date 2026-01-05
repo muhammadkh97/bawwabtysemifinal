@@ -85,16 +85,42 @@ export default function AvailableOrdersPage() {
   };
 
   const acceptOrder = async (orderId: string) => {
-    if (!driverId) return;
+    if (!driverId) {
+      toast.error('⚠️ لم يتم التعرف على حساب السائق');
+      return;
+    }
 
-    const { error } = await supabase
-      .from('orders')
-      .update({ driver_id: driverId, status: 'confirmed' })
-      .eq('id', orderId);
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .update({ 
+          driver_id: driverId, 
+          status: 'picked_up' 
+        })
+        .eq('id', orderId)
+        .select();
 
-    if (!error) {
-      toast.success('✅ تم قبول الطلب!');
-      loadAvailableOrders();
+      console.log('🔍 [Accept Order] Update result:', { data, error });
+
+      if (error) {
+        console.error('❌ [Accept Order] Error:', error);
+        toast.error(`فشل قبول الطلب: ${error.message}`);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        toast.success('✅ تم قبول الطلب!');
+        // إزالة الطلب من القائمة فوراً
+        setOrders(prevOrders => prevOrders.filter(o => o.id !== orderId));
+        // إعادة تحميل القائمة للتأكد
+        setTimeout(() => loadAvailableOrders(), 500);
+      } else {
+        toast.error('⚠️ لم يتم العثور على الطلب أو تم قبوله من قبل سائق آخر');
+        loadAvailableOrders();
+      }
+    } catch (err) {
+      console.error('❌ [Accept Order] Exception:', err);
+      toast.error('حدث خطأ أثناء قبول الطلب');
     }
   };
 
