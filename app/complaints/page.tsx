@@ -58,7 +58,7 @@ export default function ComplaintsPage() {
       const { data, error } = await supabase
         .from('orders')
         .select('id, order_number, total_amount, status, created_at')
-        .eq('user_id', userId)
+        .eq('customer_id', userId)
         .order('created_at', { ascending: false })
         .limit(20);
 
