@@ -109,7 +109,6 @@ export default function TopProductsPage() {
     <div className="min-h-screen bg-[#0A0516] text-white overflow-x-hidden">
       {/* Background Decorations */}
       <div className="fixed inset-0 z-0">
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] opacity-20 bg-[#6236FF]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] opacity-20 bg-[#FF219D]" />
       </div>
