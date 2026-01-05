@@ -38,17 +38,21 @@ export default function AvailableOrdersPage() {
         return;
       }
 
-      const { data: driverData } = await supabase
+      const { data: driverData, error: driverError } = await supabase
         .from('drivers')
         .select('id')
         .eq('user_id', user.id)
         .single();
+
+      console.log('🔍 [Load Orders] Driver data:', driverData);
+      console.log('🔍 [Load Orders] Driver error:', driverError);
 
       if (!driverData) {
         toast.error('⚠️ يجب أن تكون مندوب توصيل');
         return;
       }
 
+      console.log('🔍 [Load Orders] Setting driver ID:', driverData.id);
       setDriverId(driverData.id);
 
       const { data: ordersData, error } = await supabase
@@ -89,6 +93,10 @@ export default function AvailableOrdersPage() {
       toast.error('⚠️ لم يتم التعرف على حساب السائق');
       return;
     }
+
+    console.log('🔍 [Accept Order] Driver ID:', driverId);
+    console.log('🔍 [Accept Order] Order ID:', orderId);
+    console.log('🔍 [Accept Order] Driver ID type:', typeof driverId);
 
     try {
       const { data, error } = await supabase
