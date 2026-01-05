@@ -144,15 +144,42 @@ export default function InvitationsPage() {
       const tableName = invitation.business_type === 'vendor' ? 'vendor_staff' : 'restaurant_staff';
       const idField = invitation.business_type === 'vendor' ? 'vendor_id' : 'restaurant_id';
 
-      const { error: staffError } = await supabase
+      // التحقق من وجود سجل سابق
+      const { data: existingStaff } = await supabase
         .from(tableName)
-        .insert({
-          [idField]: invitation.business_id,
-          user_id: user.id,
-          permissions: invitation.permissions,
-          status: 'active',
-          accepted_at: new Date().toISOString()
-        });
+        .select('id, status')
+        .eq(idField, invitation.business_id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      let staffError = null;
+
+      if (existingStaff) {
+        // تحديث السجل الموجود
+        const { error } = await supabase
+          .from(tableName)
+          .update({
+            permissions: invitation.permissions,
+            status: 'active',
+            accepted_at: new Date().toISOString()
+          })
+          .eq('id', existingStaff.id);
+        
+        staffError = error;
+      } else {
+        // إنشاء سجل جديد
+        const { error } = await supabase
+          .from(tableName)
+          .insert({
+            [idField]: invitation.business_id,
+            user_id: user.id,
+            permissions: invitation.permissions,
+            status: 'active',
+            accepted_at: new Date().toISOString()
+          });
+        
+        staffError = error;
+      }
 
       if (staffError) throw staffError;
 
