@@ -44,7 +44,9 @@ export default function MyOrdersPage() {
 
       if (!driverData) return;
 
-      const { data: ordersData } = await supabase
+      console.log('🔍 [My Orders] Driver ID:', driverData.id);
+
+      const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select(`
           id,
@@ -57,8 +59,11 @@ export default function MyOrdersPage() {
           users!orders_customer_id_fkey (name)
         `)
         .eq('driver_id', driverData.id)
-        .in('status', ['confirmed', 'preparing', 'ready', 'out_for_delivery'])
+        .in('status', ['picked_up', 'in_transit', 'out_for_delivery', 'delivered'])
         .order('created_at', { ascending: false });
+
+      console.log('🔍 [My Orders] Query result:', { ordersData, ordersError });
+      console.log('📊 [My Orders] Number of orders:', ordersData?.length || 0);
 
       if (ordersData) {
         setOrders(ordersData.map((o: any) => ({

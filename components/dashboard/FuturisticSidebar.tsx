@@ -179,11 +179,11 @@ export default function FuturisticSidebar({ role }: FuturisticSidebarProps) {
 
   const fetchDriverNotifications = async () => {
     try {
-      // جلب الطلبات المتاحة للسائقين (pending and not assigned)
+      // جلب الطلبات المتاحة للسائقين (ready_for_pickup and not assigned)
       const { count: availableOrders } = await supabase
         .from('orders')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending')
+        .eq('status', 'ready_for_pickup')
         .is('driver_id', null);
 
       setDriverAvailableOrders(availableOrders || 0);
