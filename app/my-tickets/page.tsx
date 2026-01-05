@@ -23,6 +23,14 @@ interface Ticket {
   updated_at?: string;
 }
 
+interface Reply {
+  id: string;
+  message: string;
+  is_admin: boolean;
+  user_name: string;
+  created_at: string;
+}
+
 const priorityConfig = {
   low: { label: 'منخفضة', color: 'bg-gray-500', icon: Clock },
   medium: { label: 'متوسطة', color: 'bg-blue-500', icon: AlertCircle },
