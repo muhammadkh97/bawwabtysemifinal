@@ -31,7 +31,7 @@ interface Category {
 }
 
 export default function Header() {
-  const { user, userRole, loading: isLoading } = useAuth(); // استخدام AuthContext للحصول على userRole
+  const { user, userRole, loading: isLoading, isVendorStaff, isRestaurantStaff } = useAuth(); // استخدام AuthContext
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [unreadChatsCount, setUnreadChatsCount] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -165,10 +165,16 @@ export default function Header() {
   };
 
   const getDashboardUrl = () => {
+    // إذا كان مساعد بائع أو مطعم، نوجهه إلى لوحة التحكم المناسبة
+    if (isVendorStaff) return '/dashboard/vendor';
+    if (isRestaurantStaff) return '/dashboard/restaurant';
+    
+    // إذا كان مستخدم عادي، نفحص الدور
     switch (userRole) {
       case 'admin': return '/dashboard/admin';
       case 'vendor': return '/dashboard/vendor';
       case 'driver': return '/dashboard/driver';
+      case 'restaurant': return '/dashboard/restaurant';
       default: return '/auth/login';
     }
   };
@@ -236,7 +242,7 @@ export default function Header() {
           {/* Actions */}
           <div className="flex items-center gap-2 md:gap-5">
             {/* Dashboard Button - Desktop only */}
-            {userRole && userRole !== 'customer' && (
+            {(userRole && userRole !== 'customer') || isVendorStaff || isRestaurantStaff ? (
               <Link
                 href={getDashboardUrl()}
                 className="hidden md:flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 text-white rounded-xl md:rounded-2xl hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300 whitespace-nowrap font-bold text-xs sm:text-sm"
@@ -245,7 +251,7 @@ export default function Header() {
                 <LayoutDashboard className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                 <span className="hidden sm:inline">لوحة التحكم</span>
               </Link>
-            )}
+            ) : null}
             
             <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2">
               {isLoggedIn && <NotificationDropdown />}
@@ -369,8 +375,8 @@ export default function Header() {
                           transition={{ duration: 0.2 }}
                           className="absolute left-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50"
                         >
-                          {/* لوحة التحكم - للـ admin/vendor/driver فقط */}
-                          {userRole && userRole !== 'customer' && (
+                          {/* لوحة التحكم - للـ admin/vendor/driver أو المساعدين */}
+                          {((userRole && userRole !== 'customer') || isVendorStaff || isRestaurantStaff) && (
                             <Link
                               href={getDashboardUrl()}
                               onClick={() => setIsUserMenuOpen(false)}

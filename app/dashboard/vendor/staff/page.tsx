@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Plus, Shield, Trash2, Mail, Lock, CheckCircle2, XCircle, Clock, AlertTriangle, Send } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { hasPermission } from '@/lib/permissions';
 import toast from 'react-hot-toast';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
@@ -30,7 +31,7 @@ interface PendingInvitation {
 }
 
 export default function VendorStaffPage() {
-  const { user } = useAuth();
+  const { user, isVendorStaff, staffPermissions, staffVendorId } = useAuth();
   const [loading, setLoading] = useState(true);
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
@@ -41,6 +42,9 @@ export default function VendorStaffPage() {
   // Form state
   const [newEmail, setNewEmail] = useState('');
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>(['view_orders', 'manage_products']);
+
+  // التحقق من صلاحية إدارة المساعدين
+  const canManageStaff = !isVendorStaff || hasPermission(staffPermissions, 'manage_staff');
 
   const availablePermissions = [
     { id: 'manage_products', name: 'إدارة المنتجات', description: 'إضافة وتعديل وحذف المنتجات' },
@@ -61,21 +65,30 @@ export default function VendorStaffPage() {
     try {
       setLoading(true);
       
-      // Get vendor ID
-      const { data: vendorData, error: vendorError } = await supabase
-        .from('stores')
-        .select('id')
-        .eq('user_id', user!.id)
-        .single();
+      // إذا كان مساعد، استخدم staffVendorId، وإلا ابحث عن المتجر
+      let currentVendorId: string | null = null;
+      
+      if (isVendorStaff && staffVendorId) {
+        currentVendorId = staffVendorId;
+      } else {
+        // Get vendor ID
+        const { data: vendorData, error: vendorError } = await supabase
+          .from('stores')
+          .select('id')
+          .eq('user_id', user!.id)
+          .single();
 
-      if (vendorError) throw vendorError;
-      if (!vendorData) {
-        toast.error('لم يتم العثور على متجرك');
-        setLoading(false);
-        return;
+        if (vendorError) throw vendorError;
+        if (!vendorData) {
+          toast.error('لم يتم العثور على متجرك');
+          setLoading(false);
+          return;
+        }
+
+        currentVendorId = vendorData.id;
       }
 
-      setVendorId(vendorData.id);
+      setVendorId(currentVendorId);
 
       // جلب الموظفين النشطين
       const { data: staffData, error: staffError } = await supabase
@@ -330,6 +343,23 @@ export default function VendorStaffPage() {
         <FuturisticNavbar userName={(user as any)?.full_name || 'بائع'} userRole="بائع" />
         
         <main className="pt-24 px-4 md:px-8 lg:px-10 pb-10 relative z-10 max-w-[1800px] mx-auto">
+          {/* رسالة تحذير للمساعدين بدون صلاحية */}
+          {isVendorStaff && !canManageStaff && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-6 rounded-2xl bg-yellow-500/10 border border-yellow-500/30"
+            >
+              <div className="flex items-start gap-4">
+                <AlertTriangle className="w-6 h-6 text-yellow-500 flex-shrink-0 mt-1" />
+                <div>
+                  <h3 className="text-xl font-bold text-yellow-500 mb-2">⚠️ لا تمتلك صلاحية إدارة المساعدين</h3>
+                  <p className="text-yellow-400">ليس لديك صلاحية "manage_staff" لإدارة الحسابات المساعدة. يمكنك فقط عرض قائمة المساعدين.</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -342,14 +372,16 @@ export default function VendorStaffPage() {
               </h1>
               <p className="text-purple-300 text-lg">إدارة طاقم عمل متجرك وتحديد صلاحياتهم</p>
             </div>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl text-white font-bold transition-all hover:shadow-lg"
-              style={{ background: 'linear-gradient(135deg, #6236FF, #FF219D)' }}
-            >
-              <Plus className="w-5 h-5" />
-              <span>إضافة مساعد جديد</span>
-            </button>
+            {canManageStaff && (
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl text-white font-bold transition-all hover:shadow-lg"
+                style={{ background: 'linear-gradient(135deg, #6236FF, #FF219D)' }}
+              >
+                <Plus className="w-5 h-5" />
+                <span>إضافة مساعد جديد</span>
+              </button>
+            )}
           </motion.div>
 
           {/* Staff List */}
@@ -408,12 +440,14 @@ export default function VendorStaffPage() {
                         <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-500/20 text-green-400">
                           نشط
                         </span>
-                        <button 
-                          onClick={() => handleRemoveStaff(member.id)}
-                          className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
+                        {canManageStaff && (
+                          <button 
+                            onClick={() => handleRemoveStaff(member.id)}
+                            className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        )}
                       </div>
                     </motion.div>
                   ))

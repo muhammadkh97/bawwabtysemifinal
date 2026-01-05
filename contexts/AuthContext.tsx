@@ -10,6 +10,11 @@ interface AuthContextType {
   userRole: string | null;
   userFullName: string | null;
   loading: boolean;
+  isVendorStaff: boolean;
+  isRestaurantStaff: boolean;
+  staffVendorId: string | null;
+  staffRestaurantId: string | null;
+  staffPermissions: string[];
   refreshUser: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -22,6 +27,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userFullName, setUserFullName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isVendorStaff, setIsVendorStaff] = useState(false);
+  const [isRestaurantStaff, setIsRestaurantStaff] = useState(false);
+  const [staffVendorId, setStaffVendorId] = useState<string | null>(null);
+  const [staffRestaurantId, setStaffRestaurantId] = useState<string | null>(null);
+  const [staffPermissions, setStaffPermissions] = useState<string[]>([]);
 
   useEffect(() => {
     // Initial auth check
@@ -118,20 +128,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         is_vendor_staff?: boolean;
         is_restaurant_staff?: boolean;
         staff_vendor_id?: string;
+        staff_restaurant_id?: string;
         staff_permissions?: any;
       };
       
-      // إذا كان المستخدم مساعد، استخدم دور vendor أو restaurant
+      // إذا كان المستخدم مساعد، نحتفظ بدوره الأصلي (customer) ولكن نضيف معلومات المساعد
       let userRoleValue = userData?.role || 'customer';
       
       if (userData?.is_vendor_staff) {
-        userRoleValue = 'vendor';
+        // نبقي الدور كـ customer ولكن نضبط متغيرات المساعد
+        setIsVendorStaff(true);
+        setStaffVendorId(userData?.staff_vendor_id || null);
+        setStaffPermissions(userData?.staff_permissions || []);
         console.log('🎭 [AuthContext] المستخدم هو مساعد بائع');
         console.log('🏪 [AuthContext] معرف المتجر:', userData?.staff_vendor_id);
         console.log('🔑 [AuthContext] الصلاحيات:', userData?.staff_permissions);
       } else if (userData?.is_restaurant_staff) {
-        userRoleValue = 'restaurant';
+        setIsRestaurantStaff(true);
+        setStaffRestaurantId(userData?.staff_restaurant_id || null);
+        setStaffPermissions(userData?.staff_permissions || []);
         console.log('🎭 [AuthContext] المستخدم هو مساعد مطعم');
+      } else {
+        // ليس مساعد، إعادة تعيين متغيرات المساعد
+        setIsVendorStaff(false);
+        setIsRestaurantStaff(false);
+        setStaffVendorId(null);
+        setStaffRestaurantId(null);
+        setStaffPermissions([]);
       }
       
       const fullName = userData?.full_name || null;
@@ -154,6 +177,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserId(null);
     setUserRole(null);
     setUserFullName(null);
+    setIsVendorStaff(false);
+    setIsRestaurantStaff(false);
+    setStaffVendorId(null);
+    setStaffRestaurantId(null);
+    setStaffPermissions([]);
     setLoading(false);
   };
 
@@ -180,6 +208,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         userRole,
         userFullName,
         loading,
+        isVendorStaff,
+        isRestaurantStaff,
+        staffVendorId,
+        staffRestaurantId,
+        staffPermissions,
         refreshUser,
         signOut: handleSignOut,
       }}
