@@ -473,7 +473,7 @@ export default function FloatingChatWidget() {
                                   border: '1px solid rgba(255, 255, 255, 0.2)',
                                 }}
                               >
-                                <p className="text-white text-sm">{msg.message}</p>
+                                <p className="text-white text-sm">{msg.content}</p>
                               </div>
                               <div className="flex items-center gap-1 mt-1 px-1">
                                 <span className="text-[10px] text-gray-400">

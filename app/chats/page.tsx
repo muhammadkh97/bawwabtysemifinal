@@ -197,7 +197,7 @@ function ChatsContent() {
 
         {chats.length === 0 ? (
           <EmptyState
-            icon={MessageCircle}
+            type="search"
             title="لا توجد محادثات بعد"
             description="ابدأ محادثة مع البائعين من خلال المتاجر"
           />
