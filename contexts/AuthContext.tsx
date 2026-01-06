@@ -38,11 +38,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initializeAuth();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         setUser(session.user);
         setUserId(session.user.id);
-        fetchUserData(session.user.id);
+        setLoading(true); // ✅ تعيين loading قبل جلب البيانات
+        await fetchUserData(session.user.id);
       } else {
         resetAuthState();
       }
@@ -67,9 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('❌ [AuthContext] خطأ في تهيئة المصادقة:', error);
       resetAuthState();
-    } finally {
-      setLoading(false);
     }
+    // ✅ تم نقل setLoading(false) إلى fetchUserData ليتم تنفيذه بعد انتهاء جلب البيانات
   };
 
   const fetchUserData = async (uid: string, retryCount = 0): Promise<void> => {
@@ -117,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         setUserRole(userRoleValue);
         setUserFullName(fullName);
+        setLoading(false); // ✅ إضافة setLoading(false) هنا
         return;
       }
 
