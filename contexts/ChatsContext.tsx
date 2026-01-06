@@ -168,22 +168,23 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
         .eq('is_active', true)
         .order('last_message_at', { ascending: false, nullsFirst: false });
 
-      // فلترة حسب دور المستخدم - عرض المحادثات الخاصة به فقط
-      if (userRole === 'customer') {
-        query = query.eq('customer_id', userId);
-      } else if (userRole === 'vendor' || userRole === 'restaurant' || userRole === 'staff') {
-        // البائع يرى المحادثات الخاصة بمتجره
-        const { data: storeData } = await supabase
-          .from('stores')
-          .select('id')
-          .eq('user_id', userId)
-          .single();
-        
-        if (storeData) {
-          query = query.eq('vendor_id', storeData.id);
-        }
-      } else if (userRole === 'admin') {
-        // الأدمن يرى فقط المحادثات التي شارك فيها كعميل
+      // فلترة حسب المستخدم - كل شخص يرى فقط المحادثات التي هو طرف فيها
+      // يجب التحقق من كلا الجانبين: customer_id و vendor_id
+      
+      // أولاً: جلب متجر المستخدم (إذا كان لديه متجر)
+      const { data: storeData } = await supabase
+        .from('stores')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      // بناء الفلترة: المحادثات التي المستخدم طرف فيها
+      // إما كعميل (customer_id) أو كبائع (vendor_id = متجره)
+      if (storeData) {
+        // لديه متجر: يرى المحادثات كعميل أو كبائع
+        query = query.or(`customer_id.eq.${userId},vendor_id.eq.${storeData.id}`);
+      } else {
+        // ليس لديه متجر: يرى فقط المحادثات كعميل
         query = query.eq('customer_id', userId);
       }
 
