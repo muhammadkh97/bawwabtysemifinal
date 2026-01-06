@@ -72,13 +72,13 @@ export default function OrdersMapPage() {
         .select(`
           id,
           order_number,
-          total,
+          total_amount,
           delivery_fee,
           delivery_address,
           status,
           created_at,
-          users!orders_customer_id_fkey (id, name, phone),
-          stores!orders_vendor_id_fkey (id, name, latitude, longitude, address)
+          users!orders_customer_id_fkey (id, full_name, phone),
+          stores!orders_vendor_id_fkey (id, shop_name, latitude, longitude, store_address)
         `)
         .eq('driver_id', driverData.id)
         .in('status', ['ready_for_pickup', 'picked_up', 'in_transit', 'out_for_delivery'])
@@ -90,7 +90,7 @@ export default function OrdersMapPage() {
         const enrichedOrders = ordersData.map((o: any): Order => ({
           id: o.id,
           order_number: o.order_number,
-          total: o.total,
+          total: o.total_amount,
           delivery_fee: o.delivery_fee,
           status: o.status,
           created_at: o.created_at,
@@ -99,17 +99,17 @@ export default function OrdersMapPage() {
           delivery_address: o.delivery_address,
           customer: {
             id: o.users?.id || '',
-            name: o.users?.name || 'غير متوفر',
+            name: o.users?.full_name || 'غير متوفر',
             phone: o.users?.phone || 'غير متوفر',
           },
           vendor: {
             id: o.stores?.id || '',
-            store_name: o.stores?.name || 'غير متوفر',
+            store_name: o.stores?.shop_name || 'غير متوفر',
             store_latitude: o.stores?.latitude,
             store_longitude: o.stores?.longitude,
-            store_address: o.stores?.address,
+            store_address: o.stores?.store_address,
           },
-          customer_name: o.users?.name || 'غير متوفر',
+          customer_name: o.users?.full_name || 'غير متوفر',
         }));
 
         setOrders(enrichedOrders);

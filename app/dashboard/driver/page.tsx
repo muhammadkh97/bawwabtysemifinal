@@ -134,13 +134,13 @@ export default function DriverDashboard() {
         .select(`
           id,
           order_number,
-          total,
+          total_amount,
           delivery_fee,
           delivery_address,
           status,
           created_at,
-          users!orders_customer_id_fkey (id, name, phone),
-          stores!orders_vendor_id_fkey (id, name, latitude, longitude)
+          users!orders_customer_id_fkey (id, full_name, phone),
+          stores!orders_vendor_id_fkey (id, shop_name, latitude, longitude)
         `)
         .eq('driver_id', driverData.id)
         .in('status', ['ready_for_pickup', 'picked_up', 'in_transit', 'out_for_delivery'])
@@ -151,7 +151,7 @@ export default function DriverDashboard() {
         const enrichedOrders = ordersData.map((o: any): DriverOrder => ({
           id: o.id,
           order_number: o.order_number,
-          total: o.total,
+          total: o.total_amount,
           delivery_fee: o.delivery_fee,
           status: o.status,
           created_at: o.created_at,
@@ -160,12 +160,12 @@ export default function DriverDashboard() {
           delivery_address: o.delivery_address,
           customer: {
             id: o.users?.id || '',
-            name: o.users?.name || 'غير متوفر',
+            name: o.users?.full_name || 'غير متوفر',
             phone: o.users?.phone,
           },
           vendor: {
             id: o.stores?.id || '',
-            store_name: o.stores?.name || 'غير متوفر',
+            store_name: o.stores?.shop_name || 'غير متوفر',
             store_latitude: o.stores?.latitude,
             store_longitude: o.stores?.longitude,
           },

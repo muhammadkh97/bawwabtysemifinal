@@ -60,11 +60,11 @@ export default function AvailableOrdersPage() {
         .select(`
           id,
           order_number,
-          total,
+          total_amount,
           delivery_fee,
           delivery_address,
           created_at,
-          users!orders_customer_id_fkey (name, phone)
+          users!orders_customer_id_fkey (full_name, phone)
         `)
         .eq('status', 'ready_for_pickup')
         .is('driver_id', null)
@@ -76,7 +76,8 @@ export default function AvailableOrdersPage() {
       if (!error && ordersData) {
         setOrders(ordersData.map((o: any) => ({
           ...o,
-          customer_name: o.users?.name || 'غير متوفر',
+          total: o.total_amount,
+          customer_name: o.users?.full_name || 'غير متوفر',
           customer_phone: o.users?.phone || 'غير متوفر'
         })));
       }
