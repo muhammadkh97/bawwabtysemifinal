@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Package, Calendar } from 'lucide-react';
 
 interface OrderStatus {
   status: string;
@@ -51,12 +51,13 @@ export default function OrderTrackingPage() {
         return;
       }
 
-      // Fetch order with store info
+      // Fetch order with store info and batch info
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .select(`
           *,
-          stores!vendor_id(shop_name, shop_name_ar, phone)
+          stores!vendor_id(shop_name, shop_name_ar, phone),
+          delivery_batches (batch_number, status, scheduled_date, estimated_delivery)
         `)
         .eq('id', params.id)
         .eq('customer_id', user.id)
@@ -108,13 +109,22 @@ export default function OrderTrackingPage() {
     }
   }, [order?.status, order?.delivery_lat, order?.delivery_lng]);
 
-  const statuses: OrderStatus[] = [
-    { status: 'pending', label: 'تم الطلب', icon: '📝', completed: true },
-    { status: 'processing', label: 'قيد التحضير', icon: '📦', completed: order?.status === 'processing' || order?.status === 'ready_for_pickup' || order?.status === 'shipped' || order?.status === 'out_for_delivery' || order?.status === 'delivered' },
-    { status: 'ready_for_pickup', label: 'جاهز للشحن', icon: '✅', completed: order?.status === 'ready_for_pickup' || order?.status === 'shipped' || order?.status === 'out_for_delivery' || order?.status === 'delivered' },
-    { status: 'shipped', label: 'قيد التوصيل', icon: '🚚', completed: order?.status === 'shipped' || order?.status === 'out_for_delivery' || order?.status === 'delivered' },
-    { status: 'delivered', label: 'تم التوصيل', icon: '🎉', completed: order?.status === 'delivered' },
-  ];
+  const statuses: OrderStatus[] = order?.delivery_type === 'scheduled'
+    ? [
+        { status: 'pending', label: 'تم الطلب', icon: '📝', completed: true },
+        { status: 'processing', label: 'قيد التحضير', icon: '📦', completed: ['processing', 'ready_for_pickup', 'batch_assigned', 'shipped', 'out_for_delivery', 'delivered'].includes(order?.status) },
+        { status: 'ready_for_pickup', label: 'جاهز للاستلام', icon: '✅', completed: ['ready_for_pickup', 'batch_assigned', 'shipped', 'out_for_delivery', 'delivered'].includes(order?.status) },
+        { status: 'batch_assigned', label: 'تم إضافته للبكج', icon: '📦', completed: ['batch_assigned', 'shipped', 'out_for_delivery', 'delivered'].includes(order?.status) },
+        { status: 'shipped', label: 'قيد التوصيل', icon: '🚚', completed: ['shipped', 'out_for_delivery', 'delivered'].includes(order?.status) },
+        { status: 'delivered', label: 'تم التوصيل', icon: '🎉', completed: order?.status === 'delivered' },
+      ]
+    : [
+        { status: 'pending', label: 'تم الطلب', icon: '📝', completed: true },
+        { status: 'processing', label: 'قيد التحضير', icon: '📦', completed: ['processing', 'ready_for_pickup', 'shipped', 'out_for_delivery', 'delivered'].includes(order?.status) },
+        { status: 'ready_for_pickup', label: 'جاهز للشحن', icon: '✅', completed: ['ready_for_pickup', 'shipped', 'out_for_delivery', 'delivered'].includes(order?.status) },
+        { status: 'shipped', label: 'قيد التوصيل', icon: '🚚', completed: ['shipped', 'out_for_delivery', 'delivered'].includes(order?.status) },
+        { status: 'delivered', label: 'تم التوصيل', icon: '🎉', completed: order?.status === 'delivered' },
+      ];
 
   const getCurrentStatusIndex = () => {
     return statuses.findIndex(s => s.status === order?.status);
@@ -270,10 +280,51 @@ export default function OrderTrackingPage() {
 
           {/* Estimated Delivery */}
           {order.status !== 'delivered' && order.status !== 'cancelled' && (
-            <div className="mt-6 md:mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800">
-                ⏰ التوصيل المتوقع: <span className="font-bold">{order.estimated_delivery}</span>
-              </p>
+            <div className="mt-6 md:mt-8 space-y-3">
+              {/* Delivery Type Badge */}
+              <div className="flex items-center justify-center gap-2">
+                <span className={`px-4 py-2 rounded-lg font-bold text-sm ${
+                  order.delivery_type === 'instant' 
+                    ? 'bg-orange-100 text-orange-700' 
+                    : 'bg-blue-100 text-blue-700'
+                }`}>
+                  {order.delivery_type === 'instant' ? '⚡ توصيل فوري' : '📦 توصيل مجدول'}
+                </span>
+              </div>
+
+              {/* Batch Info for Scheduled Orders */}
+              {order.delivery_type === 'scheduled' && order.delivery_batches && (
+                <div className="p-4 bg-cyan-50 border border-cyan-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Package className="w-5 h-5 text-cyan-600" />
+                    <p className="font-bold text-cyan-800">
+                      بكج التوصيل: {order.delivery_batches.batch_number}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="w-4 h-4 text-cyan-600" />
+                    <p className="text-cyan-700">
+                      التاريخ المتوقع: {new Date(order.delivery_batches.scheduled_date).toLocaleDateString('ar-SA', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Estimated Delivery Time */}
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  ⏰ التوصيل المتوقع: <span className="font-bold">
+                    {order.delivery_type === 'instant' 
+                      ? '30-45 دقيقة' 
+                      : order.delivery_batches?.estimated_delivery || order.estimated_delivery}
+                  </span>
+                </p>
+              </div>
             </div>
           )}
         </div>

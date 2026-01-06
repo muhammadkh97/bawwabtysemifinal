@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
-import { ShoppingBag, Clock, CheckCircle, XCircle, Package, DollarSign } from 'lucide-react';
+import { ShoppingBag, Clock, CheckCircle, XCircle, Package, DollarSign, Truck, Calendar } from 'lucide-react';
 
 interface Order {
   id: string;
@@ -15,6 +15,11 @@ interface Order {
   status: string;
   created_at: string;
   delivery_address: string;
+  delivery_type?: string;
+  pickup_time?: string;
+  is_ready_for_pickup?: boolean;
+  batch_id?: string;
+  batch_number?: string;
   customer: {
     name: string;
     phone: string;
@@ -65,13 +70,17 @@ export default function RestaurantOrdersPage() {
         .from('orders')
         .select(`
           *,
+          delivery_batches (batch_number),
           customer:users!orders_customer_id_fkey(name, phone)
         `)
         .eq('vendor_id', vId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setOrders(data || []);
+      setOrders((data || []).map((order: any) => ({
+        ...order,
+        batch_number: order.delivery_batches?.batch_number
+      })));
     } catch (error) {
       console.error('Error fetching orders:', error);
     }
@@ -104,6 +113,23 @@ export default function RestaurantOrdersPage() {
   const filteredOrders = activeFilter === 'all' 
     ? orders 
     : orders.filter(order => order.status === activeFilter);
+
+  const markReadyForPickup = async (orderId: string) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ is_ready_for_pickup: true })
+        .eq('id', orderId);
+
+      if (error) throw error;
+      
+      await fetchOrders(vendorId);
+      alert('✅ تم تحديث الطلب - جاهز للاستلام');
+    } catch (error) {
+      console.error('Error:', error);
+      alert('حدث خطأ');
+    }
+  };
 
   if (loading) {
     return (
@@ -160,10 +186,28 @@ export default function RestaurantOrdersPage() {
                   className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900">
-                        طلب #{order.order_number || order.id.slice(0, 8)}
-                      </h3>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="text-xl font-bold text-gray-900">
+                          طلب #{order.order_number || order.id.slice(0, 8)}
+                        </h3>
+                        {/* Delivery Type Badge */}
+                        {order.delivery_type && (
+                          <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                            order.delivery_type === 'instant' 
+                              ? 'bg-orange-100 text-orange-700' 
+                              : 'bg-blue-100 text-blue-700'
+                          }`}>
+                            {order.delivery_type === 'instant' ? '⚡ فوري' : '📦 مجدول'}
+                          </span>
+                        )}
+                        {/* Ready for Pickup Badge */}
+                        {order.is_ready_for_pickup && (
+                          <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">
+                            ✅ جاهز للاستلام
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-gray-600">
                         {new Date(order.created_at).toLocaleDateString('ar-EG', {
                           year: 'numeric',
@@ -173,6 +217,25 @@ export default function RestaurantOrdersPage() {
                           minute: '2-digit'
                         })}
                       </p>
+                      {/* Batch Number for scheduled orders */}
+                      {order.batch_number && (
+                        <p className="text-sm text-cyan-600 mt-1 flex items-center gap-1">
+                          <Package className="w-4 h-4" />
+                          بكج توصيل: {order.batch_number}
+                        </p>
+                      )}
+                      {/* Pickup Time for scheduled orders */}
+                      {order.pickup_time && (
+                        <p className="text-sm text-purple-600 mt-1 flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          موعد الاستلام: {new Date(order.pickup_time).toLocaleDateString('ar-EG', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      )}
                     </div>
                     
                     <span className={`px-4 py-2 rounded-xl font-bold ${getStatusColor(order.status)}`}>
@@ -216,9 +279,32 @@ export default function RestaurantOrdersPage() {
                     </p>
                   )}
 
-                  <button className="w-full py-2 bg-orange-50 text-orange-600 rounded-xl font-bold hover:bg-orange-100 transition">
-                    عرض التفاصيل
-                  </button>
+                  <div className="flex gap-2">
+                    <button className="flex-1 py-2 bg-orange-50 text-orange-600 rounded-xl font-bold hover:bg-orange-100 transition">
+                      عرض التفاصيل
+                    </button>
+                    
+                    {/* Ready for Pickup Button for scheduled orders */}
+                    {order.delivery_type === 'scheduled' && 
+                     !order.is_ready_for_pickup && 
+                     ['confirmed', 'preparing'].includes(order.status) && (
+                      <button
+                        onClick={() => markReadyForPickup(order.id)}
+                        className="flex-1 py-2 bg-green-50 text-green-600 rounded-xl font-bold hover:bg-green-100 transition flex items-center justify-center gap-2"
+                      >
+                        <Truck className="w-4 h-4" />
+                        جاهز للاستلام
+                      </button>
+                    )}
+                    
+                    {/* Alert for instant orders */}
+                    {order.delivery_type === 'instant' && order.status === 'confirmed' && (
+                      <div className="flex-1 py-2 bg-red-50 text-red-600 rounded-xl font-bold text-center flex items-center justify-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        <span className="text-sm">⏱️ 20 دقيقة</span>
+                      </div>
+                    )}
+                  </div>
                 </motion.div>
               ))}
             </div>

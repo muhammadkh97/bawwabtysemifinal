@@ -128,7 +128,7 @@ export default function DriverDashboard() {
         average_rating: 0
       });
 
-      // Load active orders
+      // Load active orders with delivery type and batch info
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select(`
@@ -139,11 +139,15 @@ export default function DriverDashboard() {
           delivery_address,
           status,
           created_at,
+          delivery_type,
+          batch_id,
+          delivery_batches (batch_number, status),
           users!orders_customer_id_fkey (id, full_name, phone),
           stores!orders_vendor_id_fkey (id, shop_name, latitude, longitude)
         `)
         .eq('driver_id', driverData.id)
         .in('status', ['ready_for_pickup', 'picked_up', 'in_transit', 'out_for_delivery'])
+        .order('delivery_type', { ascending: true })
         .order('created_at', { ascending: false })
         .limit(5);
 
@@ -158,6 +162,10 @@ export default function DriverDashboard() {
           delivery_latitude: undefined,
           delivery_longitude: undefined,
           delivery_address: o.delivery_address,
+          delivery_type: o.delivery_type,
+          batch_id: o.batch_id,
+          batch_number: o.delivery_batches?.batch_number,
+          batch_status: o.delivery_batches?.status,
           customer: {
             id: o.users?.id || '',
             name: o.users?.full_name || 'غير متوفر',
@@ -482,12 +490,29 @@ export default function DriverDashboard() {
                       >
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
-                            <p className="font-bold text-white text-sm">
-                              #{order.order_number}
-                            </p>
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="font-bold text-white text-sm">
+                                #{order.order_number}
+                              </p>
+                              {/* Delivery Type Badge */}
+                              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                                order.delivery_type === 'instant' 
+                                  ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30' 
+                                  : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                              }`}>
+                                {order.delivery_type === 'instant' ? '⚡ فوري' : '📦 مجدول'}
+                              </span>
+                            </div>
                             <p className="text-xs text-purple-200 mt-0.5">
                               {order.customer.name}
                             </p>
+                            {/* Batch Number for scheduled orders */}
+                            {order.batch_number && (
+                              <p className="text-xs text-cyan-400 mt-1 flex items-center gap-1">
+                                <Package className="w-3 h-3" />
+                                بكج: {order.batch_number}
+                              </p>
+                            )}
                           </div>
                           <span className={`text-xs font-bold px-2 py-1 rounded-lg border whitespace-nowrap ${getStatusColor(order.status)}`}>
                             {getStatusText(order.status)}

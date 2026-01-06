@@ -15,6 +15,8 @@ interface Order {
   created_at: string;
   customer_name: string;
   customer_phone: string;
+  delivery_type?: string;
+  batch_number?: string;
 }
 
 export default function AvailableOrdersPage() {
@@ -24,6 +26,7 @@ export default function AvailableOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
   const [driverId, setDriverId] = useState<string | null>(null);
+  const [deliveryTypeFilter, setDeliveryTypeFilter] = useState<'all' | 'instant' | 'scheduled'>('all');
 
   useEffect(() => {
     loadAvailableOrders();
@@ -64,10 +67,14 @@ export default function AvailableOrdersPage() {
           delivery_fee,
           delivery_address,
           created_at,
+          delivery_type,
+          batch_id,
+          delivery_batches (batch_number),
           users!orders_customer_id_fkey (full_name, phone)
         `)
         .eq('status', 'ready_for_pickup')
         .is('driver_id', null)
+        .order('delivery_type', { ascending: true })
         .order('created_at', { ascending: false });
 
       console.log('🔍 [Available Orders] Query result:', { ordersData, error });
@@ -78,7 +85,9 @@ export default function AvailableOrdersPage() {
           ...o,
           total: o.total_amount,
           customer_name: o.users?.full_name || 'غير متوفر',
-          customer_phone: o.users?.phone || 'غير متوفر'
+          customer_phone: o.users?.phone || 'غير متوفر',
+          delivery_type: o.delivery_type,
+          batch_number: o.delivery_batches?.batch_number
         })));
       }
 
@@ -158,12 +167,46 @@ export default function AvailableOrdersPage() {
           <p className="text-gray-600 dark:text-gray-400">
             اختر الطلبات التي تريد تنفيذها واحصل على أرباح إضافية
           </p>
+          
+          {/* Delivery Type Filter */}
+          <div className="flex gap-2 mt-4">
+            <button
+              onClick={() => setDeliveryTypeFilter('all')}
+              className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                deliveryTypeFilter === 'all'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+              }`}
+            >
+              الكل ({orders.length})
+            </button>
+            <button
+              onClick={() => setDeliveryTypeFilter('instant')}
+              className={`px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-1 ${
+                deliveryTypeFilter === 'instant'
+                  ? 'bg-orange-500 text-white shadow-md'
+                  : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+              }`}
+            >
+              ⚡ فوري ({orders.filter(o => o.delivery_type === 'instant').length})
+            </button>
+            <button
+              onClick={() => setDeliveryTypeFilter('scheduled')}
+              className={`px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-1 ${
+                deliveryTypeFilter === 'scheduled'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+              }`}
+            >
+              📦 مجدول ({orders.filter(o => o.delivery_type === 'scheduled').length})
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-        {orders.length === 0 ? (
+        {orders.filter(o => deliveryTypeFilter === 'all' || o.delivery_type === deliveryTypeFilter).length === 0 ? (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
             <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
@@ -175,7 +218,9 @@ export default function AvailableOrdersPage() {
           </div>
         ) : (
           <div className="grid gap-6">
-            {orders.map((order) => (
+            {orders
+              .filter(o => deliveryTypeFilter === 'all' || o.delivery_type === deliveryTypeFilter)
+              .map((order) => (
               <div
                 key={order.id}
                 className="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700"
@@ -183,12 +228,29 @@ export default function AvailableOrdersPage() {
                 <div className="p-6">
                   <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
                     <div className="flex-1">
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
-                        طلب #{order.order_number}
-                      </h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                          طلب #{order.order_number}
+                        </h3>
+                        {/* Delivery Type Badge */}
+                        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                          order.delivery_type === 'instant' 
+                            ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200' 
+                            : 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
+                        }`}>
+                          {order.delivery_type === 'instant' ? '⚡ فوري' : '📦 مجدول'}
+                        </span>
+                      </div>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         العميل: {order.customer_name}
                       </p>
+                      {/* Batch Number */}
+                      {order.batch_number && (
+                        <p className="text-sm text-cyan-600 dark:text-cyan-400 mt-1 flex items-center gap-1">
+                          <Package className="w-4 h-4" />
+                          بكج: {order.batch_number}
+                        </p>
+                      )}
                     </div>
                     <span className="mt-2 md:mt-0 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100 text-xs font-bold px-3 py-1.5 rounded-full whitespace-nowrap">
                       متاح الآن

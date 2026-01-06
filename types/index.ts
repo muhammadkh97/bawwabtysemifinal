@@ -422,6 +422,10 @@ export interface DriverOrder {
   delivery_latitude?: number;
   delivery_longitude?: number;
   delivery_address?: string;
+  delivery_type?: string;
+  batch_id?: string;
+  batch_number?: string;
+  batch_status?: string;
   customer: {
     id: string;
     name: string;
