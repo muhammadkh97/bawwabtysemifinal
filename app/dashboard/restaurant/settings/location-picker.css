@@ -1,0 +1,32 @@
+/* Location Picker Styles for Restaurant Page */
+.location-picker-wrapper .text-purple-300 {
+  color: rgb(156 163 175) !important; /* gray-400 */
+}
+
+.location-picker-wrapper .text-purple-400 {
+  color: rgb(107 114 128) !important; /* gray-500 */
+}
+
+.location-picker-wrapper button[style*="background: linear-gradient(135deg, #667eea"] {
+  background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%) !important; /* orange to red */
+}
+
+.location-picker-wrapper input {
+  color: rgb(17 24 39) !important; /* gray-900 */
+  background: rgb(249 250 251) !important; /* gray-50 */
+  border-color: rgb(229 231 235) !important; /* gray-200 */
+}
+
+.location-picker-wrapper input:focus {
+  border-color: rgb(249 115 22) !important; /* orange-500 */
+  outline: 2px solid rgb(249 115 22 / 0.2) !important;
+}
+
+.location-picker-wrapper > div:first-child {
+  background: transparent !important;
+  border: none !important;
+}
+
+.location-picker-wrapper label {
+  color: rgb(55 65 81) !important; /* gray-700 */
+}

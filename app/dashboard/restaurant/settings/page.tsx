@@ -8,6 +8,8 @@ import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import { Store, Settings, MapPin, Phone, Clock, Save, Image, Globe, Power, Upload, X, Camera } from 'lucide-react';
 import { uploadFile } from '@/lib/storage';
+import LocationPicker from '@/components/dashboard/LocationPicker';
+import './location-picker.css';
 
 export default function RestaurantSettingsPage() {
   const router = useRouter();
@@ -34,6 +36,10 @@ export default function RestaurantSettingsPage() {
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
+
+  // Location state
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -73,6 +79,10 @@ export default function RestaurantSettingsPage() {
         setCoverImage(restaurantData.cover_image || '');
         setLogoImage(restaurantData.logo || '');
         setGalleryImages(restaurantData.gallery_images || []);
+        
+        // Load location data
+        setLatitude(restaurantData.lat || restaurantData.latitude || null);
+        setLongitude(restaurantData.lng || restaurantData.longitude || null);
       }
 
       setLoading(false);
@@ -89,7 +99,11 @@ export default function RestaurantSettingsPage() {
         ...formData,
         cover_image: coverImage,
         logo: logoImage,
-        gallery_images: galleryImages
+        gallery_images: galleryImages,
+        lat: latitude,
+        lng: longitude,
+        latitude: latitude,
+        longitude: longitude
       };
 
       const { error } = await supabase
@@ -504,6 +518,31 @@ export default function RestaurantSettingsPage() {
                 <div className="mt-6 p-4 bg-orange-50 rounded-xl">
                   <p className="text-sm text-orange-800">
                     <strong>ملاحظة:</strong> سيتم قبول الطلبات فقط خلال أوقات العمل المحددة
+                  </p>
+                </div>
+              </div>
+
+              {/* Location Section */}
+              <div className="bg-white rounded-3xl p-8 shadow-lg">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                  <MapPin className="w-6 h-6 text-orange-600" />
+                  الموقع الجغرافي
+                </h2>
+
+                <div className="location-picker-wrapper">
+                  <LocationPicker
+                    latitude={latitude}
+                    longitude={longitude}
+                    onLocationChange={(lat, lng) => {
+                      setLatitude(lat);
+                      setLongitude(lng);
+                    }}
+                  />
+                </div>
+
+                <div className="mt-4 p-4 bg-orange-50 rounded-xl">
+                  <p className="text-sm text-orange-800">
+                    <strong>ملاحظة:</strong> حدد موقع المطعم على الخريطة لتمكين العملاء من إيجادك بسهولة
                   </p>
                 </div>
               </div>

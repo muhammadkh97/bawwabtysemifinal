@@ -17,6 +17,7 @@
     "setup:mapbox": "echo '📦 Installing Mapbox dependencies...' && pnpm install mapbox-gl react-map-gl @types/mapbox-gl && echo '✅ Done! Add your NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN to .env.local'"
   },
   "dependencies": {
+    "@react-google-maps/api": "^2.20.8",
     "@supabase/supabase-js": "^2.45.0",
     "emoji-picker-react": "^4.16.1",
     "framer-motion": "^12.23.26",

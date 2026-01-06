@@ -6,6 +6,7 @@ import FloatingAddButton from '@/components/dashboard/FloatingAddButton';
 import { Store, Upload, Save, Eye, MapPin, Phone, Mail, Globe, Image as ImageIcon, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import LocationPicker from '@/components/dashboard/LocationPicker';
 
 export default function VendorMyStorePage() {
   const { userId } = useAuth();
@@ -17,6 +18,10 @@ export default function VendorMyStorePage() {
   const [website, setWebsite] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  
+  // Location state
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
   
   // Logo state
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -54,6 +59,10 @@ export default function VendorMyStorePage() {
         setWebsite(vendorData.website || '');
         setLogoUrl(vendorData.logo_url || '');
         setBannerUrl(vendorData.banner_url || '');
+        
+        // Load location data
+        setLatitude(vendorData.lat || vendorData.latitude || null);
+        setLongitude(vendorData.lng || vendorData.longitude || null);
         
         if (vendorData.logo_url) {
           setLogoPreview(vendorData.logo_url);
@@ -185,6 +194,10 @@ export default function VendorMyStorePage() {
             email: email,
             logo_url: newLogoUrl,
             banner_url: newBannerUrl,
+            lat: latitude,
+            lng: longitude,
+            latitude: latitude,
+            longitude: longitude,
             is_active: true,
             approval_status: 'pending'
           });
@@ -202,6 +215,10 @@ export default function VendorMyStorePage() {
             email: email,
             logo_url: newLogoUrl,
             banner_url: newBannerUrl,
+            lat: latitude,
+            lng: longitude,
+            latitude: latitude,
+            longitude: longitude,
             updated_at: new Date().toISOString()
           })
           .eq('id', vendorData.id);
@@ -482,6 +499,33 @@ export default function VendorMyStorePage() {
                     )}
                   </div>
                 </div>
+              </motion.div>
+
+              {/* الموقع الجغرافي */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="rounded-2xl p-6"
+                style={{
+                  background: 'rgba(15, 10, 30, 0.6)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(98, 54, 255, 0.3)',
+                }}
+              >
+                <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                  <MapPin className="w-6 h-6" />
+                  الموقع الجغرافي
+                </h2>
+
+                <LocationPicker
+                  latitude={latitude}
+                  longitude={longitude}
+                  onLocationChange={(lat, lng) => {
+                    setLatitude(lat);
+                    setLongitude(lng);
+                  }}
+                />
               </motion.div>
 
               {/* أزرار الحفظ */}
