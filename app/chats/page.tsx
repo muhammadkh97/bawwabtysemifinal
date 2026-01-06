@@ -477,7 +477,7 @@ function ChatsContent() {
                         >
                           <EmojiPicker
                             onEmojiClick={handleEmojiClick}
-                            theme="dark"
+                            theme={'dark' as any}
                             width={350}
                             height={400}
                           />

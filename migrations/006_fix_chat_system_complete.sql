@@ -196,12 +196,18 @@ CREATE POLICY "messages_delete_for_sender_or_admin"
 -- 🔧 تحديث Function لإنشاء المحادثات
 -- ==================================================
 
--- حذف الـ function القديمة أولاً
-DROP FUNCTION IF EXISTS create_or_get_chat(UUID, UUID, VARCHAR);
-DROP FUNCTION IF EXISTS create_or_get_chat(UUID, UUID);
+-- حذف جميع نسخ الـ function القديمة
+DO $$ 
+BEGIN
+    DROP FUNCTION IF EXISTS create_or_get_chat(UUID, UUID, VARCHAR);
+    DROP FUNCTION IF EXISTS create_or_get_chat(UUID, UUID);
+    DROP FUNCTION IF EXISTS create_or_get_chat;
+EXCEPTION WHEN OTHERS THEN
+    NULL;
+END $$;
 
 -- إعادة إنشاء function مع دعم جميع الأدوار
-CREATE OR REPLACE FUNCTION create_or_get_chat(
+CREATE FUNCTION create_or_get_chat(
     p_customer_id UUID,
     p_vendor_id UUID,
     p_chat_type VARCHAR DEFAULT 'direct'
