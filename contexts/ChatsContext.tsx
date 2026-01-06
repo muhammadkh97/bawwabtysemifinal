@@ -187,10 +187,13 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ تفاصيل الخطأ:', error);
+        throw error;
+      }
 
       // تنسيق البيانات حسب دور المستخدم
-      const formattedChats = data.map((chat: any) => {
+      const formattedChats = (data || []).map((chat: any) => {
         return formatChatForUser(chat, userRole as string, userId as string);
       });
 
