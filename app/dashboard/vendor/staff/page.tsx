@@ -105,7 +105,7 @@ export default function VendorStaffPage() {
             email
           )
         `)
-        .eq('vendor_id', vendorData.id)
+        .eq('vendor_id', currentVendorId)
         .in('status', ['active', 'pending'])
         .order('created_at', { ascending: false });
 
@@ -128,7 +128,7 @@ export default function VendorStaffPage() {
       const { data: invitationsData, error: invError } = await supabase
         .from('staff_invitations')
         .select('*')
-        .eq('business_id', vendorData.id)
+        .eq('business_id', currentVendorId)
         .eq('business_type', 'vendor')
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
