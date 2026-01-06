@@ -195,11 +195,11 @@ export function DeliveryPackagesProvider({ children }: { children: React.ReactNo
             center_lat, center_lng, radius_km,
             delivery_fee, estimated_days, is_active
           ),
-          driver:drivers!delivery_batches_driver_id_fkey(
+          driver:drivers(
             id, user_id, vehicle_type, vehicle_number,
             is_available, is_active, rating,
             latitude, longitude,
-            users!drivers_user_id_fkey(full_name, phone, avatar_url)
+            users(full_name, phone, avatar_url)
           )
         `)
         .order('created_at', { ascending: false });
@@ -322,7 +322,7 @@ export function DeliveryPackagesProvider({ children }: { children: React.ReactNo
           users!drivers_user_id_fkey(full_name, phone, avatar_url)
         `)
         .eq('is_active', true)
-        .order('full_name');
+        .order('id');
       
       if (error) throw error;
       

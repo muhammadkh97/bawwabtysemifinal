@@ -212,6 +212,7 @@ export default function FuturisticSidebar({ role }: FuturisticSidebarProps) {
           { name: 'لوحة التحكم', href: '/dashboard/admin', icon: LayoutDashboard },
           { name: 'الموافقات', href: '/dashboard/admin/approvals', icon: Shield, badge: adminBadges.approvals },
           { name: 'المستخدمين', href: '/dashboard/admin/users', icon: Users },
+          { name: 'بكجات التوصيل', href: '/dashboard/admin/delivery-packages', icon: Package },
           { name: 'إدارة الصفحات', href: '/dashboard/admin/pages-management', icon: FileText },
           { name: 'التصنيفات', href: '/dashboard/admin/categories', icon: Tag },
           { name: 'نظام نقاط الولاء', href: '/dashboard/admin/loyalty', icon: Star },
