@@ -94,7 +94,7 @@ export default function DeliveryPackagesPage() {
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden" dir="rtl">
-      <FuturisticSidebar />
+      <FuturisticSidebar role="admin" />
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <FuturisticNavbar />
