@@ -415,8 +415,7 @@ export default function VendorProductsPage() {
           onClose={() => setShowBulkUpload(false)}
         />
       )}
-      </div>
-    </PermissionGuard>
+    </div>
   );
 }
 
