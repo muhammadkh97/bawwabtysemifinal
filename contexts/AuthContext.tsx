@@ -32,27 +32,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [staffVendorId, setStaffVendorId] = useState<string | null>(null);
   const [staffRestaurantId, setStaffRestaurantId] = useState<string | null>(null);
   const [staffPermissions, setStaffPermissions] = useState<string[]>([]);
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
 
   useEffect(() => {
     // Initial auth check
     initializeAuth();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔔 [AuthContext] Auth state changed:', event);
+      
+      // تجاهل أحداث معينة لتجنب الحلقات اللانهائية
+      if (event === 'TOKEN_REFRESHED') {
+        console.log('🔄 [AuthContext] Token refreshed - تحديث User فقط بدون إعادة جلب');
+        if (session?.user) {
+          setUser(session.user);
+          setUserId(session.user.id);
+        }
+        return;
+      }
+
+      // فحص الوقت منذ آخر جلب (منع الجلب المتكرر خلال 30 ثانية)
+      const now = Date.now();
+      const timeSinceLastFetch = now - lastFetchTime;
+      
       if (session?.user) {
         setUser(session.user);
         setUserId(session.user.id);
-        setLoading(true); // ✅ تعيين loading قبل جلب البيانات
-        await fetchUserData(session.user.id);
+        
+        // جلب البيانات فقط إذا:
+        // 1. أول مرة (lastFetchTime === 0)
+        // 2. مر أكثر من 30 ثانية على آخر جلب
+        // 3. الحدث هو SIGNED_IN
+        if (lastFetchTime === 0 || timeSinceLastFetch > 30000 || event === 'SIGNED_IN') {
+          console.log('✅ [AuthContext] جلب بيانات المستخدم...');
+          setLoading(true);
+          await fetchUserData(session.user.id);
+          setLastFetchTime(now);
+        } else {
+          console.log('⏭️ [AuthContext] تخطي الجلب - تم الجلب مؤخراً');
+        }
       } else {
         resetAuthState();
       }
     });
 
+    // منع إعادة الجلب عند العودة للتبويب
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('👁️ [AuthContext] التبويب أصبح مرئياً - لا إعادة جلب');
+        // لا نفعل شيء - البيانات محفوظة في الـ state
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       subscription.unsubscribe();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [lastFetchTime]);
 
   const initializeAuth = async () => {
     try {

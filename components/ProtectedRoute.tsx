@@ -32,14 +32,35 @@ export default function ProtectedRoute({
   } = useAuth();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasChecked, setHasChecked] = useState(false);
 
   useEffect(() => {
-    checkAuth();
+    // تحقق فقط مرة واحدة عند التحميل الأول أو عند تغيير الدور
+    if (!hasChecked || !contextLoading) {
+      checkAuth();
+    }
   }, [contextUserRole, contextLoading, isVendorStaff, isRestaurantStaff]);
 
   const checkAuth = async () => {
     try {
       console.log('🔐 [ProtectedRoute] بدء التحقق من الصلاحيات...');
+      
+      // منع التحقق المتكرر
+      if (hasChecked && !contextLoading && contextUserRole) {
+        console.log('⏭️ [ProtectedRoute] تم التحقق مسبقاً - تخطي');
+        
+        // تحقق سريع من الصلاحيات فقط
+        const isRoleAllowed = allowedRoles.includes(contextUserRole);
+        const isStaffAccessingVendorDashboard = isVendorStaff && allowedRoles.includes('vendor');
+        const isStaffAccessingRestaurantDashboard = isRestaurantStaff && allowedRoles.includes('restaurant');
+        const hasAccess = isRoleAllowed || isStaffAccessingVendorDashboard || isStaffAccessingRestaurantDashboard;
+        
+        if (hasAccess) {
+          setIsAuthorized(true);
+          setIsLoading(false);
+        }
+        return;
+      }
       
       // انتظار تحميل AuthContext أولاً
       if (contextLoading) {
@@ -54,6 +75,7 @@ export default function ProtectedRoute({
       if (!session) {
         console.log('❌ [ProtectedRoute] لا توجد Session - التوجيه لتسجيل الدخول');
         setIsLoading(false);
+        setHasChecked(true);
         router.push(`${redirectTo}?redirect=${window.location.pathname}`);
         return;
       }
@@ -70,8 +92,8 @@ export default function ProtectedRoute({
         console.log('👤 [ProtectedRoute] User ID:', session.user.id);
         
         try {
-          // زيادة timeout إلى 15 ثانية
-          const timeoutDuration = 15000;
+          // timeout 10 ثواني
+          const timeoutDuration = 10000;
           const timeoutPromise = new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Timeout')), timeoutDuration)
           );
@@ -134,6 +156,7 @@ export default function ProtectedRoute({
         const redirectPath = roleRedirects[userRole] || '/';
         console.log(`🔄 [ProtectedRoute] إعادة التوجيه إلى: ${redirectPath}`);
         setIsLoading(false);
+        setHasChecked(true);
         router.push(redirectPath);
         return;
       }
@@ -141,9 +164,11 @@ export default function ProtectedRoute({
       console.log('✅ [ProtectedRoute] مصرح بالدخول!');
       setIsAuthorized(true);
       setIsLoading(false);
+      setHasChecked(true);
     } catch (err) {
       console.error('❌ [ProtectedRoute] خطأ غير متوقع:', err);
       setIsLoading(false);
+      setHasChecked(true);
       router.push(redirectTo);
     }
   };
