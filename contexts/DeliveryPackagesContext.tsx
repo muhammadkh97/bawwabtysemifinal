@@ -194,12 +194,6 @@ export function DeliveryPackagesProvider({ children }: { children: React.ReactNo
             id, name, name_ar, governorate, cities,
             center_lat, center_lng, radius_km,
             delivery_fee, estimated_days, is_active
-          ),
-          driver:drivers(
-            id, user_id, vehicle_type, vehicle_number,
-            is_available, is_active, rating,
-            latitude, longitude,
-            users(full_name, phone, avatar_url)
           )
         `)
         .order('created_at', { ascending: false });
@@ -221,17 +215,35 @@ export function DeliveryPackagesProvider({ children }: { children: React.ReactNo
       
       if (error) throw error;
       
-      // Transform data
-      const transformedPackages: DeliveryPackage[] = (data || []).map((pkg: any) => ({
-        ...pkg,
-        zone: pkg.zone ? pkg.zone : undefined,
-        driver: pkg.driver ? {
-          ...pkg.driver,
-          full_name: pkg.driver.users?.full_name,
-          phone: pkg.driver.users?.phone,
-          avatar_url: pkg.driver.users?.avatar_url,
-        } : undefined,
+      // Fetch driver data separately for packages that have drivers
+      const packagesWithDrivers = await Promise.all((data || []).map(async (pkg: any) => {
+        let driverData = null;
+        
+        if (pkg.driver_id) {
+          const { data: driver } = await supabase
+            .from('drivers')
+            .select('*, users(full_name, phone, avatar_url)')
+            .eq('id', pkg.driver_id)
+            .single();
+          
+          if (driver) {
+            driverData = {
+              ...driver,
+              full_name: driver.users?.full_name,
+              phone: driver.users?.phone,
+              avatar_url: driver.users?.avatar_url,
+            };
+          }
+        }
+        
+        return {
+          ...pkg,
+          zone: pkg.zone || undefined,
+          driver: driverData || undefined,
+        };
       }));
+      
+      const transformedPackages: DeliveryPackage[] = packagesWithDrivers;
       
       setPackages(transformedPackages);
       
