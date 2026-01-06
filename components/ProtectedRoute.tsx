@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,35 +32,38 @@ export default function ProtectedRoute({
   } = useAuth();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasChecked, setHasChecked] = useState(false);
+  
+  // ✅ استخدام useRef لتجنب re-checks غير ضرورية
+  const hasCheckedRef = useRef(false);
+  const lastCheckTimeRef = useRef<number>(0);
 
   useEffect(() => {
-    // تحقق فقط مرة واحدة عند التحميل الأول أو عند تغيير الدور
-    if (!hasChecked || !contextLoading) {
+    const now = Date.now();
+    const timeSinceLastCheck = now - lastCheckTimeRef.current;
+    
+    // تحقق فقط إذا:
+    // 1. لم يتم التحقق من قبل
+    // 2. AuthContext انتهى من التحميل
+    // 3. مر أكثر من 5 ثواني على آخر تحقق
+    if (!hasCheckedRef.current && !contextLoading) {
+      console.log('🔐 [ProtectedRoute] إجراء التحقق الأول...');
       checkAuth();
+      hasCheckedRef.current = true;
+      lastCheckTimeRef.current = now;
+    } else if (hasCheckedRef.current && !contextLoading && timeSinceLastCheck > 5000) {
+      // إعادة التحقق فقط إذا تغير الدور
+      const prevRole = sessionStorage.getItem('lastCheckedRole');
+      if (prevRole !== contextUserRole) {
+        console.log('🔄 [ProtectedRoute] الدور تغير - إعادة التحقق');
+        checkAuth();
+        lastCheckTimeRef.current = now;
+      }
     }
-  }, [contextUserRole, contextLoading, isVendorStaff, isRestaurantStaff]);
+  }, [contextLoading, contextUserRole]);
 
   const checkAuth = async () => {
     try {
       console.log('🔐 [ProtectedRoute] بدء التحقق من الصلاحيات...');
-      
-      // منع التحقق المتكرر
-      if (hasChecked && !contextLoading && contextUserRole) {
-        console.log('⏭️ [ProtectedRoute] تم التحقق مسبقاً - تخطي');
-        
-        // تحقق سريع من الصلاحيات فقط
-        const isRoleAllowed = allowedRoles.includes(contextUserRole);
-        const isStaffAccessingVendorDashboard = isVendorStaff && allowedRoles.includes('vendor');
-        const isStaffAccessingRestaurantDashboard = isRestaurantStaff && allowedRoles.includes('restaurant');
-        const hasAccess = isRoleAllowed || isStaffAccessingVendorDashboard || isStaffAccessingRestaurantDashboard;
-        
-        if (hasAccess) {
-          setIsAuthorized(true);
-          setIsLoading(false);
-        }
-        return;
-      }
       
       // انتظار تحميل AuthContext أولاً
       if (contextLoading) {
@@ -75,64 +78,21 @@ export default function ProtectedRoute({
       if (!session) {
         console.log('❌ [ProtectedRoute] لا توجد Session - التوجيه لتسجيل الدخول');
         setIsLoading(false);
-        setHasChecked(true);
         router.push(`${redirectTo}?redirect=${window.location.pathname}`);
         return;
       }
 
-      let userRole = 'customer';
+      let userRole = contextUserRole || 'customer';
 
-      // محاولة استخدام الدور من AuthContext أولاً
-      if (contextUserRole) {
-        console.log('✅ [ProtectedRoute] استخدام الدور من AuthContext:', contextUserRole);
-        userRole = contextUserRole;
-      } else {
-        // إذا لم يكن متاحاً، جلبه مباشرة مع timeout محسّن
-        console.log('🔍 [ProtectedRoute] جلب الدور من public.users...');
-        console.log('👤 [ProtectedRoute] User ID:', session.user.id);
-        
-        try {
-          // timeout 10 ثواني
-          const timeoutDuration = 10000;
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout')), timeoutDuration)
-          );
-
-          const fetchPromise = supabase
-            .from('users')
-            .select('role, user_role')
-            .eq('id', session.user.id)
-            .single<DbUser>();
-
-          const { data: userData, error: userError } = await Promise.race([
-            fetchPromise,
-            timeoutPromise as any
-          ]);
-
-          console.log('📊 [ProtectedRoute] بيانات المستخدم:', userData);
-          console.log('⚠️ [ProtectedRoute] خطأ (إن وجد):', userError);
-
-          if (userError || !userData) {
-            console.log('❌ [ProtectedRoute] لا يمكن جلب بيانات المستخدم - استخدام الافتراضي customer');
-            userRole = 'customer';
-          } else {
-            // استخدام role أولاً، ثم user_role كبديل
-            userRole = userData.role || userData.user_role || 'customer';
-            console.log('✅ [ProtectedRoute] تم الحصول على الدور:', userRole);
-          }
-        } catch (queryError) {
-          console.error('❌ [ProtectedRoute] خطأ في الـ query أو timeout:', queryError);
-          // في حالة الخطأ، نفترض الدور customer للسماح بالعودة للصفحة الرئيسية
-          userRole = 'customer';
-        }
-      }
+      // حفظ الدور في sessionStorage للمقارنة لاحقاً
+      sessionStorage.setItem('lastCheckedRole', userRole);
 
       console.log('🎭 [ProtectedRoute] دور المستخدم النهائي:', userRole);
       console.log('🔒 [ProtectedRoute] الأدوار المسموحة:', allowedRoles);
       console.log('👥 [ProtectedRoute] هل هو مساعد بائع؟', isVendorStaff);
       console.log('🍽️ [ProtectedRoute] هل هو مساعد مطعم؟', isRestaurantStaff);
 
-      // التحقق من الصلاحيات: إما الدور مسموح به، أو هو مساعد يحاول دخول لوحة التحكم المناسبة
+      // التحقق من الصلاحيات
       const isRoleAllowed = allowedRoles.includes(userRole);
       const isStaffAccessingVendorDashboard = isVendorStaff && allowedRoles.includes('vendor');
       const isStaffAccessingRestaurantDashboard = isRestaurantStaff && allowedRoles.includes('restaurant');
@@ -156,7 +116,6 @@ export default function ProtectedRoute({
         const redirectPath = roleRedirects[userRole] || '/';
         console.log(`🔄 [ProtectedRoute] إعادة التوجيه إلى: ${redirectPath}`);
         setIsLoading(false);
-        setHasChecked(true);
         router.push(redirectPath);
         return;
       }
@@ -164,11 +123,9 @@ export default function ProtectedRoute({
       console.log('✅ [ProtectedRoute] مصرح بالدخول!');
       setIsAuthorized(true);
       setIsLoading(false);
-      setHasChecked(true);
     } catch (err) {
       console.error('❌ [ProtectedRoute] خطأ غير متوقع:', err);
       setIsLoading(false);
-      setHasChecked(true);
       router.push(redirectTo);
     }
   };

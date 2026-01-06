@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
 
@@ -32,7 +32,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [staffVendorId, setStaffVendorId] = useState<string | null>(null);
   const [staffRestaurantId, setStaffRestaurantId] = useState<string | null>(null);
   const [staffPermissions, setStaffPermissions] = useState<string[]>([]);
-  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  
+  // ✅ استخدام useRef بدلاً من useState لتجنب re-renders
+  const lastFetchTimeRef = useRef<number>(0);
+  const isInitializedRef = useRef<boolean>(false);
 
   useEffect(() => {
     // Initial auth check
@@ -52,46 +55,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // فحص الوقت منذ آخر جلب (منع الجلب المتكرر خلال 30 ثانية)
+      // فحص الوقت منذ آخر جلب (منع الجلب المتكرر خلال 60 ثانية)
       const now = Date.now();
-      const timeSinceLastFetch = now - lastFetchTime;
+      const timeSinceLastFetch = now - lastFetchTimeRef.current;
       
       if (session?.user) {
         setUser(session.user);
         setUserId(session.user.id);
         
         // جلب البيانات فقط إذا:
-        // 1. أول مرة (lastFetchTime === 0)
-        // 2. مر أكثر من 30 ثانية على آخر جلب
+        // 1. أول مرة (!isInitializedRef.current)
+        // 2. مر أكثر من 60 ثانية على آخر جلب
         // 3. الحدث هو SIGNED_IN
-        if (lastFetchTime === 0 || timeSinceLastFetch > 30000 || event === 'SIGNED_IN') {
+        if (!isInitializedRef.current || timeSinceLastFetch > 60000 || event === 'SIGNED_IN') {
           console.log('✅ [AuthContext] جلب بيانات المستخدم...');
           setLoading(true);
           await fetchUserData(session.user.id);
-          setLastFetchTime(now);
+          lastFetchTimeRef.current = now;
+          isInitializedRef.current = true;
         } else {
-          console.log('⏭️ [AuthContext] تخطي الجلب - تم الجلب مؤخراً');
+          console.log('⏭️ [AuthContext] تخطي الجلب - تم الجلب مؤخراً (', Math.floor(timeSinceLastFetch / 1000), 'ثانية)');
         }
       } else {
         resetAuthState();
+        isInitializedRef.current = false;
       }
     });
 
-    // منع إعادة الجلب عند العودة للتبويب
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        console.log('👁️ [AuthContext] التبويب أصبح مرئياً - لا إعادة جلب');
-        // لا نفعل شيء - البيانات محفوظة في الـ state
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
     return () => {
       subscription.unsubscribe();
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [lastFetchTime]);
+  }, []); // ✅ dependency array فارغة - لا re-renders
 
   const initializeAuth = async () => {
     try {
