@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
+import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import { useDeliveryPackages, BatchStatus } from '@/contexts/DeliveryPackagesContext';
 import PackageCard from '@/components/admin/delivery/PackageCard';
 import PackageStatusBadge from '@/components/admin/delivery/PackageStatusBadge';
@@ -91,22 +93,29 @@ export default function DeliveryPackagesPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <Package className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                  إدارة بكيجات التوصيل
-                </h1>
-              </div>
-              <p className="text-gray-600 dark:text-gray-400">
-                تنظيم وتتبع جميع بكيجات التوصيل حسب المناطق
-              </p>
-            </div>
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden" dir="rtl">
+      <FuturisticSidebar />
+      
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <FuturisticNavbar />
+        
+        <div className="flex-1 overflow-y-auto">
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+            {/* Header */}
+            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <Package className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                      <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                        إدارة بكيجات التوصيل
+                      </h1>
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      تنظيم وتتبع جميع بكيجات التوصيل حسب المناطق
+                    </p>
+                  </div>
 
             <button
               onClick={() => router.push('/dashboard/admin/delivery-packages/create')}
@@ -304,6 +313,9 @@ export default function DeliveryPackagesPage() {
             </div>
           </>
         )}
+      </div>
+          </div>
+        </div>
       </div>
     </div>
   );
