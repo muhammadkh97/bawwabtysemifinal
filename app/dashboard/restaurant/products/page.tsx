@@ -14,9 +14,8 @@ interface Product {
   name: string;
   name_ar: string;
   description: string;
-  description_ar: string;
   price: number;
-  sale_price: number;
+  old_price: number;
   images: string[];
   is_active: boolean;
   stock: number;
@@ -207,18 +206,18 @@ export default function RestaurantProductsPage() {
                     </h3>
                     
                     <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                      {product.description_ar || product.description}
+                      {product.description}
                     </p>
 
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        {product.sale_price && product.sale_price < product.price ? (
+                        {product.old_price && product.old_price > product.price ? (
                           <div>
                             <span className="text-xl font-bold text-orange-600">
-                              {product.sale_price} ₪
+                              {product.price} ₪
                             </span>
                             <span className="text-sm text-gray-400 line-through mr-2">
-                              {product.price} ₪
+                              {product.old_price} ₪
                             </span>
                           </div>
                         ) : (

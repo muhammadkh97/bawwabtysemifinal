@@ -339,7 +339,7 @@ export default function RestaurantDashboard() {
                       </div>
                     </div>
                     <div className="text-left">
-                      <p className="font-bold text-gray-900">{order.total} ₪</p>
+                      <p className="font-bold text-gray-900">{order.total_amount} ₪</p>
                       <span className={`text-xs px-3 py-1 rounded-full ${
                         order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                         order.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
