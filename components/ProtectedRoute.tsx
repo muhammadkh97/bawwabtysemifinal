@@ -24,13 +24,18 @@ export default function ProtectedRoute({
   redirectTo = '/auth/login'
 }: ProtectedRouteProps) {
   const router = useRouter();
-  const { userRole: contextUserRole, loading: contextLoading } = useAuth();
+  const { 
+    userRole: contextUserRole, 
+    loading: contextLoading, 
+    isVendorStaff, 
+    isRestaurantStaff 
+  } = useAuth();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     checkAuth();
-  }, [contextUserRole, contextLoading]);
+  }, [contextUserRole, contextLoading, isVendorStaff, isRestaurantStaff]);
 
   const checkAuth = async () => {
     try {
@@ -102,8 +107,17 @@ export default function ProtectedRoute({
 
       console.log('🎭 [ProtectedRoute] دور المستخدم النهائي:', userRole);
       console.log('🔒 [ProtectedRoute] الأدوار المسموحة:', allowedRoles);
+      console.log('👥 [ProtectedRoute] هل هو مساعد بائع؟', isVendorStaff);
+      console.log('🍽️ [ProtectedRoute] هل هو مساعد مطعم؟', isRestaurantStaff);
 
-      if (!allowedRoles.includes(userRole)) {
+      // التحقق من الصلاحيات: إما الدور مسموح به، أو هو مساعد يحاول دخول لوحة التحكم المناسبة
+      const isRoleAllowed = allowedRoles.includes(userRole);
+      const isStaffAccessingVendorDashboard = isVendorStaff && allowedRoles.includes('vendor');
+      const isStaffAccessingRestaurantDashboard = isRestaurantStaff && allowedRoles.includes('restaurant');
+
+      const hasAccess = isRoleAllowed || isStaffAccessingVendorDashboard || isStaffAccessingRestaurantDashboard;
+
+      if (!hasAccess) {
         console.log('❌ [ProtectedRoute] الدور غير مسموح - التوجيه للوحة التحكم الصحيحة');
         console.log(`   المطلوب: ${allowedRoles.join(', ')}`);
         console.log(`   الموجود: ${userRole}`);
