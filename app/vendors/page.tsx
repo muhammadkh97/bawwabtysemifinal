@@ -33,6 +33,7 @@ export default function VendorsPage() {
       const { data, error } = await supabase
         .from('stores')
         .select('*')
+        .eq('vendor_type', 'shop') // ✅ عرض المتاجر فقط (بدون مطاعم)
         .order('created_at', { ascending: false });
 
       if (error) {

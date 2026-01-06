@@ -64,6 +64,8 @@ export default function VendorDetailsPage() {
   const [activeTab, setActiveTab] = useState<'products' | 'about'>('products');
   const [searchTerm, setSearchTerm] = useState('');
   const [isRestaurant, setIsRestaurant] = useState(false);
+  const [isInWishlist, setIsInWishlist] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
 
   useEffect(() => {
     if (vendorId) {
@@ -119,6 +121,45 @@ export default function VendorDetailsPage() {
       await addToRestaurantCart(productId, vendorId, 1);
     } else {
       await addToCart(productId, 1);
+    }
+  };
+
+  // ✅ دالة لزر القلب (إضافة/إزالة من المفضلة)
+  const handleToggleWishlist = () => {
+    setIsInWishlist(!isInWishlist);
+    // TODO: إضافة للقاعدة
+  };
+
+  // ✅ دالة لزر المشاركة
+  const handleShare = async () => {
+    const url = window.location.href;
+    const title = vendor?.shop_name_ar || vendor?.shop_name;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: title,
+          text: `شاهد ${title} على بوابتي`,
+          url: url,
+        });
+      } catch (err) {
+        console.log('إلغاء المشاركة');
+      }
+    } else {
+      // Fallback: نسخ الرابط
+      navigator.clipboard.writeText(url);
+      alert('تم نسخ الرابط!');
+    }
+  };
+
+  // ✅ دالة لفتح الخريطة
+  const handleOpenMap = () => {
+    if (vendor?.latitude && vendor?.longitude) {
+      const url = `https://www.google.com/maps?q=${vendor.latitude},${vendor.longitude}`;
+      window.open(url, '_blank');
+    } else if (vendor?.store_address) {
+      const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(vendor.store_address)}`;
+      window.open(url, '_blank');
     }
   };
 
@@ -213,10 +254,13 @@ export default function VendorDetailsPage() {
                       <span className="text-white/60">({vendor.reviews_count || 0} تقييم)</span>
                     </div>
 
-                    <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-2xl">
+                    <button 
+                      onClick={handleOpenMap}
+                      className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-2xl hover:bg-white/20 transition-all cursor-pointer"
+                    >
                       <MapPin className="w-5 h-5 text-red-400" />
                       <span>{vendor.store_address || 'موقع المتجر'}</span>
-                    </div>
+                    </button>
 
                     {vendor.min_order_amount > 0 && (
                       <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-2xl">
@@ -230,10 +274,16 @@ export default function VendorDetailsPage() {
 
               {/* Quick Actions */}
               <div className="flex gap-3">
-                <button className="w-14 h-14 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl flex items-center justify-center hover:bg-white/20 transition-all group">
-                  <Heart className="w-6 h-6 text-white group-hover:fill-red-500 group-hover:text-red-500 transition-colors" />
+                <button 
+                  onClick={handleToggleWishlist}
+                  className="w-14 h-14 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl flex items-center justify-center hover:bg-white/20 transition-all group"
+                >
+                  <Heart className={`w-6 h-6 transition-colors ${isInWishlist ? 'fill-red-500 text-red-500' : 'text-white group-hover:fill-red-500 group-hover:text-red-500'}`} />
                 </button>
-                <button className="w-14 h-14 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl flex items-center justify-center hover:bg-white/20 transition-all">
+                <button 
+                  onClick={handleShare}
+                  className="w-14 h-14 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl flex items-center justify-center hover:bg-white/20 transition-all"
+                >
                   <Share2 className="w-6 h-6 text-white" />
                 </button>
               </div>
