@@ -589,7 +589,7 @@ export default function Header() {
                   </div>
                 </div>
               </div>
-            </li>
+            </li>}
             <li>
               <Link href="/products" className="text-sm font-bold text-gray-700 hover:text-purple-600 transition-colors">المنتجات</Link>
             </li>
