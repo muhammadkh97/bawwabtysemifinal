@@ -9,21 +9,19 @@ import {
   MessageCircle,
   Search,
   Send,
-  Image as ImageIcon,
   User,
-  Clock,
-  Check,
-  CheckCheck,
-  Smile,
-  Paperclip,
-  X,
   Loader2,
   Store,
-  ShoppingBag
+  ShoppingBag,
+  Archive,
+  ArchiveX
 } from 'lucide-react';
 import { useChats } from '@/contexts/ChatsContext';
 import Image from 'next/image';
 import EmptyState from '@/components/EmptyState';
+import MessageBubble from '@/components/chat/MessageBubble';
+import ReplyPreview from '@/components/chat/ReplyPreview';
+import RoleBadge from '@/components/chat/RoleBadge';
 
 // دالة بسيطة لحساب الوقت المنقضي
 function getTimeAgo(date: Date): string {
@@ -47,15 +45,22 @@ function ChatsContent() {
     messages,
     loading,
     messagesLoading,
+    userRole,
     setCurrentChatId,
     sendMessage,
     markAsRead,
-    createOrGetChat
+    createOrGetChat,
+    editMessage,
+    deleteMessage,
+    archiveChat,
+    unarchiveChat
   } = useChats();
 
   const [message, setMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [replyToMessage, setReplyToMessage] = useState<any>(null);
+  const [showArchived, setShowArchived] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -89,298 +94,416 @@ function ChatsContent() {
   }, [messages]);
 
   const selectedChatData = chats.find(c => c.id === currentChatId);
-  const filteredChats = chats.filter(chat =>
-    chat.other_user_name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredChats = chats.filter(chat => {
+    const matchesSearch = chat.other_user_name?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesArchive = showArchived ? chat.is_archived : !chat.is_archived;
+    return matchesSearch && matchesArchive;
+  });
 
   const handleSendMessage = async () => {
     if (!message.trim() || !currentChatId || isSending) return;
 
     setIsSending(true);
     try {
-      await sendMessage(currentChatId, message);
+      await sendMessage(currentChatId, message, {
+        reply_to_id: replyToMessage?.id
+      });
       setMessage('');
+      setReplyToMessage(null);
+    } catch (error) {
+      console.error('Error sending message:', error);
     } finally {
       setIsSending(false);
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
+  const handleEdit = async (messageId: string, newContent: string) => {
+    try {
+      await editMessage(messageId, newContent);
+    } catch (error) {
+      console.error('Error editing message:', error);
     }
   };
 
+  const handleDelete = async (messageId: string) => {
+    try {
+      await deleteMessage(messageId);
+    } catch (error) {
+      console.error('Error deleting message:', error);
+    }
+  };
+
+  const handleReply = (messageId: string) => {
+    const msg = messages.find(m => m.id === messageId);
+    if (msg) {
+      setReplyToMessage(msg);
+    }
+  };
+
+  const handleArchive = async (chatId: string) => {
+    try {
+      await archiveChat(chatId);
+      setCurrentChatId(null);
+    } catch (error) {
+      console.error('Error archiving chat:', error);
+    }
+  };
+
+  const handleUnarchive = async (chatId: string) => {
+    try {
+      await unarchiveChat(chatId);
+    } catch (error) {
+      console.error('Error unarchiving chat:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-purple-400 animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen" style={{ background: '#0A0515' }}>
+    <div className="min-h-screen flex flex-col" style={{
+      background: 'linear-gradient(135deg, #0a0520 0%, #1a0b40 50%, #0a0520 100%)',
+    }}>
       <Header />
       
-      <div className="container mx-auto px-4 py-12">
+      <main className="flex-1 container mx-auto px-4 py-8">
         {/* العنوان */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-5xl font-bold text-white mb-4 flex items-center gap-3">
-            <MessageCircle className="w-12 h-12" />
-            المحادثات
-          </h1>
-          <p className="text-purple-200 text-lg">
-            تواصل مع البائعين والمندوبين
-          </p>
-        </motion.div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-300px)]">
-          {/* قائمة المحادثات */}
-          <div 
-            className="rounded-3xl overflow-hidden flex flex-col"
+        <div className="text-center mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center justify-center gap-3 px-6 py-3 rounded-full mb-4"
             style={{
-              background: 'rgba(15, 10, 30, 0.6)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(98, 54, 255, 0.3)'
+              background: 'linear-gradient(135deg, rgba(98, 54, 255, 0.2) 0%, rgba(182, 33, 254, 0.2) 100%)',
+              border: '1px solid rgba(98, 54, 255, 0.3)',
             }}
           >
-            {/* البحث */}
-            <div className="p-4 border-b border-purple-500/20">
-              <div className="relative">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="ابحث في المحادثات..."
-                  className="w-full pr-10 pl-4 py-3 rounded-xl text-white bg-white/5 border border-purple-500/30 focus:border-purple-500 focus:outline-none placeholder-gray-500"
-                />
+            <MessageCircle className="w-8 h-8 text-purple-300" />
+            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300">
+              الدردشات
+            </h1>
+          </motion.div>
+          {userRole && (
+            <div className="flex justify-center">
+              <RoleBadge role={userRole} size="md" />
+            </div>
+          )}
+        </div>
+
+        {chats.length === 0 ? (
+          <EmptyState
+            icon={MessageCircle}
+            title="لا توجد محادثات بعد"
+            description="ابدأ محادثة مع البائعين من خلال المتاجر"
+          />
+        ) : (
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* قائمة المحادثات */}
+            <div 
+              className="lg:col-span-1 rounded-3xl overflow-hidden"
+              style={{
+                background: 'rgba(15, 10, 30, 0.6)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(98, 54, 255, 0.3)',
+                maxHeight: 'calc(100vh - 250px)',
+              }}
+            >
+              {/* البحث */}
+              <div className="p-4 border-b border-purple-500/20">
+                <div className="relative">
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-300" />
+                  <input
+                    type="text"
+                    placeholder="ابحث عن محادثة..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pr-10 pl-4 py-3 rounded-xl bg-white/5 border border-purple-500/20 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+                
+                {/* Archive Toggle */}
+                <button
+                  onClick={() => setShowArchived(!showArchived)}
+                  className="w-full mt-3 px-4 py-2 rounded-xl bg-white/5 border border-purple-500/20 text-purple-300 hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
+                >
+                  {showArchived ? (
+                    <>
+                      <ArchiveX className="w-4 h-4" />
+                      <span>المحادثات النشطة</span>
+                    </>
+                  ) : (
+                    <>
+                      <Archive className="w-4 h-4" />
+                      <span>المحادثات المؤرشفة</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* المحادثات */}
+              <div className="overflow-y-auto custom-scrollbar" style={{ maxHeight: 'calc(100vh - 400px)' }}>
+                {filteredChats.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <p className="text-purple-200/50">
+                      {showArchived ? 'لا توجد محادثات مؤرشفة' : 'لا توجد نتائج'}
+                    </p>
+                  </div>
+                ) : (
+                  filteredChats.map((chat) => (
+                    <motion.button
+                      key={chat.id}
+                      onClick={() => {
+                        setCurrentChatId(chat.id);
+                        markAsRead(chat.id);
+                      }}
+                      className={`w-full p-4 text-right transition-all border-b border-purple-500/10 ${
+                        currentChatId === chat.id
+                          ? 'bg-gradient-to-r from-purple-500/30 to-pink-500/30'
+                          : 'hover:bg-white/5'
+                      }`}
+                      whileHover={{ x: 5 }}
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* Avatar */}
+                        <div className="relative flex-shrink-0">
+                          <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center"
+                            style={{ background: 'linear-gradient(135deg, #6236FF, #FF219D)' }}>
+                            {chat.other_user_avatar ? (
+                              <Image
+                                src={chat.other_user_avatar}
+                                alt={chat.other_user_name || 'User'}
+                                width={56}
+                                height={56}
+                                className="object-cover"
+                              />
+                            ) : chat.other_user_role === 'vendor' ? (
+                              <Store className="w-6 h-6 text-white" />
+                            ) : (
+                              <User className="w-6 h-6 text-white" />
+                            )}
+                          </div>
+                          {chat.unread_count && chat.unread_count > 0 && (
+                            <div className="absolute bottom-0 right-0 w-6 h-6 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                              {chat.unread_count > 99 ? '99+' : chat.unread_count}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* المعلومات */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <h3 className="font-bold text-white truncate">{chat.other_user_name}</h3>
+                            {chat.last_message_at && (
+                              <span className="text-xs text-gray-400">
+                                {getTimeAgo(new Date(chat.last_message_at))}
+                              </span>
+                            )}
+                          </div>
+                          {chat.other_user_role === 'vendor' && chat.vendor_store_name && (
+                            <div className="flex items-center gap-1 mb-1">
+                              <Store className="w-3 h-3 text-purple-300" />
+                              <span className="text-xs text-purple-300">{chat.vendor_store_name}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2">
+                            {chat.last_message_sender_role && (
+                              <RoleBadge role={chat.last_message_sender_role} size="sm" />
+                            )}
+                            <p className="text-sm text-purple-200 truncate flex-1">
+                              {chat.last_message || 'لا توجد رسائل'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.button>
+                  ))
+                )}
               </div>
             </div>
 
-            {/* قائمة */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar">
-              {filteredChats.length === 0 ? (
-                <div className="p-8 text-center">
-                  <MessageCircle className="w-16 h-16 text-purple-300/30 mx-auto mb-4" />
-                  <p className="text-purple-200/50">لا توجد محادثات</p>
-                </div>
-              ) : (
-                filteredChats.map((chat, index) => (
-                  <motion.button
-                    key={chat.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    onClick={() => {
-                      setCurrentChatId(chat.id);
-                      markAsRead(chat.id);
-                    }}
-                    className={`w-full p-4 border-b border-purple-500/10 hover:bg-white/5 transition-all text-right ${
-                      currentChatId === chat.id ? 'bg-white/10' : ''
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      {/* الصورة */}
-                      <div className="relative">
-                        <div className="w-14 h-14 rounded-full flex items-center justify-center text-3xl"
-                          style={{ background: 'linear-gradient(135deg, #6236FF, #FF219D)' }}>
-                          {chat.other_user_avatar ? (
-                            <Image
-                              src={chat.other_user_avatar}
-                              alt={chat.other_user_name || 'User'}
-                              width={56}
-                              height={56}
-                              className="rounded-full object-cover"
-                            />
-                          ) : chat.other_user_role === 'vendor' ? (
-                            <Store className="w-7 h-7 text-white" />
-                          ) : (
-                            <User className="w-7 h-7 text-white" />
+            {/* نافذة الدردشة */}
+            <div 
+              className="lg:col-span-2 rounded-3xl overflow-hidden flex flex-col"
+              style={{
+                background: 'rgba(15, 10, 30, 0.6)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(98, 54, 255, 0.3)',
+                height: 'calc(100vh - 250px)',
+              }}
+            >
+              {selectedChatData ? (
+                <>
+                  {/* الرأس */}
+                  <div className="p-4 border-b border-purple-500/20">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <div className="w-12 h-12 rounded-full flex items-center justify-center"
+                            style={{ background: 'linear-gradient(135deg, #6236FF, #FF219D)' }}>
+                            {selectedChatData.other_user_avatar ? (
+                              <Image
+                                src={selectedChatData.other_user_avatar}
+                                alt={selectedChatData.other_user_name || 'User'}
+                                width={48}
+                                height={48}
+                                className="rounded-full object-cover"
+                              />
+                            ) : selectedChatData.other_user_role === 'vendor' ? (
+                              <Store className="w-6 h-6 text-white" />
+                            ) : (
+                              <User className="w-6 h-6 text-white" />
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-white">{selectedChatData.other_user_name}</h3>
+                          {selectedChatData.other_user_role === 'vendor' && selectedChatData.vendor_store_name && (
+                            <p className="text-sm text-purple-300">
+                              {selectedChatData.vendor_store_name}
+                            </p>
                           )}
                         </div>
-                        {chat.unread_count && chat.unread_count > 0 && (
-                          <div className="absolute bottom-0 right-0 w-6 h-6 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                            {chat.unread_count > 99 ? '99+' : chat.unread_count}
-                          </div>
-                        )}
                       </div>
-
-                      {/* المعلومات */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <h3 className="font-bold text-white truncate">{chat.other_user_name}</h3>
-                          {chat.last_message_at && (
-                            <span className="text-xs text-gray-400">
-                              {getTimeAgo(new Date(chat.last_message_at))}
-                            </span>
-                          )}
-                        </div>
-                        {chat.other_user_role === 'vendor' && chat.vendor_store_name && (
-                          <div className="flex items-center gap-1 mb-1">
-                            <Store className="w-3 h-3 text-purple-300" />
-                            <span className="text-xs text-purple-300">{chat.vendor_store_name}</span>
-                          </div>
+                      
+                      {/* Archive Button */}
+                      <button
+                        onClick={() => selectedChatData.is_archived 
+                          ? handleUnarchive(selectedChatData.id)
+                          : handleArchive(selectedChatData.id)
+                        }
+                        className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                        title={selectedChatData.is_archived ? 'إلغاء الأرشفة' : 'أرشفة'}
+                      >
+                        {selectedChatData.is_archived ? (
+                          <ArchiveX className="w-5 h-5 text-purple-300" />
+                        ) : (
+                          <Archive className="w-5 h-5 text-purple-300" />
                         )}
-                        <p className="text-sm text-purple-200 truncate">
-                          {chat.last_message || 'لا توجد رسائل'}
-                        </p>
-                      </div>
+                      </button>
                     </div>
-                  </motion.button>
-                ))
+                  </div>
+
+                  {/* الرسائل */}
+                  <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+                    {messagesLoading ? (
+                      <div className="flex items-center justify-center h-full">
+                        <Loader2 className="w-12 h-12 text-purple-400 animate-spin" />
+                      </div>
+                    ) : messages.length === 0 ? (
+                      <div className="flex items-center justify-center h-full">
+                        <div className="text-center">
+                          <ShoppingBag className="w-20 h-20 text-purple-300/30 mx-auto mb-4" />
+                          <p className="text-purple-200/50 text-lg">
+                            لا توجد رسائل بعد. ابدأ المحادثة!
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      messages.map((msg) => {
+                        const isMe = msg.sender_id === (selectedChatData.customer_id === msg.sender_id ? selectedChatData.customer_id : selectedChatData.vendor_id);
+                        const replyMsg = msg.reply_to_id ? messages.find(m => m.id === msg.reply_to_id) : null;
+                        
+                        return (
+                          <MessageBubble
+                            key={msg.id}
+                            message={msg}
+                            isMe={isMe}
+                            showRole={true}
+                            replyToMessage={replyMsg}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
+                            onReply={handleReply}
+                          />
+                        );
+                      })
+                    )}
+                    <div ref={messagesEndRef} />
+                  </div>
+
+                  {/* Reply Preview */}
+                  <AnimatePresence>
+                    {replyToMessage && (
+                      <ReplyPreview
+                        replyToMessage={replyToMessage}
+                        onClear={() => setReplyToMessage(null)}
+                      />
+                    )}
+                  </AnimatePresence>
+
+                  {/* مربع الإرسال */}
+                  <div className="p-4 border-t border-purple-500/20">
+                    <div className="flex gap-3">
+                      <input
+                        type="text"
+                        placeholder="اكتب رسالتك..."
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage();
+                          }
+                        }}
+                        className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-purple-500/20 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        disabled={isSending}
+                      />
+                      <motion.button
+                        onClick={handleSendMessage}
+                        disabled={!message.trim() || isSending}
+                        className="px-6 py-3 rounded-xl font-bold text-white shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{
+                          background: 'linear-gradient(135deg, #6236FF 0%, #B621FE 100%)',
+                        }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {isSending ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <Send className="w-5 h-5" />
+                        )}
+                      </motion.button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <MessageCircle className="w-20 h-20 text-purple-300/30 mx-auto mb-4" />
+                    <p className="text-purple-200/50 text-lg">
+                      اختر محادثة للبدء
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
           </div>
-
-          {/* نافذة الدردشة */}
-          <div 
-            className="lg:col-span-2 rounded-3xl overflow-hidden flex flex-col"
-            style={{
-              background: 'rgba(15, 10, 30, 0.6)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(98, 54, 255, 0.3)'
-            }}
-          >
-            {selectedChatData ? (
-              <>
-                {/* الرأس */}
-                <div className="p-4 border-b border-purple-500/20">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                          style={{ background: 'linear-gradient(135deg, #6236FF, #FF219D)' }}>
-                          {selectedChatData.other_user_avatar ? (
-                            <Image
-                              src={selectedChatData.other_user_avatar}
-                              alt={selectedChatData.other_user_name || 'User'}
-                              width={48}
-                              height={48}
-                              className="rounded-full object-cover"
-                            />
-                          ) : selectedChatData.other_user_role === 'vendor' ? (
-                            <Store className="w-6 h-6 text-white" />
-                          ) : (
-                            <User className="w-6 h-6 text-white" />
-                          )}
-                        </div>
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-white">{selectedChatData.other_user_name}</h3>
-                        {selectedChatData.other_user_role === 'vendor' && selectedChatData.vendor_store_name && (
-                          <p className="text-sm text-purple-300">
-                            {selectedChatData.vendor_store_name}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* الرسائل */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-                  {messagesLoading ? (
-                    <div className="flex items-center justify-center h-full">
-                      <Loader2 className="w-12 h-12 text-purple-400 animate-spin" />
-                    </div>
-                  ) : messages.length === 0 ? (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="text-center">
-                        <ShoppingBag className="w-20 h-20 text-purple-300/30 mx-auto mb-4" />
-                        <p className="text-purple-200/50 text-lg">
-                          لا توجد رسائل بعد. ابدأ المحادثة!
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    messages.map((msg, index) => {
-                      const isMe = msg.sender_role !== selectedChatData.other_user_role;
-                      
-                      return (
-                        <motion.div
-                          key={msg.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                          className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
-                        >
-                          <div className={`max-w-[70%]`}>
-                            <div
-                              className={`px-5 py-3 rounded-2xl ${
-                                isMe
-                                  ? 'text-white rounded-br-none'
-                                  : 'bg-white/10 text-white rounded-bl-none'
-                              }`}
-                              style={isMe ? {
-                                background: 'linear-gradient(90deg, #6236FF, #FF219D)'
-                              } : {}}
-                            >
-                              <p className="leading-relaxed whitespace-pre-wrap">{msg.message}</p>
-                            </div>
-                            <div className={`flex items-center gap-2 mt-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
-                              <span className="text-xs text-gray-500">
-                                {getTimeAgo(new Date(msg.created_at))}
-                              </span>
-                              {isMe && (
-                                msg.is_read ? (
-                                  <CheckCheck className="w-4 h-4 text-blue-400" />
-                                ) : (
-                                  <Check className="w-4 h-4 text-gray-400" />
-                                )
-                              )}
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
-
-                {/* إدخال الرسالة */}
-                <div className="p-4 border-t border-purple-500/20">
-                  <div className="flex gap-3">
-                    <button className="w-12 h-12 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition">
-                      <ImageIcon className="w-5 h-5 text-white" />
-                    </button>
-                    <input
-                      type="text"
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      placeholder="اكتب رسالتك..."
-                      className="flex-1 px-4 py-3 rounded-xl text-white bg-white/5 border border-purple-500/30 focus:border-purple-500 focus:outline-none placeholder-gray-500"
-                    />
-                    <button
-                      onClick={handleSendMessage}
-                      disabled={!message.trim() || isSending}
-                      className="w-12 h-12 rounded-xl flex items-center justify-center transition disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{ background: 'linear-gradient(90deg, #6236FF, #FF219D)' }}
-                    >
-                      {isSending ? (
-                        <Loader2 className="w-5 h-5 text-white animate-spin" />
-                      ) : (
-                        <Send className="w-5 h-5 text-white" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="flex-1 flex items-center justify-center text-center p-8">
-                <div>
-                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-purple-600/20 to-pink-600/20 flex items-center justify-center mx-auto mb-6 border border-purple-500/30">
-                    <MessageCircle className="w-16 h-16 text-purple-300" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mb-2">اختر محادثة لبدء المراسلة</h3>
-                  <p className="text-purple-200/70">حدد محادثة من القائمة أو ابدأ محادثة جديدة</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+        )}
+      </main>
 
       <Footer />
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(98, 54, 255, 0.1);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: linear-gradient(135deg, #6236FF, #B621FE);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(135deg, #7347FF, #C732FF);
+        }
+      `}</style>
     </div>
   );
 }
@@ -388,15 +511,8 @@ function ChatsContent() {
 export default function ChatsPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900">
-        <Header />
-        <div className="container mx-auto px-4 py-20 flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="w-16 h-16 text-purple-400 animate-spin mx-auto mb-6" />
-            <p className="text-white text-xl">جاري تحميل المحادثات...</p>
-          </div>
-        </div>
-        <Footer />
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-purple-400 animate-spin" />
       </div>
     }>
       <ChatsContent />
