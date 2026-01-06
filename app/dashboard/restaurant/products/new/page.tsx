@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
+import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import { 
   ArrowRight, 
   Upload, 
@@ -23,7 +25,6 @@ interface ProductVariant {
   id: string;
   name: string;
   price: number;
-  stock: number;
 }
 
 export default function NewMealPage() {
@@ -103,13 +104,31 @@ export default function NewMealPage() {
     setImagePreviews(imagePreviews.filter((_, i) => i !== index));
   };
 
+  // Get currency name
+  const getCurrencyName = (code: string): string => {
+    const currencies: Record<string, string> = {
+      'SAR': 'ريال',
+      'USD': 'دولار',
+      'EUR': 'يورو',
+      'GBP': 'جنيه',
+      'AED': 'درهم',
+      'KWD': 'دينار',
+      'BHD': 'دينار',
+      'OMR': 'ريال',
+      'QAR': 'ريال',
+      'EGP': 'جنيه',
+      'JOD': 'دينار',
+      'ILS': 'شيكل'
+    };
+    return currencies[code] || 'ريال';
+  };
+
   // Variant management
   const addVariant = () => {
     const newVariant: ProductVariant = {
       id: Date.now().toString(),
       name: '',
-      price: 0,
-      stock: 100
+      price: 0
     };
     setVariants([...variants, newVariant]);
   };
@@ -218,7 +237,7 @@ export default function NewMealPage() {
         category_id: category || 'f4573c7e-b55a-4dd5-8e4b-22e51dcec6a0', // Grocery & Food category
         price: parseFloat(price),
         old_price: oldPrice ? parseFloat(oldPrice) : null,
-        stock: hasVariants ? variants.reduce((sum, v) => sum + v.stock, 0) : parseInt(stock),
+        stock: 9999, // للمطاعم: المخزون غير محدود (يتم التحضير حسب الطلب)
         low_stock_threshold: 10,
         images: uploadedUrls,
         featured_image: uploadedUrls[0],
@@ -261,8 +280,13 @@ export default function NewMealPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <>
+      <FuturisticNavbar />
+      <div className="flex">
+        <FuturisticSidebar role="restaurant" />
+        <div className="md:mr-[280px] transition-all duration-300 w-full">
+          <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         {/* Modern Header with Gradient */}
         <div className="bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl shadow-xl p-8 mb-8 text-white">
           <button
@@ -361,7 +385,7 @@ export default function NewMealPage() {
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     <DollarSign className="w-4 h-4" />
-                    السعر (ريال) *
+                    السعر ({getCurrencyName(originalCurrency)}) *
                   </label>
                   <input
                     type="number"
@@ -399,6 +423,7 @@ export default function NewMealPage() {
                     required
                   >
                     <option value="SAR">ريال سعودي (SAR)</option>
+                    <option value="ILS">شيكل إسرائيلي (ILS)</option>
                     <option value="USD">دولار أمريكي (USD)</option>
                     <option value="EUR">يورو (EUR)</option>
                     <option value="GBP">جنيه إسترليني (GBP)</option>
@@ -500,64 +525,55 @@ export default function NewMealPage() {
                 </label>
               </div>
 
-              {/* Stock (if no variants) */}
-              {!hasVariants && (
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    <Package className="w-4 h-4" />
-                    الكمية المتوفرة
-                  </label>
-                  <input
-                    type="number"
-                    value={stock}
-                    onChange={(e) => setStock(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all"
-                    placeholder="100"
-                  />
-                </div>
-              )}
-
               {/* Variants */}
               {hasVariants && (
                 <div className="space-y-4">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border-r-4 border-blue-500 p-4 rounded-lg mb-4">
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                      💡 <strong>نصيحة:</strong> أضف أحجام مختلفة للوجبة (صغير، وسط، كبير) مع السعر المناسب لكل حجم
+                    </p>
+                  </div>
+                  
                   {variants.map((variant, index) => (
-                    <div key={variant.id} className="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-blue-300 transition-colors">
-                      <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-medium text-gray-900 dark:text-white">
-                          حجم #{index + 1}
-                        </h3>
-                        <button
-                          type="button"
-                          onClick={() => removeVariant(index)}
-                          className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-all"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
+                    <div key={variant.id} className="relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl p-6 hover:border-orange-400 hover:shadow-lg transition-all">
+                      <div className="absolute top-4 left-4 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                        الحجم {index + 1}
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <input
-                          type="text"
-                          value={variant.name}
-                          onChange={(e) => updateVariant(index, 'name', e.target.value)}
-                          placeholder="اسم الحجم (صغير، وسط، كبير)"
-                          className="px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                        />
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={variant.price}
-                          onChange={(e) => updateVariant(index, 'price', parseFloat(e.target.value))}
-                          placeholder="السعر"
-                          className="px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                        />
-                        <input
-                          type="number"
-                          value={variant.stock}
-                          onChange={(e) => updateVariant(index, 'stock', parseInt(e.target.value))}
-                          placeholder="الكمية"
-                          className="px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                        />
+                      <button
+                        type="button"
+                        onClick={() => removeVariant(index)}
+                        className="absolute top-4 right-4 text-red-500 hover:text-white hover:bg-red-500 p-2 rounded-lg transition-all"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                        <div>
+                          <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">
+                            🍽️ اسم الحجم
+                          </label>
+                          <input
+                            type="text"
+                            value={variant.name}
+                            onChange={(e) => updateVariant(index, 'name', e.target.value)}
+                            placeholder="مثال: صغير، وسط، كبير، عائلي"
+                            className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-500 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white transition-all font-medium"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">
+                            💰 السعر ({getCurrencyName(originalCurrency)})
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={variant.price}
+                            onChange={(e) => updateVariant(index, 'price', parseFloat(e.target.value))}
+                            placeholder="0.00"
+                            className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-500 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white transition-all font-medium"
+                          />
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -565,10 +581,10 @@ export default function NewMealPage() {
                   <button
                     type="button"
                     onClick={addVariant}
-                    className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20 px-4 py-2 rounded-lg transition-all"
+                    className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-orange-500 to-red-500 text-white py-4 rounded-xl hover:from-orange-600 hover:to-red-600 font-bold shadow-lg hover:shadow-xl transition-all"
                   >
-                    <Plus className="w-5 h-5" />
-                    <span>إضافة حجم</span>
+                    <Plus className="w-6 h-6" />
+                    <span>إضافة حجم جديد</span>
                   </button>
                 </div>
               )}
@@ -614,7 +630,10 @@ export default function NewMealPage() {
             </button>
           </div>
         </form>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
