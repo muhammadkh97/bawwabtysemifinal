@@ -156,16 +156,34 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       
-      // بناء الاستعلام الأساسي
+      // بناء الاستعلام مع فلترة حسب المستخدم
       let query = supabase
         .from('chats')
         .select(`
           *,
           customer:users!chats_customer_id_fkey(id, full_name, avatar_url, role),
-          vendor:vendors(id, store_name, logo_url, user_id, users:user_id(full_name, avatar_url))
+          vendor:stores(id, shop_name, logo, user_id)
         `)
         .eq('is_active', true)
         .order('last_message_at', { ascending: false, nullsFirst: false });
+
+      // فلترة حسب دور المستخدم - عرض المحادثات الخاصة به فقط
+      if (userRole === 'customer') {
+        query = query.eq('customer_id', userId);
+      } else if (userRole === 'vendor' || userRole === 'restaurant' || userRole === 'staff') {
+        // البائع يرى المحادثات الخاصة بمتجره
+        const { data: storeData } = await supabase
+          .from('stores')
+          .select('id')
+          .eq('user_id', userId)
+          .single();
+        
+        if (storeData) {
+          query = query.eq('vendor_id', storeData.id);
+        }
+      } else if (userRole === 'admin') {
+        // الأدمن يرى كل شيء - لا فلترة
+      }
 
       const { data, error } = await query;
 
@@ -215,14 +233,14 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
       formattedChat.unread_count = chat.driver_unread_count || 0;
     } else if (isCustomer) {
       // العميل يرى البائع
-      formattedChat.other_user_name = chat.vendor?.store_name;
-      formattedChat.other_user_avatar = chat.vendor?.logo_url;
+      formattedChat.other_user_name = chat.vendor?.shop_name || 'متجر';
+      formattedChat.other_user_avatar = chat.vendor?.logo;
       formattedChat.other_user_role = 'vendor';
-      formattedChat.vendor_store_name = chat.vendor?.store_name;
+      formattedChat.vendor_store_name = chat.vendor?.shop_name;
       formattedChat.unread_count = chat.customer_unread_count || 0;
     } else if (isVendor || isStaff) {
       // البائع/المساعد يرى العميل
-      formattedChat.other_user_name = chat.customer?.full_name;
+      formattedChat.other_user_name = chat.customer?.full_name || 'عميل';
       formattedChat.other_user_avatar = chat.customer?.avatar_url;
       formattedChat.other_user_role = 'customer';
       formattedChat.unread_count = chat.vendor_unread_count || 0;
@@ -520,18 +538,33 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
   const subscribeToChatsChanges = () => {
     if (!userId || !userRole) return;
 
+    // فلترة للاشتراك في المحادثات الخاصة بالمستخدم فقط
+    let filter = '';
+    if (userRole === 'customer') {
+      filter = `customer_id=eq.${userId}`;
+    } else if (userRole === 'vendor' || userRole === 'restaurant' || userRole === 'staff') {
+      // سيتم التحديث عند تلقي رسالة جديدة
+      filter = '';
+    }
+
     const channel = supabase
       .channel('chats-changes')
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'UPDATE', // فقط التحديثات (آخر رسالة، عدد غير مقروءة)
           schema: 'public',
-          table: 'chats'
+          table: 'chats',
+          filter: filter || undefined
         },
-        () => {
-          console.log('📨 تم تحديث المحادثات');
-          fetchChats();
+        (payload) => {
+          console.log('📨 تم تحديث محادثة:', payload.new);
+          // تحديث محلي فقط بدون re-fetch كامل
+          setChats(prev => prev.map(chat => 
+            chat.id === payload.new.id 
+              ? formatChatForUser(payload.new, userRole as string, userId as string)
+              : chat
+          ));
         }
       )
       .subscribe();
