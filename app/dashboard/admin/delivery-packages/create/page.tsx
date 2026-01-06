@@ -32,7 +32,7 @@ export default function CreatePackagePage() {
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    if (selected Zone && scheduledDate) {
+    if (selectedZone && scheduledDate) {
       loadAvailableOrders();
     }
   }, [selectedZone, scheduledDate]);
