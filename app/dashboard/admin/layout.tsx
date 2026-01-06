@@ -1,6 +1,7 @@
 'use client';
 
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { DeliveryPackagesProvider } from '@/contexts/DeliveryPackagesContext';
 
 /**
  * Layout لحماية جميع صفحات لوحة تحكم المدير
@@ -13,7 +14,9 @@ export default function AdminLayout({
 }) {
   return (
     <ProtectedRoute allowedRoles={['admin']}>
-      {children}
+      <DeliveryPackagesProvider>
+        {children}
+      </DeliveryPackagesProvider>
     </ProtectedRoute>
   );
 }
