@@ -63,9 +63,10 @@ export default function RestaurantStaffPage() {
       
       // Get restaurant ID
       const { data: restaurantData, error: restaurantError } = await supabase
-        .from('restaurants')
+        .from('stores')
         .select('id')
         .eq('user_id', user!.id)
+        .eq('business_type', 'restaurant')
         .single();
 
       if (restaurantError) throw restaurantError;
@@ -79,7 +80,7 @@ export default function RestaurantStaffPage() {
 
       // جلب الموظفين النشطين
       const { data: staffData, error: staffError } = await supabase
-        .from('restaurant_staff')
+        .from('vendor_staff')
         .select(`
           id,
           user_id,
@@ -87,12 +88,12 @@ export default function RestaurantStaffPage() {
           status,
           invited_at,
           accepted_at,
-          users!restaurant_staff_user_id_fkey (
+          users!vendor_staff_user_id_fkey (
             full_name,
             email
           )
         `)
-        .eq('restaurant_id', restaurantData.id)
+        .eq('vendor_id', restaurantData.id)
         .in('status', ['active', 'pending'])
         .order('created_at', { ascending: false });
 
@@ -164,9 +165,9 @@ export default function RestaurantStaffPage() {
       if (result.user_exists && result.user_id) {
         // المستخدم موجود، إضافته مباشرة
         const { error: staffError } = await supabase
-          .from('restaurant_staff')
+          .from('vendor_staff')
           .insert({
-            restaurant_id: restaurantId,
+            vendor_id: restaurantId,
             user_id: result.user_id,
             permissions: selectedPermissions,
             status: 'active',
@@ -178,8 +179,8 @@ export default function RestaurantStaffPage() {
 
         // إرسال إشعار للمستخدم
         const { data: restaurantData } = await supabase
-          .from('restaurants')
-          .select('name, name_ar')
+          .from('stores')
+          .select('name, name_ar, shop_name, shop_name_ar')
           .eq('id', restaurantId)
           .single();
 
@@ -187,7 +188,7 @@ export default function RestaurantStaffPage() {
           user_id: result.user_id,
           type: 'staff_invitation',
           title: 'دعوة للانضمام كمساعد',
-          message: `تمت إضافتك كمساعد في مطعم ${restaurantData?.name_ar || restaurantData?.name || 'المطعم'}`,
+          message: `تمت إضافتك كمساعد في مطعم ${restaurantData?.shop_name_ar || restaurantData?.shop_name || restaurantData?.name_ar || restaurantData?.name || 'المطعم'}`,
           link: '/invitations',
           priority: 'normal',
           category: 'staff'
@@ -220,7 +221,7 @@ export default function RestaurantStaffPage() {
 
     try {
       const { error } = await supabase
-        .from('restaurant_staff')
+        .from('vendor_staff')
         .update({ status: 'removed' })
         .eq('id', staffId);
 
