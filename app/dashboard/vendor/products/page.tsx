@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import BulkUploadModal from '@/components/BulkUploadModal';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
+import PermissionGuard from '@/components/PermissionGuard';
 import { Package, Plus, Search, Edit, TrendingUp, Trash2, FileUp, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -415,6 +416,7 @@ export default function VendorProductsPage() {
         />
       )}
     </div>
+    </PermissionGuard>
   );
 }
 

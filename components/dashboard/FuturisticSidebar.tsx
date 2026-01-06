@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { signOut } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { hasPermission, hasAnyPermission } from '@/lib/permissions';
 import {
   LayoutDashboard,
   Users,
@@ -39,6 +40,7 @@ interface NavItem {
   href: string;
   icon: any;
   badge?: number;
+  requiredPermission?: string; // الصلاحية المطلوبة لعرض هذا العنصر
 }
 
 interface FuturisticSidebarProps {
@@ -63,7 +65,7 @@ export default function FuturisticSidebar({ role }: FuturisticSidebarProps) {
   
   const pathname = usePathname();
   const router = useRouter();
-  const { userId } = useAuth();
+  const { userId, isVendorStaff, isRestaurantStaff, staffPermissions } = useAuth();
 
   useEffect(() => {
     if (userId) {
@@ -224,16 +226,16 @@ export default function FuturisticSidebar({ role }: FuturisticSidebarProps) {
       case 'vendor':
         return [
           { name: 'لوحة التحكم', href: '/dashboard/vendor', icon: LayoutDashboard },
-          { name: 'المنتجات', href: '/dashboard/vendor/products', icon: Package },
-          { name: 'الطلبات', href: '/dashboard/vendor/orders', icon: ShoppingCart, badge: ordersCount },
-          { name: 'الإحصائيات', href: '/dashboard/vendor/analytics', icon: BarChart3 },
+          { name: 'المنتجات', href: '/dashboard/vendor/products', icon: Package, requiredPermission: 'manage_products' },
+          { name: 'الطلبات', href: '/dashboard/vendor/orders', icon: ShoppingCart, badge: ordersCount, requiredPermission: 'view_orders' },
+          { name: 'الإحصائيات', href: '/dashboard/vendor/analytics', icon: BarChart3, requiredPermission: 'view_analytics' },
           { name: 'المحفظة', href: '/dashboard/vendor/wallet', icon: Wallet },
           { name: 'التقييمات', href: '/dashboard/vendor/reviews', icon: Star },
-          { name: 'الترويج والكوبونات', href: '/dashboard/vendor/promotions', icon: Tag },
+          { name: 'الترويج والكوبونات', href: '/dashboard/vendor/promotions', icon: Tag, requiredPermission: 'manage_marketing' },
           { name: 'الرسائل', href: '/dashboard/vendor/messages', icon: MessageSquare, badge: notificationCount },
-          { name: 'الحسابات المساعدة', href: '/dashboard/vendor/staff', icon: Users },
+          { name: 'الحسابات المساعدة', href: '/dashboard/vendor/staff', icon: Users, requiredPermission: 'manage_staff' },
           { name: 'متجري', href: '/dashboard/vendor/my-store', icon: Store },
-          { name: 'الإعدادات', href: '/dashboard/vendor/settings', icon: Settings },
+          { name: 'الإعدادات', href: '/dashboard/vendor/settings', icon: Settings, requiredPermission: 'manage_settings' },
         ];
       case 'driver':
         return [
@@ -261,7 +263,29 @@ export default function FuturisticSidebar({ role }: FuturisticSidebarProps) {
     }
   };
 
-  const navItems = getNavItems();
+  const allNavItems = getNavItems();
+  
+  // فلترة العناصر حسب صلاحيات المساعد
+  const navItems = allNavItems.filter(item => {
+    // إذا لم يكن مساعد، أظهر كل العناصر
+    if (role === 'vendor' && !isVendorStaff) return true;
+    if (role === 'restaurant' && !isRestaurantStaff) return true;
+    
+    // إذا كان مساعد ولكن العنصر لا يحتاج صلاحية، أظهره
+    if (!item.requiredPermission) return true;
+    
+    // إذا كان مساعد بائع، تحقق من صلاحياته
+    if (role === 'vendor' && isVendorStaff) {
+      return hasPermission(staffPermissions, item.requiredPermission as any);
+    }
+    
+    // إذا كان مساعد مطعم، تحقق من صلاحياته
+    if (role === 'restaurant' && isRestaurantStaff) {
+      return hasPermission(staffPermissions, item.requiredPermission as any);
+    }
+    
+    return true;
+  });
 
   const isActive = (href: string) => pathname === href;
 
