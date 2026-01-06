@@ -162,7 +162,7 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
         .select(`
           *,
           customer:users!chats_customer_id_fkey(id, full_name, avatar_url, role),
-          vendor:stores(id, shop_name, image, user_id)
+          vendor:stores(id, shop_name, logo_url, user_id)
         `)
         .eq('is_active', true)
         .order('last_message_at', { ascending: false, nullsFirst: false });
@@ -237,7 +237,7 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
     } else if (isCustomer) {
       // العميل يرى البائع
       formattedChat.other_user_name = chat.vendor?.shop_name || 'متجر';
-      formattedChat.other_user_avatar = chat.vendor?.image;
+      formattedChat.other_user_avatar = chat.vendor?.logo_url;
       formattedChat.other_user_role = 'vendor';
       formattedChat.vendor_store_name = chat.vendor?.shop_name;
       formattedChat.unread_count = chat.customer_unread_count || 0;
