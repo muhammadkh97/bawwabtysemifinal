@@ -219,34 +219,24 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
   // =====================================================
 
   const formatChatForUser = (chat: any, role: string, uid: string): Chat => {
-    const isCustomer = role === 'customer';
-    const isVendor = role === 'vendor' || role === 'restaurant';
-    const isAdmin = role === 'admin';
-    const isDriver = role === 'driver';
-    const isStaff = role === 'staff';
-
     let formattedChat: Chat = { ...chat };
 
-    if (isAdmin) {
-      // المدير يرى كل شيء
-      formattedChat.other_user_name = `${chat.customer?.full_name} ↔ ${chat.vendor?.store_name}`;
-      formattedChat.other_user_avatar = chat.customer?.avatar_url;
-      formattedChat.unread_count = chat.admin_unread_count || 0;
-    } else if (isDriver) {
-      // السائق يرى العميل والمطعم
-      formattedChat.other_user_name = `${chat.customer?.full_name} ↔ ${chat.vendor?.store_name}`;
-      formattedChat.other_user_avatar = chat.customer?.avatar_url;
-      formattedChat.unread_count = chat.driver_unread_count || 0;
-    } else if (isCustomer) {
-      // العميل يرى البائع
-      formattedChat.other_user_name = chat.vendor?.shop_name || 'متجر';
+    // تحديد من هو "الطرف الآخر" بناءً على customer_id
+    // إذا كان المستخدم هو العميل في هذه المحادثة → الطرف الآخر هو البائع
+    // إذا كان المستخدم هو البائع → الطرف الآخر هو العميل
+    
+    const isUserCustomerInThisChat = chat.customer_id === uid;
+    
+    if (isUserCustomerInThisChat) {
+      // المستخدم هو العميل في هذه المحادثة → عرض معلومات البائع
+      formattedChat.other_user_name = chat.vendor?.shop_name || chat.vendor?.name || 'متجر';
       formattedChat.other_user_avatar = chat.vendor?.logo_url;
       formattedChat.other_user_role = 'vendor';
       formattedChat.vendor_store_name = chat.vendor?.shop_name;
       formattedChat.unread_count = chat.customer_unread_count || 0;
-    } else if (isVendor || isStaff) {
-      // البائع/المساعد يرى العميل
-      formattedChat.other_user_name = chat.customer?.full_name || 'عميل';
+    } else {
+      // المستخدم هو البائع في هذه المحادثة → عرض معلومات العميل
+      formattedChat.other_user_name = chat.customer?.full_name || chat.customer?.name || 'عميل';
       formattedChat.other_user_avatar = chat.customer?.avatar_url;
       formattedChat.other_user_role = 'customer';
       formattedChat.unread_count = chat.vendor_unread_count || 0;
