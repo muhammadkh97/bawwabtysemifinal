@@ -82,6 +82,7 @@ interface ChatsContextType {
   fetchMessages: (chatId: string) => Promise<void>;
   editMessage: (messageId: string, newContent: string) => Promise<void>;
   deleteMessage: (messageId: string) => Promise<void>;
+  deleteChat: (chatId: string) => Promise<void>;
   archiveChat: (chatId: string) => Promise<void>;
   unarchiveChat: (chatId: string) => Promise<void>;
 }
@@ -182,7 +183,8 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
           query = query.eq('vendor_id', storeData.id);
         }
       } else if (userRole === 'admin') {
-        // الأدمن يرى كل شيء - لا فلترة
+        // الأدمن يرى فقط المحادثات التي شارك فيها كعميل
+        query = query.eq('customer_id', userId);
       }
 
       const { data, error } = await query;
@@ -322,10 +324,21 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
 
+      // ✅ إضافة الرسالة محلياً فوراً
+      if (data) {
+        setMessages(prev => {
+          // تحقق من عدم وجود الرسالة بالفعل
+          const exists = prev.some(msg => msg.id === data.id);
+          if (!exists) {
+            return [...prev, data as Message];
+          }
+          return prev;
+        });
+      }
+
       // الـ Trigger سيحدث last_message و unread_count تلقائياً
-      
-      // تحديث UI محلياً
-      await fetchChats();
+      // تحديث قائمة المحادثات في الخلفية
+      fetchChats();
       
       toast.success('✅ تم إرسال الرسالة');
     } catch (error) {
@@ -492,6 +505,38 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
   };
 
   // =====================================================
+  // 🗑️ Delete Chat
+  // =====================================================
+
+  const deleteChat = async (chatId: string) => {
+    if (!userId) return;
+
+    try {
+      // حذف المحادثة (soft delete بتعيين is_active = false)
+      const { error } = await supabase
+        .from('chats')
+        .update({ is_active: false, updated_at: new Date().toISOString() })
+        .eq('id', chatId);
+
+      if (error) throw error;
+
+      // إزالة من القائمة محلياً
+      setChats(prev => prev.filter(chat => chat.id !== chatId));
+      
+      // إذا كانت المحادثة المفتوحة حالياً، أغلقها
+      if (currentChatId === chatId) {
+        setCurrentChatId(null);
+        setMessages([]);
+      }
+
+      toast.success('✅ تم حذف المحادثة');
+    } catch (error) {
+      console.error('❌ خطأ في حذف المحادثة:', error);
+      toast.error('فشل حذف المحادثة');
+    }
+  };
+
+  // =====================================================
   // 📦 Archive Chat
   // =====================================================
 
@@ -589,11 +634,21 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
           filter: `chat_id=eq.${chatId}`
         },
         (payload) => {
+          console.log('📨 رسالة جديدة:', payload.new);
           const newMessage = payload.new as Message;
           
-          // لا نضيف الرسالة إذا كانت محذوفة
+          // لا نضيف الرسالة إذا كانت محذوفة أو مرسلة من نفس المستخدم (تمت إضافتها بالفعل)
           if (!newMessage.is_deleted) {
-            setMessages((prev) => [...prev, newMessage]);
+            setMessages((prev) => {
+              // تحقق من عدم وجود الرسالة بالفعل
+              const exists = prev.some(msg => msg.id === newMessage.id);
+              if (exists) {
+                console.log('⏭️ الرسالة موجودة بالفعل - تخطي');
+                return prev;
+              }
+              console.log('✅ إضافة رسالة جديدة');
+              return [...prev, newMessage];
+            });
             
             // تحديد كمقروءة تلقائياً إذا كانت المحادثة مفتوحة
             if (newMessage.sender_id !== userId) {
@@ -632,6 +687,7 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
         fetchMessages,
         editMessage,
         deleteMessage,
+        deleteChat,
         archiveChat,
         unarchiveChat,
       }}
