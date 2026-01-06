@@ -256,6 +256,7 @@ export default function FuturisticSidebar({ role }: FuturisticSidebarProps) {
           { name: 'التقييمات', href: '/dashboard/restaurant/reviews', icon: Star },
           { name: 'العروض والكوبونات', href: '/dashboard/restaurant/promotions', icon: Tag },
           { name: 'الرسائل', href: '/dashboard/restaurant/messages', icon: MessageSquare, badge: notificationCount },
+          { name: 'الحسابات المساعدة', href: '/dashboard/restaurant/staff', icon: Users, requiredPermission: 'manage_staff' },
           { name: 'مطعمي', href: '/dashboard/restaurant/settings', icon: Store },
         ];
       default:

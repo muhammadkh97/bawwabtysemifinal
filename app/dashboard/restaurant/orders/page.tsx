@@ -11,12 +11,14 @@ import { ShoppingBag, Clock, CheckCircle, XCircle, Package, DollarSign } from 'l
 interface Order {
   id: string;
   order_number: string;
-  total: number;
+  total_amount: number;
   status: string;
   created_at: string;
   delivery_address: string;
-  customer_name: string;
-  customer_phone: string;
+  customer: {
+    name: string;
+    phone: string;
+  } | null;
 }
 
 export default function RestaurantOrdersPage() {
@@ -61,7 +63,10 @@ export default function RestaurantOrdersPage() {
     try {
       const { data, error } = await supabase
         .from('orders')
-        .select('*')
+        .select(`
+          *,
+          customer:users!orders_customer_id_fkey(name, phone)
+        `)
         .eq('vendor_id', vId)
         .order('created_at', { ascending: false });
 
@@ -180,26 +185,26 @@ export default function RestaurantOrdersPage() {
                       <DollarSign className="w-5 h-5 text-green-600" />
                       <div>
                         <p className="text-sm text-gray-600">المبلغ</p>
-                        <p className="font-bold text-gray-900">{order.total} ₪</p>
+                        <p className="font-bold text-gray-900">{order.total_amount} ₪</p>
                       </div>
                     </div>
 
-                    {order.customer_name && (
+                    {order.customer?.name && (
                       <div className="flex items-center gap-2">
                         <Package className="w-5 h-5 text-blue-600" />
                         <div>
                           <p className="text-sm text-gray-600">العميل</p>
-                          <p className="font-bold text-gray-900">{order.customer_name}</p>
+                          <p className="font-bold text-gray-900">{order.customer.name}</p>
                         </div>
                       </div>
                     )}
 
-                    {order.customer_phone && (
+                    {order.customer?.phone && (
                       <div className="flex items-center gap-2">
                         <Clock className="w-5 h-5 text-purple-600" />
                         <div>
                           <p className="text-sm text-gray-600">الهاتف</p>
-                          <p className="font-bold text-gray-900">{order.customer_phone}</p>
+                          <p className="font-bold text-gray-900">{order.customer.phone}</p>
                         </div>
                       </div>
                     )}
