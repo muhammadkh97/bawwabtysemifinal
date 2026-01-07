@@ -81,14 +81,34 @@ export default function MyOrdersPage() {
   };
 
   const completeDelivery = async (orderId: string) => {
-    const { error } = await supabase
-      .from('orders')
-      .update({ status: 'delivered' })
-      .eq('id', orderId);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('الرجاء تسجيل الدخول');
+        return;
+      }
 
-    if (!error) {
-      toast.success('✅ تم إتمام التوصيل!');
-      loadMyOrders();
+      const { data, error } = await supabase.rpc('update_order_status_by_driver', {
+        p_order_id: orderId,
+        p_new_status: 'delivered',
+        p_driver_user_id: user.id
+      });
+
+      if (error) {
+        console.error('❌ Error updating order:', error);
+        toast.error('فشل تحديث حالة الطلب');
+        return;
+      }
+
+      if (data?.success) {
+        toast.success('✅ تم إتمام التوصيل!');
+        loadMyOrders();
+      } else {
+        toast.error(data?.error || 'حدث خطأ أثناء تحديث الطلب');
+      }
+    } catch (error) {
+      console.error('❌ Exception:', error);
+      toast.error('حدث خطأ غير متوقع');
     }
   };
 
