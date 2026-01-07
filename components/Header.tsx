@@ -464,8 +464,7 @@ export default function Header() {
                 الرئيسية
               </Link>
             </li>
-            {/* تم إزالة قائمة الفئات */}
-            {false && <li className="relative group">
+            <li className="relative group">
               <button className="text-sm font-bold text-gray-700 group-hover:text-purple-600 transition-all flex items-center gap-2 py-2">
                 الفئات
                 <ChevronDown className="w-4 h-4 group-hover:rotate-180 transition-transform duration-300" />
@@ -589,7 +588,7 @@ export default function Header() {
                   </div>
                 </div>
               </div>
-            </li>}
+            </li>
             <li>
               <Link href="/products" className="text-sm font-bold text-gray-700 hover:text-purple-600 transition-colors">المنتجات</Link>
             </li>
