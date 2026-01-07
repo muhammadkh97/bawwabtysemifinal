@@ -74,7 +74,7 @@ export default function MobileHamburgerMenu({ userRole = 'customer', userName }:
       case 'driver':
         return [
           { href: '/dashboard/driver', icon: '🚗', label: 'التوصيلات' },
-          { href: '/dashboard/driver/earnings', icon: '💵', label: 'أرباحي' },
+          { href: '/dashboard/driver/wallet', icon: '💵', label: 'أرباحي' },
           { href: '/dashboard/driver/history', icon: '📜', label: 'سجل التوصيلات' },
           { href: '/dashboard/driver/profile', icon: '👤', label: 'ملفي الشخصي' },
           { href: '/support', icon: '💬', label: 'الدعم الفني' },

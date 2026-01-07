@@ -245,7 +245,7 @@ export default function FuturisticSidebar({ role }: FuturisticSidebarProps) {
           { name: 'الطلبات المتاحة', href: '/dashboard/driver/available', icon: ShoppingCart, badge: driverAvailableOrders },
           { name: 'طلباتي', href: '/dashboard/driver/my-orders', icon: Package },
           { name: 'الموقع الحالي', href: '/dashboard/driver/location', icon: MapPin },
-          { name: 'الأرباح', href: '/dashboard/driver/earnings', icon: DollarSign },
+          { name: 'الأرباح', href: '/dashboard/driver/wallet', icon: DollarSign },
         ];
       case 'restaurant':
         return [

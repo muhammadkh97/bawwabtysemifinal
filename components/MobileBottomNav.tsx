@@ -32,7 +32,7 @@ export default function MobileBottomNav({ role }: MobileNavProps) {
       case 'driver':
         return [
           { href: '/dashboard/driver', icon: '🚗', label: 'التوصيلات' },
-          { href: '/dashboard/driver/earnings', icon: '💵', label: 'الأرباح' },
+          { href: '/dashboard/driver/wallet', icon: '💵', label: 'الأرباح' },
           { href: '/dashboard/driver/history', icon: '📜', label: 'السجل' },
           { href: '/dashboard/driver/profile', icon: '👤', label: 'الملف' },
         ];

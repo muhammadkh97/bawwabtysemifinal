@@ -563,7 +563,7 @@ export default function DriverDashboard() {
                   خريطة كاملة
                 </button>
                 <button
-                  onClick={() => router.push('/dashboard/driver/earnings')}
+                  onClick={() => router.push('/dashboard/driver/wallet')}
                   className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold py-3 px-4 rounded-xl transition-all text-sm flex items-center justify-center gap-2 shadow-lg hover:shadow-emerald-500/50"
                 >
                   <DollarSign className="w-4 h-4" />
@@ -591,7 +591,7 @@ export default function DriverDashboard() {
             </div>
             <div className="text-right">
               <button
-                onClick={() => router.push('/dashboard/driver/earnings')}
+                onClick={() => router.push('/dashboard/driver/wallet')}
                 className="bg-white/20 hover:bg-white/30 backdrop-blur-sm px-8 py-4 rounded-xl font-bold text-white transition-all shadow-lg hover:shadow-purple-500/50 text-lg"
               >
                 عرض التفاصيل
