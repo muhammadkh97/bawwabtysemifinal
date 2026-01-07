@@ -72,33 +72,35 @@ export default function VendorWalletPage() {
       
       setVendorId(vendorData.id);
 
-      // Get wallet data
-      const { data: wallet } = await supabase
-        .from('vendor_wallets')
-        .select('*')
-        .eq('vendor_id', vendorData.id)
+      // استخدام الـ Function الاحترافية الجديدة
+      const { data: summary, error: summaryError } = await supabase
+        .rpc('get_vendor_wallet_summary', { p_vendor_id: vendorData.id })
         .single();
 
-      if (wallet) {
+      if (summaryError) {
+        console.error('Error fetching wallet summary:', summaryError);
+      } else if (summary) {
         setWalletData({
-          current_balance: wallet.current_balance || 0,
-          pending_balance: wallet.pending_balance || 0,
-          total_earned: wallet.total_earned || 0,
-          total_withdrawn: wallet.total_withdrawn || 0,
-          platform_commission_rate: 10,
-          last_payout: wallet.last_payout_at,
+          current_balance: summary.current_balance || 0,
+          pending_balance: summary.pending_balance || 0,
+          total_earned: summary.total_earned || 0,
+          total_withdrawn: summary.total_withdrawn || 0,
+          platform_commission_rate: summary.commission_rate || 10,
+          last_payout: summary.last_payout_date,
         });
       }
 
-      // Get transactions
-      const { data: transactionsData } = await supabase
-        .from('wallet_transactions')
-        .select('*')
-        .eq('vendor_id', vendorData.id)
-        .order('created_at', { ascending: false })
-        .limit(20);
+      // جلب المعاملات من الـ Function
+      const { data: transactionsData, error: txnsError } = await supabase
+        .rpc('get_vendor_transactions', {
+          p_vendor_id: vendorData.id,
+          p_limit: 50,
+          p_offset: 0
+        });
 
-      if (transactionsData) {
+      if (txnsError) {
+        console.error('Error fetching transactions:', txnsError);
+      } else if (transactionsData) {
         setTransactions(transactionsData);
       }
 
@@ -107,7 +109,7 @@ export default function VendorWalletPage() {
         .from('payout_requests')
         .select('*')
         .eq('vendor_id', vendorData.id)
-        .order('created_at', { ascending: false });
+        .order('requested_at', { ascending: false });
 
       if (payoutsData) {
         setPayouts(payoutsData);
@@ -172,12 +174,6 @@ export default function VendorWalletPage() {
     try {
       setSubmitting(true);
 
-      // TODO: Create payout_requests table first
-      alert('⚠️ نظام طلبات السحب قيد التطوير حالياً');
-      setSubmitting(false);
-      return;
-
-      /* Disabled until payout_requests table is created
       // إنشاء طلب سحب في قاعدة البيانات
       const { data, error } = await supabase
         .from('payout_requests')
@@ -193,11 +189,15 @@ export default function VendorWalletPage() {
         .single();
 
       if (error) throw error;
-      */
 
-      // تحديث الرصيد المتاح (خصم المبلغ المطلوب)
-      const { error: updateError } = await supabase
-        .from('vendor_wallets')
+      // تحديث قائمة الطلبات
+      await fetchWalletData();
+      
+      alert('✅ تم إرسال طلب السحب بنجاح! سيتم مراجعته من قبل الإدارة.');
+      setShowPayoutModal(false);
+      setPayoutAmount('');
+      setBankName('');
+      setAccountNumber('');
         .update({
           current_balance: walletData.current_balance - amount,
           pending_balance: walletData.pending_balance + amount,

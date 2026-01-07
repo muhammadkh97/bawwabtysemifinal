@@ -6,24 +6,46 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
-import { Wallet, DollarSign, TrendingUp, Calendar, ArrowUpRight, ArrowDownLeft, Clock, CreditCard } from 'lucide-react';
+import { Wallet, DollarSign, TrendingUp, Calendar, ArrowUpRight, ArrowDownLeft, Clock, CreditCard, Download, AlertCircle } from 'lucide-react';
 
 interface Transaction {
   id: string;
-  type: 'income' | 'withdraw';
+  type: 'earning' | 'withdrawal' | 'refund';
   amount: number;
   description: string;
-  date: string;
-  status: 'completed' | 'pending';
+  order_number?: string;
+  created_at: string;
+  status: 'completed' | 'pending' | 'failed';
+}
+
+interface WalletSummary {
+  current_balance: number;
+  pending_balance: number;
+  total_earned: number;
+  total_withdrawn: number;
+  completed_orders: number;
+  pending_orders: number;
+  total_commission: number;
+  avg_order_value: number;
+  can_request_payout: boolean;
+  min_payout_amount: number;
 }
 
 export default function RestaurantWalletPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [balance, setBalance] = useState(0);
-  const [pendingBalance, setPendingBalance] = useState(0);
+  const [walletSummary, setWalletSummary] = useState<WalletSummary | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [vendorId, setVendorId] = useState<string>('');
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [payoutAmount, setPayoutAmount] = useState(0);
+  const [bankDetails, setBankDetails] = useState({
+    bankName: '',
+    accountNumber: '',
+    accountHolder: '',
+    iban: '',
+    notes: ''
+  });
 
   useEffect(() => {
     checkAuth();
@@ -58,40 +80,58 @@ export default function RestaurantWalletPage() {
 
   const fetchWalletData = async (vId: string) => {
     try {
-      // Fetch completed orders
-      const { data: completedOrders } = await supabase
-        .from('orders')
-        .select('total_amount, created_at, order_number')
-        .eq('vendor_id', vId)
-        .eq('status', 'delivered');
+      // استخدام الـ Function الاحترافية الجديدة
+      const { data: summary, error: summaryError } = await supabase
+        .rpc('get_vendor_wallet_summary', { p_vendor_id: vId })
+        .single();
 
-      // Fetch pending orders
-      const { data: pendingOrders } = await supabase
-        .from('orders')
-        .select('total_amount')
-        .eq('vendor_id', vId)
-        .in('status', ['pending', 'preparing', 'ready', 'out_for_delivery']);
+      if (summaryError) throw summaryError;
+      setWalletSummary(summary);
+      setPayoutAmount(summary.current_balance);
 
-      // Calculate balances (assuming platform takes 10% commission)
-      const completedBalance = completedOrders?.reduce((sum, order) => sum + (order.total_amount * 0.9), 0) || 0;
-      const pendingBal = pendingOrders?.reduce((sum, order) => sum + (order.total_amount * 0.9), 0) || 0;
+      // جلب المعاملات من الـ Function
+      const { data: txns, error: txnsError } = await supabase
+        .rpc('get_vendor_transactions', {
+          p_vendor_id: vId,
+          p_limit: 50,
+          p_offset: 0
+        });
 
-      setBalance(completedBalance);
-      setPendingBalance(pendingBal);
-
-      // Create transaction history
-      const transactionList: Transaction[] = completedOrders?.map(order => ({
-        id: order.order_number || Math.random().toString(),
-        type: 'income' as const,
-        amount: order.total_amount * 0.9,
-        description: `طلب رقم ${order.order_number}`,
-        date: new Date(order.created_at).toLocaleDateString('ar-EG'),
-        status: 'completed' as const
-      })) || [];
-
-      setTransactions(transactionList.slice(0, 10));
+      if (txnsError) throw txnsError;
+      setTransactions(txns || []);
     } catch (error) {
       console.error('Error fetching wallet data:', error);
+    }
+  };
+
+  const handleRequestPayout = async () => {
+    if (!walletSummary?.can_request_payout) {
+      alert(`الحد الأدنى للسحب هو ${walletSummary?.min_payout_amount} ر.س`);
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('payout_requests')
+        .insert({
+          vendor_id: vendorId,
+          amount: payoutAmount,
+          bank_name: bankDetails.bankName,
+          account_number: bankDetails.accountNumber,
+          account_holder: bankDetails.accountHolder,
+          iban: bankDetails.iban,
+          notes: bankDetails.notes,
+          status: 'pending'
+        });
+
+      if (error) throw error;
+
+      alert('✅ تم إرسال طلب السحب بنجاح! سيتم مراجعته من قبل الإدارة.');
+      setShowPayoutModal(false);
+      fetchWalletData(vendorId);
+    } catch (error) {
+      console.error('Error requesting payout:', error);
+      alert('حدث خطأ في إرسال الطلب');
     }
   };
 
@@ -117,24 +157,25 @@ export default function RestaurantWalletPage() {
           </div>
 
           {/* Balance Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {/* Available Balance */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl p-8 text-white shadow-xl"
+              className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl p-6 text-white shadow-xl"
             >
-              <div className="flex items-center justify-between mb-4">
-                <Wallet className="w-12 h-12" />
-                <div className="bg-white/20 p-3 rounded-xl">
-                  <TrendingUp className="w-6 h-6" />
-                </div>
-              </div>
-              <p className="text-green-100 text-sm mb-2">الرصيد المتاح</p>
-              <h2 className="text-5xl font-black mb-2">{balance.toFixed(2)} ₪</h2>
-              <button className="mt-4 w-full bg-white text-green-600 py-3 rounded-xl font-bold hover:bg-green-50 transition">
-                سحب الرصيد
-              </button>
+              <Wallet className="w-10 h-10 mb-3" />
+              <p className="text-green-100 text-sm mb-1">الرصيد المتاح</p>
+              <h2 className="text-4xl font-black mb-3">{walletSummary?.current_balance.toFixed(2) || '0.00'} ر.س</h2>
+              {walletSummary?.can_request_payout && (
+                <button 
+                  onClick={() => setShowPayoutModal(true)}
+                  className="w-full bg-white text-green-600 py-2 rounded-xl font-bold hover:bg-green-50 transition text-sm"
+                >
+                  <Download className="w-4 h-4 inline mr-2" />
+                  سحب الرصيد
+                </button>
+              )}
             </motion.div>
 
             {/* Pending Balance */}
@@ -142,58 +183,93 @@ export default function RestaurantWalletPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-gradient-to-br from-orange-500 to-red-600 rounded-3xl p-8 text-white shadow-xl"
+              className="bg-gradient-to-br from-orange-500 to-red-600 rounded-3xl p-6 text-white shadow-xl"
             >
-              <div className="flex items-center justify-between mb-4">
-                <Clock className="w-12 h-12" />
-                <div className="bg-white/20 p-3 rounded-xl">
-                  <Calendar className="w-6 h-6" />
-                </div>
-              </div>
-              <p className="text-orange-100 text-sm mb-2">الرصيد المعلق</p>
-              <h2 className="text-5xl font-black mb-2">{pendingBalance.toFixed(2)} ₪</h2>
-              <p className="text-sm text-orange-100 mt-4">من الطلبات قيد التنفيذ</p>
+              <Clock className="w-10 h-10 mb-3" />
+              <p className="text-orange-100 text-sm mb-1">الرصيد المعلق</p>
+              <h2 className="text-4xl font-black mb-3">{walletSummary?.pending_balance.toFixed(2) || '0.00'} ر.س</h2>
+              <p className="text-sm text-orange-100">من {walletSummary?.pending_orders || 0} طلبات معلقة</p>
+            </motion.div>
+
+            {/* Total Earned */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl p-6 text-white shadow-xl"
+            >
+              <TrendingUp className="w-10 h-10 mb-3" />
+              <p className="text-blue-100 text-sm mb-1">إجمالي الأرباح</p>
+              <h2 className="text-4xl font-black mb-3">{walletSummary?.total_earned.toFixed(2) || '0.00'} ر.س</h2>
+              <p className="text-sm text-blue-100">من {walletSummary?.completed_orders || 0} طلب مكتمل</p>
+            </motion.div>
+
+            {/* Total Withdrawn */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-3xl p-6 text-white shadow-xl"
+            >
+              <DollarSign className="w-10 h-10 mb-3" />
+              <p className="text-purple-100 text-sm mb-1">إجمالي المسحوبات</p>
+              <h2 className="text-4xl font-black mb-3">{walletSummary?.total_withdrawn.toFixed(2) || '0.00'} ر.س</h2>
+              <p className="text-sm text-purple-100">طلبات سحب مكتملة</p>
             </motion.div>
           </div>
 
           {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                   <DollarSign className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">إجمالي الأرباح</p>
-                  <p className="text-2xl font-bold text-gray-900">{(balance + pendingBalance).toFixed(2)} ₪</p>
+                  <p className="text-sm text-gray-600">متوسط قيمة الطلب</p>
+                  <p className="text-2xl font-bold text-gray-900">{walletSummary?.avg_order_value.toFixed(2) || '0.00'} ر.س</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
                   <TrendingUp className="w-6 h-6 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">عمولة المنصة</p>
-                  <p className="text-2xl font-bold text-gray-900">10%</p>
+                  <p className="text-sm text-gray-600">إجمالي العمولات</p>
+                  <p className="text-2xl font-bold text-gray-900">{walletSummary?.total_commission.toFixed(2) || '0.00'} ر.س</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
                   <CreditCard className="w-6 h-6 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">المعاملات</p>
+                  <p className="text-sm text-gray-600">عدد المعاملات</p>
                   <p className="text-2xl font-bold text-gray-900">{transactions.length}</p>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Minimum Payout Warning */}
+          {!walletSummary?.can_request_payout && walletSummary && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 mb-8 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
+              <div>
+                <p className="text-yellow-800 font-semibold">الحد الأدنى للسحب</p>
+                <p className="text-yellow-700 text-sm">
+                  رصيدك الحالي {walletSummary.current_balance.toFixed(2)} ر.س، 
+                  الحد الأدنى للسحب هو {walletSummary.min_payout_amount.toFixed(2)} ر.س
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Transaction History */}
           <div className="bg-white rounded-3xl p-6 shadow-lg">

@@ -1,599 +1,575 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
-import { supabase } from '@/lib/supabase';
+import { 
+  DollarSign, TrendingUp, Users, Wallet, Clock, CheckCircle, XCircle, Download, Calendar, AlertCircle, FileText
+} from 'lucide-react';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-interface FinancialSummary {
-  totalCommissions: number;
-  pendingPayouts: number;
-  totalPayments: number;
-  totalTaxes: number;
+interface PlatformStats {
+  total_orders: number;
+  completed_orders: number;
+  pending_orders: number;
+  total_revenue: number;
+  total_platform_earning: number;
+  total_vendors_earning: number;
+  avg_commission_rate: number;
+  active_vendors: number;
 }
 
-interface FinancialSettings {
-  default_commission_rate: number;
-  tax_rate: number;
-  min_payout_amount: number;
-  base_delivery_fee: number;
-  per_km_delivery_fee: number;
+interface VendorEarnings {
+  vendor_id: string;
+  vendor_name: string;
+  total_orders: number;
+  total_revenue: number;
+  total_commission: number;
+  net_earnings: number;
+  current_balance: number;
+}
+
+interface DailyRevenue {
+  date: string;
+  total_orders: number;
+  total_revenue: number;
+  platform_earning: number;
+  vendors_earning: number;
+}
+
+interface PayoutRequest {
+  id: string;
+  vendor_id: string;
+  vendor_name: string;
+  vendor_phone: string;
+  amount: number;
+  status: string;
+  bank_name: string;
+  account_number: string;
+  account_holder: string;
+  iban: string;
+  requested_at: string;
+  notes: string;
+  current_balance: number;
 }
 
 export default function AdminFinancialsPage() {
-  const [activeTab, setActiveTab] = useState<'commissions' | 'payouts' | 'settings'>('commissions');
-  const [financialSummary, setFinancialSummary] = useState<FinancialSummary>({
-    totalCommissions: 0,
-    pendingPayouts: 0,
-    totalPayments: 0,
-    totalTaxes: 0
-  });
-  const [commissions, setCommissions] = useState<any[]>([]);
-  const [payouts, setPayouts] = useState<any[]>([]);
-  const [settings, setSettings] = useState<FinancialSettings>({
-    default_commission_rate: 10,
-    tax_rate: 16,
-    min_payout_amount: 100,
-    base_delivery_fee: 20,
-    per_km_delivery_fee: 2
-  });
+  const [stats, setStats] = useState<PlatformStats | null>(null);
+  const [vendors, setVendors] = useState<VendorEarnings[]>([]);
+  const [dailyRevenue, setDailyRevenue] = useState<DailyRevenue[]>([]);
+  const [payoutRequests, setPayoutRequests] = useState<PayoutRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [savingSettings, setSavingSettings] = useState(false);
+  const [dateRange, setDateRange] = useState<'7days' | '30days'>('30days');
+  const [processingPayout, setProcessingPayout] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'checking'>('checking');
 
   useEffect(() => {
-    fetchFinancialData();
-  }, []);
+    checkConnection();
+    loadFinancialData();
+  }, [dateRange]);
 
-  const fetchFinancialData = async () => {
+  async function checkConnection() {
+    try {
+      setConnectionStatus('checking');
+      const { data, error } = await supabase.from('financial_settings').select('id').limit(1);
+      setConnectionStatus(error ? 'disconnected' : 'connected');
+    } catch {
+      setConnectionStatus('disconnected');
+    }
+  }
+
+  async function loadFinancialData() {
     setLoading(true);
     try {
-      // 0. جلب الإعدادات المالية
-      const { data: settingsData } = await supabase
-        .from('financial_settings')
-        .select('*')
-        .eq('is_active', true)
-        .single();
+      // 1. Platform Stats
+      const { data: statsData, error: statsError } = await supabase.rpc('get_platform_financial_stats');
+      if (statsError) throw statsError;
+      if (statsData?.[0]) setStats(statsData[0]);
 
-      if (settingsData) {
-        setSettings({
-          default_commission_rate: settingsData.default_commission_rate || 10,
-          tax_rate: settingsData.tax_rate || 16,
-          min_payout_amount: settingsData.min_payout_amount || 100,
-          base_delivery_fee: settingsData.base_delivery_fee || 20,
-          per_km_delivery_fee: settingsData.per_km_delivery_fee || 2
-        });
-      }
+      // 2. Top Vendors
+      const { data: vendorsData, error: vendorsError } = await supabase.rpc('get_vendors_earnings_report');
+      if (vendorsError) throw vendorsError;
+      if (vendorsData) setVendors(vendorsData.slice(0, 10));
 
-      // 1. جلب الطلبات المكتملة لحساب العمولات
-      // جلب الطلبات المكتملة مع معلومات المتاجر
-      const { data: orders } = await supabase
-        .from('orders')
+      // 3. Daily Revenue
+      const daysBack = dateRange === '7days' ? 7 : 30;
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - daysBack);
+      
+      const { data: revenueData, error: revenueError } = await supabase.rpc('get_daily_revenue_report', {
+        p_start_date: startDate.toISOString().split('T')[0],
+        p_end_date: new Date().toISOString().split('T')[0]
+      });
+      if (revenueError) throw revenueError;
+      if (revenueData) setDailyRevenue(revenueData);
+
+      // 4. Pending Payout Requests
+      const { data: payoutsData, error: payoutsError } = await supabase
+        .from('payout_requests')
         .select(`
           id,
-          order_number,
-          total_amount,
-          created_at,
-          stores!orders_vendor_id_fkey (
-            id,
-            name,
-            name_ar
-          )
-        `)
-        .eq('status', 'delivered')
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      // جلب العمولات من جدول commissions
-      const { data: commissionsFromDB } = await supabase
-        .from('commissions')
-        .select(`
-          *,
-          orders!commissions_order_id_fkey (
-            order_number
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      // تنسيق بيانات العمولات
-      const commissionsData = commissionsFromDB?.map(commission => {
-        const order = commission.orders as any;
-        
-        return {
-          order_id: order?.order_number || commission.order_id.slice(0, 8),
-          vendor_name: 'بائع', // سنحتاج JOIN إضافي للحصول على اسم البائع
-          order_total: commission.order_amount,
-          commission_rate: commission.commission_rate * 100, // تحويل من 0.10 إلى 10
-          commission_amount: commission.commission_amount,
-          vendor_earning: commission.order_amount - commission.commission_amount,
-          date: new Date(commission.created_at).toLocaleDateString('ar-JO'),
-          status: commission.status
-        };
-      }) || [];
-
-      setCommissions(commissionsData);
-
-      const totalCommissions = commissionsData.reduce((sum, c) => sum + c.commission_amount, 0);
-      const totalPayments = commissionsData.reduce((sum, c) => sum + c.order_total, 0);
-      const totalTaxes = totalPayments * 0.16; // 16% ضريبة
-
-      // 2. جلب طلبات السحب
-      const { data: payoutsData } = await supabase
-        .from('payouts')
-        .select(`
-          id,
+          vendor_id,
           amount,
           status,
           bank_name,
-          bank_account_number,
-          bank_account_holder,
-          created_at,
-          users!payouts_user_id_fkey (
+          account_number,
+          account_holder,
+          iban,
+          requested_at,
+          notes,
+          stores!payout_requests_vendor_id_fkey (
             name,
-            role
+            phone
+          ),
+          vendor_wallets!payout_requests_vendor_id_fkey (
+            current_balance
           )
         `)
-        .order('created_at', { ascending: false });
+        .eq('status', 'pending')
+        .order('requested_at', { ascending: false });
 
-      const payoutsFormatted = payoutsData?.map(p => {
-        const user = p.users as any;
-        return {
+      if (payoutsError) throw payoutsError;
+      if (payoutsData) {
+        const formatted = payoutsData.map((p: any) => ({
           id: p.id,
+          vendor_id: p.vendor_id,
+          vendor_name: p.stores?.name || 'غير معروف',
+          vendor_phone: p.stores?.phone || '',
           amount: p.amount,
           status: p.status,
-          user_name: user?.name || 'مستخدم',
-          user_role: user?.role || 'vendor',
-          bank_details: {
-            bank_name: p.bank_name || 'غير محدد',
-            account_number: p.bank_account_number || 'غير محدد',
-            account_holder: p.bank_account_holder || 'غير محدد'
-          },
-          requested_at: new Date(p.created_at).toLocaleDateString('ar-JO')
-        };
-      }) || [];
+          bank_name: p.bank_name || '',
+          account_number: p.account_number || '',
+          account_holder: p.account_holder || '',
+          iban: p.iban || '',
+          requested_at: p.requested_at,
+          notes: p.notes || '',
+          current_balance: p.vendor_wallets?.current_balance || 0
+        }));
+        setPayoutRequests(formatted);
+      }
 
-      setPayouts(payoutsFormatted);
-      
-      const pendingPayouts = payoutsFormatted.filter(p => p.status === 'pending').length;
-
-      setFinancialSummary({
-        totalCommissions,
-        pendingPayouts,
-        totalPayments,
-        totalTaxes
-      });
-
+      setConnectionStatus('connected');
     } catch (error) {
-      console.error('خطأ في جلب البيانات المالية:', error);
+      console.error('Error loading financial data:', error);
+      setConnectionStatus('disconnected');
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const handleSaveSettings = async () => {
-    setSavingSettings(true);
-    try {
-      // تحديث أو إدراج الإعدادات
-      const { data: existing } = await supabase
-        .from('financial_settings')
-        .select('id')
-        .eq('is_active', true)
-        .single();
-
-      if (existing) {
-        // تحديث
-        const { error } = await supabase
-          .from('financial_settings')
-          .update({
-            default_commission_rate: settings.default_commission_rate,
-            tax_rate: settings.tax_rate,
-            min_payout_amount: settings.min_payout_amount,
-            base_delivery_fee: settings.base_delivery_fee,
-            per_km_delivery_fee: settings.per_km_delivery_fee,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existing.id);
-
-        if (error) throw error;
-      } else {
-        // إدراج جديد
-        const { error } = await supabase
-          .from('financial_settings')
-          .insert({
-            default_commission_rate: settings.default_commission_rate,
-            tax_rate: settings.tax_rate,
-            min_payout_amount: settings.min_payout_amount,
-            base_delivery_fee: settings.base_delivery_fee,
-            per_km_delivery_fee: settings.per_km_delivery_fee,
-            is_active: true
-          });
-
-        if (error) throw error;
-      }
-
-      alert('✅ تم حفظ الإعدادات المالية بنجاح');
-    } catch (error) {
-      console.error('خطأ في حفظ الإعدادات:', error);
-      alert('حدث خطأ في حفظ الإعدادات');
-    } finally {
-      setSavingSettings(false);
+  async function handlePayoutAction(payoutId: string, action: 'approve' | 'reject') {
+    if (!confirm(`هل أنت متأكد من ${action === 'approve' ? 'الموافقة على' : 'رفض'} هذا الطلب؟`)) {
+      return;
     }
-  };
 
-  const handleApprovePayout = async (id: string) => {
+    setProcessingPayout(payoutId);
     try {
+      const newStatus = action === 'approve' ? 'approved' : 'rejected';
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const { error } = await supabase
-        .from('payouts')
-        .update({ status: 'approved', approved_at: new Date().toISOString() })
-        .eq('id', id);
+        .from('payout_requests')
+        .update({ 
+          status: newStatus,
+          processed_at: new Date().toISOString(),
+          processed_by: user?.id
+        })
+        .eq('id', payoutId);
 
       if (error) throw error;
-      
-      alert(`✅ تمت الموافقة على طلب السحب`);
-      fetchFinancialData(); // إعادة تحميل البيانات
-    } catch (error) {
-      console.error('خطأ في الموافقة:', error);
-      alert('حدث خطأ في الموافقة على الطلب');
-    }
-  };
 
-  const handleRejectPayout = async (id: string) => {
-    const reason = prompt('يرجى إدخال سبب الرفض:');
-    if (reason) {
-      try {
-        const { error } = await supabase
-          .from('payouts')
-          .update({ status: 'rejected', rejection_reason: reason })
-          .eq('id', id);
-
-        if (error) throw error;
-        
-        alert(`✅ تم رفض طلب السحب`);
-        fetchFinancialData();
-      } catch (error) {
-        console.error('خطأ في رفض الطلب:', error);
-        alert('حدث خطأ في رفض الطلب');
+      // If approved, update vendor wallet
+      if (action === 'approve') {
+        const payout = payoutRequests.find(p => p.id === payoutId);
+        if (payout) {
+          await supabase
+            .from('vendor_wallets')
+            .update({
+              current_balance: payout.current_balance - payout.amount,
+              total_withdrawn: payout.current_balance
+            })
+            .eq('vendor_id', payout.vendor_id);
+        }
       }
+
+      await loadFinancialData();
+      alert(action === 'approve' ? '✅ تم الموافقة على طلب السحب بنجاح' : '❌ تم رفض طلب السحب');
+    } catch (error) {
+      console.error('Error processing payout:', error);
+      alert('حدث خطأ أثناء معالجة الطلب');
+    } finally {
+      setProcessingPayout(null);
     }
-  };
+  }
+
+  function exportToCSV() {
+    if (!vendors.length) return;
+
+    const headers = ['اسم البائع', 'عدد الطلبات', 'الإيرادات', 'العمولة', 'الأرباح الصافية', 'الرصيد الحالي'];
+    const rows = vendors.map(v => [
+      v.vendor_name,
+      v.total_orders,
+      v.total_revenue,
+      v.total_commission,
+      v.net_earnings,
+      v.current_balance
+    ]);
+
+    const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `financial_report_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  }
+
+  function exportDailyRevenueToCSV() {
+    if (!dailyRevenue.length) return;
+
+    const headers = ['التاريخ', 'الطلبات', 'الإيرادات', 'عمولة المنصة', 'أرباح البائعين'];
+    const rows = dailyRevenue.map(d => [
+      new Date(d.date).toLocaleDateString('ar-SA'),
+      d.total_orders,
+      d.total_revenue,
+      d.platform_earning,
+      d.vendors_earning
+    ]);
+
+    const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `daily_revenue_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  }
 
   if (loading) {
     return (
-      <div className="min-h-screen relative overflow-hidden bg-gray-50">
+      <div className="flex h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
         <FuturisticSidebar role="admin" />
-        <div className="md:mr-[280px] transition-all duration-300">
-          <FuturisticNavbar userName="" userRole="admin" />
-          <main className="pt-24 px-4 md:px-8 lg:px-10 pb-10">
-            <div className="flex items-center justify-center h-96">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">جاري تحميل البيانات المالية...</p>
-              </div>
-            </div>
-          </main>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gray-50">
+    <div className="flex h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <FuturisticSidebar role="admin" />
-      
-      {/* Main Content Area */}
-      <div className="md:mr-[280px] transition-all duration-300">
-        <FuturisticNavbar userName="" userRole="admin" />
-        
-        <main className="pt-24 px-4 md:px-8 lg:px-10 pb-10 relative z-10 max-w-[1800px] mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">الإدارة المالية</h1>
-            <p className="text-gray-600">إدارة العمولات والمدفوعات والإعدادات المالية</p>
-          </div>
-
-          {/* Financial Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <p className="text-sm text-gray-600 mb-1">إجمالي العمولات</p>
-              <h3 className="text-3xl font-bold text-green-600">
-                {financialSummary.totalCommissions.toLocaleString('ar-JO', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2
-                })} ₪
-              </h3>
-              <p className="text-sm text-gray-500 mt-2">من الطلبات المكتملة</p>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <p className="text-sm text-gray-600 mb-1">طلبات سحب معلقة</p>
-              <h3 className="text-3xl font-bold text-orange-600">{financialSummary.pendingPayouts}</h3>
-              <p className="text-sm text-gray-500 mt-2">
-                {financialSummary.pendingPayouts > 0 ? 'تحتاج إلى معالجة' : 'لا توجد طلبات معلقة'}
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <p className="text-sm text-gray-600 mb-1">إجمالي المدفوعات</p>
-              <h3 className="text-3xl font-bold text-gray-800">
-                {financialSummary.totalPayments.toLocaleString('ar-JO', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2
-                })} ₪
-              </h3>
-              <p className="text-sm text-gray-500 mt-2">قيمة الطلبات المكتملة</p>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <p className="text-sm text-gray-600 mb-1">الضرائب المحصلة</p>
-              <h3 className="text-3xl font-bold text-gray-800">
-                {financialSummary.totalTaxes.toLocaleString('ar-JO', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2
-                })} ₪
-              </h3>
-              <p className="text-sm text-gray-500 mt-2">16% من المدفوعات</p>
-            </div>
-          </div>
-
-          {/* Tabs Navigation */}
-          <div className="bg-white rounded-xl shadow-sm mb-6 border border-gray-100">
-            <div className="border-b border-gray-200">
-              <button
-                onClick={() => setActiveTab('commissions')}
-                className={`px-6 py-4 font-medium transition-colors ${
-                  activeTab === 'commissions'
-                    ? 'text-indigo-600 border-b-2 border-indigo-600'
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
-              >
-                💰 تقرير العمولات
-              </button>
-              <button
-                onClick={() => setActiveTab('payouts')}
-                className={`px-6 py-4 font-medium transition-colors ${
-                  activeTab === 'payouts'
-                    ? 'text-indigo-600 border-b-2 border-indigo-600'
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
-              >
-                💰 طلبات السحب ({payouts.filter(p => p.status === 'pending').length})
-              </button>
-              <button
-                onClick={() => setActiveTab('settings')}
-                className={`px-6 py-4 font-medium transition-colors ${
-                  activeTab === 'settings'
-                    ? 'text-indigo-600 border-b-2 border-indigo-600'
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
-              >
-                ⚙️ الإعدادات المالية
-              </button>
-            </div>
-
-            <div className="p-6">
-              {/* Commissions Tab */}
-              {activeTab === 'commissions' && (
-                <div>
-                  {commissions.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">رقم الطلب</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">البائع</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">إجمالي الطلب</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">نسبة العمولة</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">قيمة العمولة</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">ربح البائع</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                          {commissions.map((commission, index) => (
-                            <tr key={index} className="hover:bg-gray-50">
-                              <td className="px-6 py-4">
-                                <span className="font-medium text-indigo-600">
-                                  #{commission.order_id}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 text-gray-800">{commission.vendor_name}</td>
-                              <td className="px-6 py-4 font-semibold text-gray-800">
-                                {commission.order_total.toFixed(2)} ₪
-                              </td>
-                              <td className="px-6 py-4 text-gray-600">{commission.commission_rate}%</td>
-                              <td className="px-6 py-4 font-bold text-green-600">
-                                +{commission.commission_amount.toFixed(2)} ₪
-                              </td>
-                              <td className="px-6 py-4 text-gray-800">
-                                {commission.vendor_earning.toFixed(2)} ₪
-                              </td>
-                              <td className="px-6 py-4 text-gray-600">{commission.date}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 text-gray-500">
-                      <p className="text-4xl mb-2">💰</p>
-                      <p>لا توجد عمولات محصلة بعد</p>
-                    </div>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <FuturisticNavbar />
+        <main className="flex-1 overflow-y-auto p-6">
+          <div className="max-w-7xl mx-auto space-y-6">
+            {/* Header with Connection Status */}
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+                  النظام المالي الإحترافي
+                  {connectionStatus === 'connected' && (
+                    <span className="flex items-center gap-1 text-sm font-normal text-green-400 bg-green-500/20 px-3 py-1 rounded-full">
+                      <CheckCircle className="w-4 h-4" />
+                      متصل
+                    </span>
                   )}
-                </div>
-              )}
-
-              {/* Payouts Tab */}
-              {activeTab === 'payouts' && (
-                <div className="space-y-4">
-                  {payouts.length > 0 ? (
-                    payouts.map((payout) => (
-                      <div key={payout.id} className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1 mr-[70px]">
-                          <div className="flex items-center gap-3 mb-3">
-                            <h3 className="text-xl font-bold text-gray-800">{payout.user_name}</h3>
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              payout.user_role === 'vendor' 
-                                ? 'bg-purple-100 text-purple-800' 
-                                : 'bg-blue-100 text-blue-800'
-                            }`}>
-                              {payout.user_role === 'vendor' ? 'بائع' : 'مندوب'}
-                            </span>
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              payout.status === 'pending' 
-                                ? 'bg-yellow-100 text-yellow-800' 
-                                : payout.status === 'processing'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-green-100 text-green-800'
-                            }`}>
-                              {payout.status === 'pending' ? 'قيد الانتظار' : 
-                               payout.status === 'processing' ? 'قيد المعالجة' : 
-                               'مكتمل'}
-                            </span>
-                          </div>
-                          
-                          <div className="grid grid-cols-3 gap-4 mb-4">
-                            <div>
-                              <p className="text-sm text-gray-600">المبلغ المطلوب:</p>
-                              <p className="text-2xl font-bold text-green-600">{payout.amount} د.أ</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-600">البنك:</p>
-                              <p className="font-semibold text-gray-800">{payout.bank_details.bank_name}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-600">رقم الحساب:</p>
-                              <p className="font-semibold text-gray-800">{payout.bank_details.account_number}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-600">اسم صاحب الحساب:</p>
-                              <p className="font-semibold text-gray-800">{payout.bank_details.account_holder}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-600">تاريخ الطلب:</p>
-                              <p className="font-semibold text-gray-800">{payout.requested_at}</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {payout.status === 'pending' && (
-                        <div className="flex gap-3">
-                          <button
-                            onClick={() => handleApprovePayout(payout.id)}
-                            className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
-                          >
-                            ✓ الموافقة والتحويل
-                          </button>
-                          <button
-                            onClick={() => handleRejectPayout(payout.id)}
-                            className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
-                          >
-                            ✗ رفض الطلب
-                          </button>
-                        </div>
-                      )}
-
-                      {payout.status === 'processing' && (
-                        <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg">
-                          🔄 جاري معالجة الطلب...
-                        </div>
-                      )}
-                    </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-12 text-gray-500">
-                      <p className="text-4xl mb-2">💳</p>
-                      <p>لا توجد طلبات سحب بعد</p>
-                    </div>
+                  {connectionStatus === 'disconnected' && (
+                    <span className="flex items-center gap-1 text-sm font-normal text-red-400 bg-red-500/20 px-3 py-1 rounded-full">
+                      <XCircle className="w-4 h-4" />
+                      غير متصل
+                    </span>
                   )}
-                </div>
-              )}
+                  {connectionStatus === 'checking' && (
+                    <span className="flex items-center gap-1 text-sm font-normal text-yellow-400 bg-yellow-500/20 px-3 py-1 rounded-full">
+                      <Clock className="w-4 h-4 animate-spin" />
+                      جاري التحقق...
+                    </span>
+                  )}
+                </h1>
+                <p className="text-gray-400 mt-2">إحصائيات وتقارير شاملة | Amazon-like Dashboard</p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={exportDailyRevenueToCSV}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all"
+                >
+                  <FileText className="w-5 h-5" />
+                  تصدير اليومي
+                </button>
+                <button
+                  onClick={exportToCSV}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all"
+                >
+                  <Download className="w-5 h-5" />
+                  تصدير البائعين
+                </button>
+              </div>
+            </div>
 
-              {/* Settings Tab */}
-              {activeTab === 'settings' && (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Stats Cards */}
+            {stats && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-gradient-to-br from-blue-600/20 to-blue-700/20 backdrop-blur-sm border border-blue-500/30 rounded-xl p-6">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        نسبة العمولة الافتراضية (%)
-                      </label>
-                      <input
-                        type="number"
-                        value={settings.default_commission_rate}
-                        onChange={(e) => setSettings({...settings, default_commission_rate: Number(e.target.value)})}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                      />
+                      <p className="text-blue-300 text-sm">إجمالي الإيرادات</p>
+                      <p className="text-3xl font-bold text-white mt-2">{stats.total_revenue.toFixed(2)} ر.س</p>
+                      <p className="text-blue-300 text-xs mt-2">{stats.total_orders} طلب</p>
                     </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        نسبة الضريبة (%)
-                      </label>
-                      <input
-                        type="number"
-                        value={settings.tax_rate}
-                        onChange={(e) => setSettings({...settings, tax_rate: Number(e.target.value)})}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        الحد الأدنى للسحب (د.أ)
-                      </label>
-                      <input
-                        type="number"
-                        value={settings.min_payout_amount}
-                        onChange={(e) => setSettings({...settings, min_payout_amount: Number(e.target.value)})}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        min="0"
-                        step="1"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        رسوم التوصيل الأساسية (د.أ)
-                      </label>
-                      <input
-                        type="number"
-                        value={settings.base_delivery_fee}
-                        onChange={(e) => setSettings({...settings, base_delivery_fee: Number(e.target.value)})}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        min="0"
-                        step="0.1"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        رسوم التوصيل لكل كم (د.أ)
-                      </label>
-                      <input
-                        type="number"
-                        value={settings.per_km_delivery_fee}
-                        onChange={(e) => setSettings({...settings, per_km_delivery_fee: Number(e.target.value)})}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        min="0"
-                        step="0.1"
-                      />
-                    </div>
+                    <DollarSign className="w-12 h-12 text-blue-400" />
                   </div>
-
-                  <button 
-                    onClick={handleSaveSettings}
-                    disabled={savingSettings}
-                    className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {savingSettings ? '⏳ جاري الحفظ...' : '💾 حفظ الإعدادات'}
-                  </button>
                 </div>
-              )}
+
+                <div className="bg-gradient-to-br from-green-600/20 to-green-700/20 backdrop-blur-sm border border-green-500/30 rounded-xl p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-green-300 text-sm">أرباح المنصة</p>
+                      <p className="text-3xl font-bold text-white mt-2">{stats.total_platform_earning.toFixed(2)} ر.س</p>
+                      <p className="text-green-300 text-xs mt-2">{stats.avg_commission_rate.toFixed(1)}% عمولة</p>
+                    </div>
+                    <TrendingUp className="w-12 h-12 text-green-400" />
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-purple-600/20 to-purple-700/20 backdrop-blur-sm border border-purple-500/30 rounded-xl p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-purple-300 text-sm">أرباح البائعين</p>
+                      <p className="text-3xl font-bold text-white mt-2">{stats.total_vendors_earning.toFixed(2)} ر.س</p>
+                      <p className="text-purple-300 text-xs mt-2">{stats.active_vendors} بائع</p>
+                    </div>
+                    <Wallet className="w-12 h-12 text-purple-400" />
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-orange-600/20 to-orange-700/20 backdrop-blur-sm border border-orange-500/30 rounded-xl p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-orange-300 text-sm">الطلبات المكتملة</p>
+                      <p className="text-3xl font-bold text-white mt-2">{stats.completed_orders}</p>
+                      <p className="text-orange-300 text-xs mt-2">من {stats.total_orders} طلب</p>
+                    </div>
+                    <CheckCircle className="w-12 h-12 text-orange-400" />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Payout Requests Section */}
+            {payoutRequests.length > 0 && (
+              <div className="bg-gradient-to-br from-orange-500/10 to-red-500/10 backdrop-blur-sm border border-orange-500/30 rounded-xl p-6">
+                <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                  <AlertCircle className="w-6 h-6 text-orange-400" />
+                  طلبات السحب المعلقة ({payoutRequests.length})
+                </h2>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-900/50">
+                      <tr>
+                        <th className="px-4 py-3 text-right text-sm font-semibold text-gray-300">البائع</th>
+                        <th className="px-4 py-3 text-right text-sm font-semibold text-gray-300">المبلغ</th>
+                        <th className="px-4 py-3 text-right text-sm font-semibold text-gray-300">الرصيد الحالي</th>
+                        <th className="px-4 py-3 text-right text-sm font-semibold text-gray-300">البنك / IBAN</th>
+                        <th className="px-4 py-3 text-right text-sm font-semibold text-gray-300">التاريخ</th>
+                        <th className="px-4 py-3 text-right text-sm font-semibold text-gray-300">الإجراءات</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-700">
+                      {payoutRequests.map((payout) => (
+                        <tr key={payout.id} className="hover:bg-gray-700/30">
+                          <td className="px-4 py-3">
+                            <div>
+                              <p className="font-medium text-white">{payout.vendor_name}</p>
+                              <p className="text-sm text-gray-400">{payout.vendor_phone}</p>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-lg font-bold text-green-400">{payout.amount.toFixed(2)} ر.س</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-gray-300">{payout.current_balance.toFixed(2)} ر.س</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div>
+                              <p className="text-sm font-medium text-white">{payout.bank_name}</p>
+                              <p className="text-xs text-gray-400 font-mono">{payout.iban || payout.account_number}</p>
+                              <p className="text-xs text-gray-500">{payout.account_holder}</p>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-300">
+                            {new Date(payout.requested_at).toLocaleDateString('ar-SA')}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handlePayoutAction(payout.id, 'approve')}
+                                disabled={processingPayout === payout.id}
+                                className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {processingPayout === payout.id ? (
+                                  <Clock className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <CheckCircle className="w-4 h-4" />
+                                )}
+                                موافقة
+                              </button>
+                              <button
+                                onClick={() => handlePayoutAction(payout.id, 'reject')}
+                                disabled={processingPayout === payout.id}
+                                className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <XCircle className="w-4 h-4" />
+                                رفض
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Revenue Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Line Chart */}
+              <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6">
+                <h2 className="text-xl font-bold text-white mb-4">منحنى الإيرادات</h2>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={dailyRevenue}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis 
+                      dataKey="date" 
+                      stroke="#9CA3AF"
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(value) => new Date(value).toLocaleDateString('ar-SA', { month: 'short', day: 'numeric' })}
+                    />
+                    <YAxis stroke="#9CA3AF" tick={{ fontSize: 12 }} />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                      labelStyle={{ color: '#F3F4F6' }}
+                    />
+                    <Legend wrapperStyle={{ color: '#9CA3AF' }} />
+                    <Line type="monotone" dataKey="total_revenue" stroke="#3B82F6" strokeWidth={2} name="الإيرادات" />
+                    <Line type="monotone" dataKey="platform_earning" stroke="#10B981" strokeWidth={2} name="أرباح المنصة" />
+                    <Line type="monotone" dataKey="vendors_earning" stroke="#8B5CF6" strokeWidth={2} name="أرباح البائعين" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Bar Chart */}
+              <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6">
+                <h2 className="text-xl font-bold text-white mb-4">مقارنة الطلبات اليومية</h2>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={dailyRevenue}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis 
+                      dataKey="date" 
+                      stroke="#9CA3AF"
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(value) => new Date(value).toLocaleDateString('ar-SA', { month: 'short', day: 'numeric' })}
+                    />
+                    <YAxis stroke="#9CA3AF" tick={{ fontSize: 12 }} />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                      labelStyle={{ color: '#F3F4F6' }}
+                    />
+                    <Legend wrapperStyle={{ color: '#9CA3AF' }} />
+                    <Bar dataKey="total_orders" fill="#3B82F6" name="عدد الطلبات" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Calendar className="w-6 h-6 text-blue-400" />
+                  الإيرادات اليومية
+                </h2>
+                <div className="flex gap-2">
+                  {['7days', '30days'].map((range) => (
+                    <button
+                      key={range}
+                      onClick={() => setDateRange(range as any)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                        dateRange === range
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700'
+                      }`}
+                    >
+                      {range === '7days' ? '7 أيام' : '30 يوم'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-900/50">
+                    <tr>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-300">التاريخ</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-300">الطلبات</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-300">الإيرادات</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-300">عمولة المنصة</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-300">أرباح البائعين</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-700">
+                    {dailyRevenue.map((day) => (
+                      <tr key={day.date} className="hover:bg-gray-700/30">
+                        <td className="px-4 py-3 text-sm font-medium text-white">
+                          {new Date(day.date).toLocaleDateString('ar-SA')}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-300">{day.total_orders}</td>
+                        <td className="px-4 py-3 text-sm font-bold text-blue-400">{day.total_revenue.toFixed(2)} ر.س</td>
+                        <td className="px-4 py-3 text-sm text-green-400">{day.platform_earning.toFixed(2)} ر.س</td>
+                        <td className="px-4 py-3 text-sm text-purple-400">{day.vendors_earning.toFixed(2)} ر.س</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6">
+              <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <Users className="w-6 h-6 text-purple-400" />
+                أفضل البائعين ({vendors.length})
+              </h2>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-900/50">
+                    <tr>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-300">#</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-300">البائع</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-300">الطلبات</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-300">الإيرادات</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-300">العمولة</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-300">الصافي</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-300">الرصيد</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-700">
+                    {vendors.map((vendor, index) => (
+                      <tr key={vendor.vendor_id} className="hover:bg-gray-700/30">
+                        <td className="px-4 py-3">
+                          <span className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold text-sm flex items-center justify-center">
+                            {index + 1}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 font-medium text-white">{vendor.vendor_name}</td>
+                        <td className="px-4 py-3 text-gray-300">{vendor.total_orders}</td>
+                        <td className="px-4 py-3 font-bold text-blue-400">{vendor.total_revenue.toFixed(2)} ر.س</td>
+                        <td className="px-4 py-3 text-orange-400">{vendor.total_commission.toFixed(2)} ر.س</td>
+                        <td className="px-4 py-3 font-bold text-green-400">{vendor.net_earnings.toFixed(2)} ر.س</td>
+                        <td className="px-4 py-3 text-purple-400">{vendor.current_balance.toFixed(2)} ر.س</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </main>
