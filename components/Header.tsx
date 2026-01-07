@@ -218,8 +218,8 @@ export default function Header() {
       </div>
 
       {/* Main Header */}
-      <div className="container mx-auto px-3 sm:px-4 md:px-8 py-2 sm:py-3 md:py-4 max-w-full">
-        <div className="flex items-center justify-between gap-2 md:gap-10">
+      <div className="container mx-auto px-3 sm:px-4 md:px-8 py-2 sm:py-3 md:py-4 max-w-full overflow-visible">
+        <div className="flex items-center justify-between gap-2 md:gap-10 overflow-visible">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group shrink-0">
             <div className="relative">
@@ -240,7 +240,7 @@ export default function Header() {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-1 sm:gap-2 md:gap-5">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-5 overflow-visible">
             {/* Dashboard Button - Desktop only */}
             {(userRole && userRole !== 'customer') || isVendorStaff || isRestaurantStaff ? (
               <Link
@@ -253,7 +253,7 @@ export default function Header() {
               </Link>
             ) : null}
             
-            <div className="flex items-center gap-0.5 sm:gap-1">
+            <div className="flex items-center gap-0.5 sm:gap-1 overflow-visible">
               {isLoggedIn && <NotificationDropdown />}
               
               {isLoggedIn && (
@@ -356,7 +356,7 @@ export default function Header() {
                 </div>
 
                 {/* Mobile Version - قائمة منسدلة محسّنة */}
-                <div className="md:hidden">
+                <div className="md:hidden relative overflow-visible">
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                     className="flex items-center gap-1 p-0.5 pr-1.5 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all duration-300 border border-gray-100"
