@@ -70,7 +70,7 @@ export default function RestaurantOrdersPage() {
         .from('orders')
         .select(`
           *,
-          delivery_batches!orders_batch_id_fkey (batch_number),
+          delivery_batches!fk_orders_batch (batch_number),
           customer:users!orders_customer_id_fkey(name, phone)
         `)
         .eq('vendor_id', vId)
