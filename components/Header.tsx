@@ -241,6 +241,18 @@ export default function Header() {
 
           {/* Actions */}
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+            {/* Dashboard Button - Desktop only */}
+            {(userRole && userRole !== 'customer') || isVendorStaff || isRestaurantStaff ? (
+              <Link
+                href={getDashboardUrl()}
+                className="hidden md:flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 text-white rounded-xl md:rounded-2xl hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300 whitespace-nowrap font-bold text-xs sm:text-sm"
+                style={{ background: 'linear-gradient(135deg, #6236FF 0%, #B621FE 100%)' }}
+              >
+                <LayoutDashboard className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                <span className="hidden sm:inline">لوحة التحكم</span>
+              </Link>
+            ) : null}
+
             {/* Group 1: Notifications & Currency */}
             {isLoggedIn && (
               <div className="flex items-center gap-2">
