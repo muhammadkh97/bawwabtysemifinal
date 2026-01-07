@@ -92,7 +92,7 @@ export default function CustomerDeliveryScanPage() {
 
       // التحقق من الحالة
       if (orderData.status === 'delivered') {
-        toast.info('تم تسليم هذا الطلب مسبقاً')
+        toast('تم تسليم هذا الطلب مسبقاً', { icon: 'ℹ️' })
         router.push(`/orders/${params.id}`)
         return
       }

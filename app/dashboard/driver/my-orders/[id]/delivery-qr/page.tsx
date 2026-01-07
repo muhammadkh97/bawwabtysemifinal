@@ -117,7 +117,7 @@ export default function DriverDeliveryQRPage() {
 
       // التحقق من الحالة
       if (orderData.status === 'delivered') {
-        toast.info('تم تسليم هذا الطلب مسبقاً')
+        toast('تم تسليم هذا الطلب مسبقاً', { icon: 'ℹ️' })
         router.push(`/dashboard/driver/my-orders/${params.id}`)
         return
       }

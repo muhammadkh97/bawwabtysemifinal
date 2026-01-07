@@ -94,7 +94,7 @@ export default function DriverPickupScanPage() {
 
       // التحقق من الحالة
       if (orderData.status === 'picked_up') {
-        toast.info('تم استلام هذا الطلب مسبقاً')
+        toast('تم استلام هذا الطلب مسبقاً', { icon: 'ℹ️' })
         router.push(`/dashboard/driver/my-orders/${params.id}`)
         return
       }
