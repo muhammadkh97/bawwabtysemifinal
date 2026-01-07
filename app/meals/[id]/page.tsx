@@ -68,12 +68,74 @@ export default function MealDetailsPage() {
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [adding, setAdding] = useState(false);
+  const [deliveryInfo, setDeliveryInfo] = useState({ fee: 5, time: '30-60', distance: 0 });
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
 
   useEffect(() => {
     if (mealId) {
       fetchMealDetails();
+      getUserLocation();
     }
   }, [mealId]);
+
+  // الحصول على موقع المستخدم
+  const getUserLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.log('Could not get location:', error);
+        }
+      );
+    }
+  };
+
+  // حساب المسافة بين نقطتين (بالكيلومتر)
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // نصف قطر الأرض بالكيلومتر
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  // حساب رسوم ووقت التوصيل بناءً على المسافة
+  const calculateDeliveryInfo = (restaurantLat: number, restaurantLng: number) => {
+    if (!userLocation) {
+      return { fee: 5, time: '30-60', distance: 0 };
+    }
+
+    const distance = calculateDistance(
+      userLocation.lat,
+      userLocation.lng,
+      restaurantLat,
+      restaurantLng
+    );
+
+    // حساب الرسوم: 3 دينار للكيلومتر الأول + 1 دينار لكل كيلومتر إضافي
+    let fee = 3;
+    if (distance > 1) {
+      fee += Math.ceil(distance - 1) * 1;
+    }
+    // الحد الأقصى 15 دينار
+    fee = Math.min(fee, 15);
+
+    // حساب الوقت: 20 دقيقة + 5 دقائق لكل كيلومتر
+    const minTime = Math.ceil(20 + (distance * 5));
+    const maxTime = Math.ceil(minTime + 15);
+    const timeRange = `${minTime}-${maxTime}`;
+
+    return { fee, time: timeRange, distance: Math.round(distance * 10) / 10 };
+  };
 
   const fetchMealDetails = async () => {
     try {
@@ -109,6 +171,22 @@ export default function MealDetailsPage() {
       }
 
       setMeal(data);
+
+      // حساب معلومات التوصيل إذا كان هناك موقع للمطعم
+      const { data: restaurantData } = await supabase
+        .from('stores')
+        .select('latitude, longitude, lat, lng')
+        .eq('id', data.vendor_id)
+        .single();
+
+      if (restaurantData) {
+        const lat = restaurantData.latitude || restaurantData.lat;
+        const lng = restaurantData.longitude || restaurantData.lng;
+        if (lat && lng) {
+          const deliveryCalc = calculateDeliveryInfo(lat, lng);
+          setDeliveryInfo(deliveryCalc);
+        }
+      }
     } catch (error) {
       console.error('Error fetching meal:', error);
       toast.error('حدث خطأ في تحميل تفاصيل الوجبة');
@@ -438,9 +516,17 @@ export default function MealDetailsPage() {
             {/* Info Alert */}
             <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
               <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-blue-900">
-                سيتم توصيل طلبك خلال 30-60 دقيقة. رسوم التوصيل: 5 دينار
-              </p>
+              <div className="text-sm text-blue-900">
+                <p>
+                  سيتم توصيل طلبك خلال {deliveryInfo.time} دقيقة.
+                </p>
+                <p className="mt-1">
+                  رسوم التوصيل: {formatPrice(deliveryInfo.fee)}
+                  {deliveryInfo.distance > 0 && (
+                    <span className="text-blue-600"> (المسافة: {deliveryInfo.distance} كم)</span>
+                  )}
+                </p>
+              </div>
             </div>
           </div>
         </div>

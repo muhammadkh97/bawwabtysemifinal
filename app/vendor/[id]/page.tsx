@@ -259,7 +259,7 @@ export default function VendorDetailsPage() {
                       className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-2xl hover:bg-white/20 transition-all cursor-pointer"
                     >
                       <MapPin className="w-5 h-5 text-red-400" />
-                      <span>{vendor.store_address || 'موقع المتجر'}</span>
+                      <span>{vendor.store_address || (isRestaurant ? 'موقع المطعم' : 'موقع المتجر')}</span>
                     </button>
 
                     {vendor.min_order_amount > 0 && (
