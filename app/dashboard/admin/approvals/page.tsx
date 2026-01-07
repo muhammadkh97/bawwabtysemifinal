@@ -50,7 +50,7 @@ export default function ApprovalsPage() {
             name,
             name_ar
           ),
-          stores!products_vendor_id_fkey (
+          stores!products_vendor_id_stores_fkey (
             id,
             name,
             name_ar,
@@ -127,10 +127,9 @@ export default function ApprovalsPage() {
         .select(`
           id,
           license_number,
+          license_image,
           vehicle_type,
-          vehicle_plate,
-          vehicle_model,
-          vehicle_color,
+          vehicle_number,
           documents,
           created_at,
           users!drivers_user_id_fkey (
@@ -153,10 +152,9 @@ export default function ApprovalsPage() {
           email: d.users?.email || '',
           phone: d.users?.phone || '',
           license_number: d.license_number || '',
+          license_image: d.license_image || '',
           vehicle_type: d.vehicle_type || '',
-          vehicle_plate: d.vehicle_plate || '',
-          vehicle_model: d.vehicle_model || '',
-          vehicle_color: d.vehicle_color || '',
+          vehicle_number: d.vehicle_number || '',
           documents: d.documents || [],
           created_at: d.created_at
         })));
