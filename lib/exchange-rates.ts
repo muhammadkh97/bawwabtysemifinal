@@ -262,3 +262,160 @@ export function scheduleExchangeRatesUpdate(intervalHours: number = 24) {
     clearInterval(intervalId);
   };
 }
+
+// =========================================================
+// إضافات جديدة لدعم نظام العملات المحسّن
+// =========================================================
+
+/**
+ * Types
+ */
+export interface Currency {
+  code: string;
+  name_en: string;
+  name_ar: string;
+  symbol: string;
+  flag: string;
+  decimal_places: number;
+  country_code: string;
+  subunit_name: string;
+  is_active: boolean;
+}
+
+export interface ExchangeRate {
+  currency: string;
+  rate: number;
+  last_updated: string;
+  is_stale: boolean;
+}
+
+/**
+ * الحصول على جميع العملات النشطة
+ */
+export async function getAllCurrencies(): Promise<Currency[]> {
+  try {
+    const { data, error } = await supabase
+      .from('currencies')
+      .select('code, name_en, name_ar, symbol, flag, decimal_places, country_code, subunit_name, is_active')
+      .eq('is_active', true)
+      .order('display_order');
+    
+    if (error) {
+      console.error('❌ خطأ في جلب العملات:', error);
+      throw error;
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error in getAllCurrencies:', error);
+    throw error;
+  }
+}
+
+/**
+ * تحويل مبلغ من عملة إلى أخرى
+ */
+export async function convertCurrency(
+  amount: number,
+  fromCurrency: string,
+  toCurrency: string
+): Promise<number> {
+  if (amount === 0) return 0;
+  if (fromCurrency === toCurrency) return amount;
+  
+  try {
+    const { data, error } = await supabase.rpc('convert_currency_cached', {
+      p_amount: amount,
+      p_from_currency: fromCurrency,
+      p_to_currency: toCurrency
+    });
+    
+    if (error) {
+      console.error(`❌ خطأ في تحويل ${amount} ${fromCurrency} إلى ${toCurrency}:`, error);
+      throw error;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error in convertCurrency:', error);
+    throw error;
+  }
+}
+
+/**
+ * الحصول على معلومات عملة محددة
+ */
+export async function getCurrencyInfo(code: string): Promise<Currency | null> {
+  try {
+    const { data, error } = await supabase.rpc('get_currency_info', {
+      p_code: code
+    });
+    
+    if (error) {
+      console.error(`❌ خطأ في جلب معلومات العملة ${code}:`, error);
+      return null;
+    }
+    
+    return data?.[0] || null;
+  } catch (error) {
+    console.error('Error in getCurrencyInfo:', error);
+    return null;
+  }
+}
+
+/**
+ * تمييز الأسعار القديمة (أكثر من 24 ساعة)
+ */
+export async function markStaleRates(): Promise<number> {
+  try {
+    const { data, error } = await supabase.rpc('mark_stale_exchange_rates');
+    
+    if (error) {
+      console.error('❌ خطأ في تمييز الأسعار القديمة:', error);
+      throw error;
+    }
+    
+    return data || 0;
+  } catch (error) {
+    console.error('Error in markStaleRates:', error);
+    throw error;
+  }
+}
+
+/**
+ * تنسيق السعر حسب العملة
+ */
+export function formatPrice(
+  amount: number,
+  currency: string,
+  locale: 'ar' | 'en' = 'ar'
+): string {
+  return new Intl.NumberFormat(locale === 'ar' ? 'ar-JO' : 'en-US', {
+    style: 'currency',
+    currency: currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+/**
+ * الحصول على رمز العملة مع العلم
+ */
+export function getCurrencySymbol(code: string): string {
+  const symbols: Record<string, string> = {
+    JOD: 'د.أ 🇯🇴',
+    SAR: 'ر.س 🇸🇦',
+    ILS: '₪ 🇮🇱',
+    USD: '$ 🇺🇸',
+    EUR: '€ 🇪🇺',
+    GBP: '£ 🇬🇧',
+    AED: 'د.إ 🇦🇪',
+    KWD: 'د.ك 🇰🇼',
+    QAR: 'ر.ق 🇶🇦',
+    BHD: 'د.ب 🇧🇭',
+    OMR: 'ر.ع 🇴🇲',
+    EGP: 'ج.م 🇪🇬',
+  };
+  
+  return symbols[code] || code;
+}
