@@ -82,6 +82,30 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Hardcoded exchange rates (fallback if database is unavailable)
+  const getHardcodedRates = (targetCurrency: string): Record<string, number> => {
+    // All rates are based on USD = 1.0
+    const usdRates: Record<string, number> = {
+      'USD': 1.0,
+      'SAR': 3.75,
+      'ILS': 3.65,
+      'JOD': 0.71,
+      'EGP': 49.5,
+      'AED': 3.67,
+      'KWD': 0.31
+    };
+
+    const targetRate = usdRates[targetCurrency] || 1;
+    const rates: Record<string, number> = {};
+    
+    // Convert all currencies to target currency
+    Object.entries(usdRates).forEach(([currency, rateToUSD]) => {
+      rates[currency] = targetRate / rateToUSD;
+    });
+    
+    return rates;
+  };
+
   // جلب أسعار الصرف من قاعدة البيانات
   const loadExchangeRates = async () => {
     try {
@@ -92,7 +116,12 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       );
       
       if (error) {
-        console.error('Error loading exchange rates:', error);
+        console.warn('⚠️ Error loading exchange rates from database, using hardcoded rates:', error.message);
+        // Use hardcoded rates as fallback
+        const hardcodedRates = getHardcodedRates(selectedCurrency);
+        setExchangeRates(hardcodedRates);
+        setExchangeRatesLoaded(true);
+        console.log(`✅ استخدام أسعار صرف ثابتة (${Object.keys(hardcodedRates).length} عملة)`);
         return;
       }
 
@@ -104,11 +133,25 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       // إضافة سعر 1 للعملة نفسها
       rates[selectedCurrency] = 1;
       
+      // If no data returned, use hardcoded rates
+      if (Object.keys(rates).length <= 1) {
+        const hardcodedRates = getHardcodedRates(selectedCurrency);
+        setExchangeRates(hardcodedRates);
+        setExchangeRatesLoaded(true);
+        console.log(`✅ استخدام أسعار صرف ثابتة (${Object.keys(hardcodedRates).length} عملة)`);
+        return;
+      }
+      
       setExchangeRates(rates);
       setExchangeRatesLoaded(true);
       console.log(`✅ تم تحميل ${Object.keys(rates).length} سعر صرف للعملة ${selectedCurrency}`);
     } catch (error) {
       console.error('❌ خطأ في تحميل أسعار الصرف:', error);
+      // Use hardcoded rates as final fallback
+      const hardcodedRates = getHardcodedRates(selectedCurrency);
+      setExchangeRates(hardcodedRates);
+      setExchangeRatesLoaded(true);
+      console.log(`✅ استخدام أسعار صرف ثابتة كـ fallback (${Object.keys(hardcodedRates).length} عملة)`);
     }
   };
 
