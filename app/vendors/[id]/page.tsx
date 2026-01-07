@@ -127,7 +127,7 @@ export default function VendorStorePage() {
       console.error('Error opening chat:', error);
       toast.error('فشل فتح المحادثة');
     }
-  };
+  }, [user, userRole, vendorId, createOrGetChat]);
 
   const handleFollowToggle = async () => {
     if (!user) {
