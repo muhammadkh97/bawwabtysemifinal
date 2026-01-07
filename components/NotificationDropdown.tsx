@@ -188,7 +188,7 @@ export default function NotificationDropdown() {
           />
           
           <div
-            className="fixed right-2 top-[70px] w-[calc(100vw-16px)] sm:w-80 md:w-96 max-h-[calc(100vh-100px)] rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-5 duration-300"
+            className="fixed left-2 top-[70px] w-[calc(100vw-16px)] sm:w-80 md:w-96 max-h-[calc(100vh-100px)] rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-5 duration-300"
             style={{
               background: 'linear-gradient(135deg, rgba(15, 10, 30, 0.98) 0%, rgba(30, 15, 50, 0.98) 100%)',
               backdropFilter: 'blur(20px)',
