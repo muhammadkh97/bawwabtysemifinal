@@ -370,10 +370,10 @@ export default function Header() {
                   {/* القائمة المنسدلة */}
                   <AnimatePresence>
                     {isUserMenuOpen && (
-                      <>
+                      <>  
                         {/* Backdrop */}
                         <div
-                          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+                          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[60]"
                           onClick={() => setIsUserMenuOpen(false)}
                         />
                         
@@ -383,7 +383,7 @@ export default function Header() {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: -10, scale: 0.95 }}
                           transition={{ duration: 0.2 }}
-                          className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50"
+                          className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[70]"
                         >
                           {/* لوحة التحكم - للـ admin/vendor/driver أو المساعدين */}
                           {((userRole && userRole !== 'customer') || isVendorStaff || isRestaurantStaff) && (
@@ -501,7 +501,7 @@ export default function Header() {
               </button>
               
               {/* Mega Menu */}
-              <div className="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+              <div className="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[100]">
                 <div className="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-[32px] border border-gray-100 overflow-hidden flex" style={{ width: '900px' }}>
                   {/* Sidebar Categories */}
                   <div className="w-1/3 bg-gray-50/50 p-6 border-l border-gray-100">
