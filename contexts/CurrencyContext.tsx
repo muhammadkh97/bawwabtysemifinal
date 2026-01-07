@@ -109,10 +109,10 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   // جلب أسعار الصرف من قاعدة البيانات
   const loadExchangeRates = async () => {
     try {
+      // جلب جميع أسعار الصرف (من وإلى USD)
       const { data, error } = await import('@/lib/supabase').then(m => m.supabase
         .from('exchange_rates')
         .select('base_currency, target_currency, rate')
-        .eq('target_currency', selectedCurrency)
       );
       
       if (error) {
@@ -125,9 +125,29 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const rates: Record<string, number> = {};
+      // بناء خريطة أسعار الصرف
+      const ratesMap: Record<string, Record<string, number>> = {};
       data?.forEach(rate => {
-        rates[rate.base_currency] = rate.rate;
+        if (!ratesMap[rate.base_currency]) {
+          ratesMap[rate.base_currency] = {};
+        }
+        ratesMap[rate.base_currency][rate.target_currency] = rate.rate;
+      });
+
+      // حساب أسعار التحويل إلى العملة المستهدفة (عبر USD)
+      const rates: Record<string, number> = {};
+      
+      // للتحويل من أي عملة إلى العملة المستهدفة
+      Object.keys(ratesMap).forEach(fromCurrency => {
+        if (fromCurrency === selectedCurrency) {
+          rates[fromCurrency] = 1;
+        } else if (ratesMap[fromCurrency]?.[selectedCurrency]) {
+          // تحويل مباشر موجود
+          rates[fromCurrency] = ratesMap[fromCurrency][selectedCurrency];
+        } else if (ratesMap[fromCurrency]?.['USD'] && ratesMap['USD']?.[selectedCurrency]) {
+          // التحويل عبر USD: fromCurrency → USD → selectedCurrency
+          rates[fromCurrency] = ratesMap[fromCurrency]['USD'] * ratesMap['USD'][selectedCurrency];
+        }
       });
       
       // إضافة سعر 1 للعملة نفسها

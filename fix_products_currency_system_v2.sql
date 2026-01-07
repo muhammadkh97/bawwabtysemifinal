@@ -166,7 +166,7 @@ RETURNS TABLE (
   total_sales INTEGER,
   created_at TIMESTAMPTZ,
   updated_at TIMESTAMPTZ,
-  approval_status VARCHAR,
+  approval_status TEXT,
   rejection_reason TEXT
 )
 LANGUAGE plpgsql

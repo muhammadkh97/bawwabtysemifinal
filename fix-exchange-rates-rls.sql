@@ -26,16 +26,16 @@ FOR ALL
 TO authenticated
 USING (
   EXISTS (
-    SELECT 1 FROM profiles
-    WHERE profiles.id = auth.uid()
-    AND profiles.role = 'admin'
+    SELECT 1 FROM users
+    WHERE users.id = auth.uid()
+    AND users.role = 'admin'
   )
 )
 WITH CHECK (
   EXISTS (
-    SELECT 1 FROM profiles
-    WHERE profiles.id = auth.uid()
-    AND profiles.role = 'admin'
+    SELECT 1 FROM users
+    WHERE users.id = auth.uid()
+    AND users.role = 'admin'
   )
 );
 
@@ -43,34 +43,18 @@ WITH CHECK (
 -- INSERT DEFAULT EXCHANGE RATES (if not exists)
 -- ============================================================================
 -- These match the hardcoded rates in convert_price function
+-- Note: base_currency must be USD (constraint check_base_usd)
 
 INSERT INTO exchange_rates (base_currency, target_currency, rate, last_updated)
 VALUES
-  -- From USD to other currencies
+  -- From USD to all other currencies (only USD as base is allowed)
   ('USD', 'USD', 1.00, NOW()),
   ('USD', 'SAR', 3.75, NOW()),
   ('USD', 'ILS', 3.65, NOW()),
   ('USD', 'JOD', 0.71, NOW()),
   ('USD', 'EGP', 49.5, NOW()),
   ('USD', 'AED', 3.67, NOW()),
-  ('USD', 'KWD', 0.31, NOW()),
-  
-  -- From SAR to others
-  ('SAR', 'USD', 0.2667, NOW()),
-  ('SAR', 'SAR', 1.00, NOW()),
-  ('SAR', 'JOD', 0.1893, NOW()),
-  
-  -- From ILS to others
-  ('ILS', 'USD', 0.2740, NOW()),
-  ('ILS', 'ILS', 1.00, NOW()),
-  ('ILS', 'JOD', 0.1945, NOW()),
-  ('ILS', 'SAR', 1.0274, NOW()),
-  
-  -- From JOD to others  
-  ('JOD', 'USD', 1.4085, NOW()),
-  ('JOD', 'JOD', 1.00, NOW()),
-  ('JOD', 'SAR', 5.2817, NOW()),
-  ('JOD', 'ILS', 5.1408, NOW())
+  ('USD', 'KWD', 0.31, NOW())
 ON CONFLICT (base_currency, target_currency) 
 DO UPDATE SET 
   rate = EXCLUDED.rate,
