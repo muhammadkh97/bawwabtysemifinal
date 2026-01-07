@@ -307,7 +307,7 @@ export default function MealDetailsPage() {
           <div className="space-y-4">
             <div className="relative aspect-square rounded-3xl overflow-hidden bg-white shadow-2xl">
               <img 
-                src={meal.images?.[selectedImage] || '/placeholder.png'} 
+                src={meal.images?.[selectedImage] || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&h=800&fit=crop'} 
                 alt={meal.name_ar || meal.name}
                 className="w-full h-full object-cover"
               />
@@ -365,7 +365,7 @@ export default function MealDetailsPage() {
               className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-md hover:shadow-xl transition-all group"
             >
               <img 
-                src={meal.vendors?.shop_logo || '/placeholder.png'} 
+                src={meal.vendors?.shop_logo || 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=200&h=200&fit=crop'} 
                 alt="" 
                 className="w-16 h-16 rounded-xl object-cover"
               />
