@@ -82,30 +82,24 @@ export default function MyOrdersPage() {
 
   const completeDelivery = async (orderId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error('الرجاء تسجيل الدخول');
-        return;
-      }
-
-      // استخدام UPDATE مباشر مع تحديد الأعمدة فقط
-      const { error } = await supabase
-        .from('orders')
-        .update({ 
-          status: 'delivered',
-          delivered_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', orderId);
+      const { data, error } = await supabase.rpc('update_driver_order_status_simple', {
+        p_order_id: orderId,
+        p_new_status: 'delivered'
+      });
 
       if (error) {
         console.error('❌ Error updating order:', error);
-        toast.error('فشل تحديث حالة الطلب: ' + error.message);
+        toast.error('فشل تحديث حالة الطلب: ' + (error.message || 'خطأ غير معروف'));
         return;
       }
 
-      toast.success('✅ تم إتمام التوصيل!');
-      loadMyOrders();
+      if (data?.success) {
+        toast.success('✅ تم إتمام التوصيل!');
+        loadMyOrders();
+      } else {
+        console.error('❌ Function returned error:', data);
+        toast.error(data?.error || 'حدث خطأ أثناء تحديث الطلب');
+      }
     } catch (error) {
       console.error('❌ Exception:', error);
       toast.error('حدث خطأ غير متوقع');
