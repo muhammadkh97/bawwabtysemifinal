@@ -164,14 +164,16 @@ export default function NotificationDropdown() {
       {/* Bell Icon Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-all duration-200"
+        className="relative group"
       >
-        <Bell className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-700 hover:text-purple-600 transition-colors" />
+        <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:scale-105">
+          <Bell className="w-4.5 h-4.5 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 text-purple-600 group-hover:text-purple-700 transition-colors" />
+        </div>
 
         {/* Unread Badge */}
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 min-w-[16px] sm:min-w-[20px] h-4 sm:h-5 px-1 sm:px-1.5 flex items-center justify-center text-[8px] sm:text-xs font-black text-white bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-full animate-pulse shadow-lg border border-white">
-            {unreadCount > 99 ? '99' : unreadCount}
+          <span className="absolute -top-1 -right-1 min-w-[18px] sm:min-w-[20px] h-[18px] sm:h-5 px-1 sm:px-1.5 flex items-center justify-center text-[9px] sm:text-[10px] font-black text-white bg-gradient-to-r from-red-500 to-pink-600 rounded-full animate-pulse shadow-lg border-2 border-white">
+            {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
       </button>
@@ -179,7 +181,7 @@ export default function NotificationDropdown() {
       {/* Dropdown Menu */}
       {isOpen && (
         <div
-          className="absolute left-0 mt-3 w-80 sm:w-96 max-h-[500px] sm:max-h-[600px] rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-5 duration-300"
+          className="absolute right-0 mt-3 w-[90vw] sm:w-80 md:w-96 max-h-[500px] sm:max-h-[600px] rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-5 duration-300"
           style={{
             background: 'linear-gradient(135deg, rgba(15, 10, 30, 0.98) 0%, rgba(30, 15, 50, 0.98) 100%)',
             backdropFilter: 'blur(20px)',

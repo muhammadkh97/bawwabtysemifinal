@@ -180,10 +180,10 @@ export default function Header() {
   };
 
   return (
-    <header className="border-b sticky top-0 bg-white/80 backdrop-blur-md z-50">
+    <header className="border-b sticky top-0 bg-white/80 backdrop-blur-md z-50 overflow-x-hidden">
       {/* Top Bar */}
       <div className="hidden md:block text-white py-1.5" style={{ background: 'linear-gradient(90deg, #6236FF 0%, #B621FE 50%, #FF219D 100%)' }}>
-        <div className="container mx-auto px-4 flex justify-between items-center text-[12px] font-medium">
+        <div className="container mx-auto px-3 sm:px-4 md:px-8 flex justify-between items-center text-[12px] font-medium max-w-full">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2 hover:text-white/80 transition-colors cursor-pointer">
               <Phone className="w-3.5 h-3.5" />
@@ -218,7 +218,7 @@ export default function Header() {
       </div>
 
       {/* Main Header */}
-      <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3 md:py-4">
+      <div className="container mx-auto px-3 sm:px-4 md:px-8 py-2 sm:py-3 md:py-4 max-w-full">
         <div className="flex items-center justify-between gap-2 md:gap-10">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group shrink-0">
@@ -257,11 +257,13 @@ export default function Header() {
               {isLoggedIn && <NotificationDropdown />}
               
               {isLoggedIn && (
-                <Link href="/chats" className="relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-50 rounded-lg md:rounded-xl transition-all duration-300 group">
-                  <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-700 group-hover:text-purple-600 transition-colors" />
+                <Link href="/chats" className="relative group">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:scale-105">
+                    <MessageCircle className="w-4.5 h-4.5 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 text-purple-600 group-hover:text-purple-700 transition-colors" />
+                  </div>
                   {unreadChatsCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 sm:top-0 sm:right-0 md:top-0.5 md:right-0.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[8px] sm:text-[9px] rounded-full w-3.5 h-3.5 sm:w-4 sm:h-4 flex items-center justify-center font-black shadow-lg border border-white">
-                      {unreadChatsCount > 99 ? '99' : unreadChatsCount}
+                    <span className="absolute -top-1 -right-1 min-w-[18px] sm:min-w-[20px] h-[18px] sm:h-5 px-1 sm:px-1.5 flex items-center justify-center text-[9px] sm:text-[10px] font-black text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-lg border-2 border-white">
+                      {unreadChatsCount > 99 ? '99+' : unreadChatsCount}
                     </span>
                   )}
                 </Link>
@@ -272,39 +274,47 @@ export default function Header() {
                 <CurrencySelector />
               </div>
 
-              <Link href="/wishlist" className="relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-50 rounded-lg md:rounded-xl transition-all duration-300 group">
-                <Heart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-700 group-hover:text-red-500 transition-colors" />
+              <Link href="/wishlist" className="relative group">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl bg-gradient-to-br from-red-50 to-pink-50 hover:from-red-100 hover:to-pink-100 flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:scale-105">
+                  <Heart className="w-4.5 h-4.5 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 text-red-500 group-hover:text-red-600 transition-colors" />
+                </div>
                 {wishlistCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 sm:top-0 sm:right-0 md:top-0.5 md:right-0.5 bg-red-500 text-white text-[8px] sm:text-[9px] rounded-full w-3.5 h-3.5 sm:w-4 sm:h-4 flex items-center justify-center font-black shadow-lg border border-white">
-                    {wishlistCount}
+                  <span className="absolute -top-1 -right-1 min-w-[18px] sm:min-w-[20px] h-[18px] sm:h-5 px-1 sm:px-1.5 flex items-center justify-center text-[9px] sm:text-[10px] font-black text-white bg-gradient-to-r from-red-500 to-pink-600 rounded-full shadow-lg border-2 border-white">
+                    {wishlistCount > 99 ? '99+' : wishlistCount}
                   </span>
                 )}
               </Link>
 
               {/* سلة المطاعم */}
-              <Link href="/restaurant-cart" className="relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-50 rounded-lg md:rounded-xl transition-all duration-300 group">
-                <UtensilsCrossed className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-700 group-hover:text-orange-500 transition-colors" />
+              <Link href="/restaurant-cart" className="relative group">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl bg-gradient-to-br from-orange-50 to-red-50 hover:from-orange-100 hover:to-red-100 flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:scale-105">
+                  <UtensilsCrossed className="w-4.5 h-4.5 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 text-orange-600 group-hover:text-orange-700 transition-colors" />
+                </div>
                 {restaurantItemsCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 sm:top-0 sm:right-0 md:top-0.5 md:right-0.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[8px] sm:text-[9px] rounded-full w-3.5 h-3.5 sm:w-4 sm:h-4 flex items-center justify-center font-black shadow-lg border border-white">
-                    {restaurantItemsCount}
+                  <span className="absolute -top-1 -right-1 min-w-[18px] sm:min-w-[20px] h-[18px] sm:h-5 px-1 sm:px-1.5 flex items-center justify-center text-[9px] sm:text-[10px] font-black text-white bg-gradient-to-r from-orange-500 to-red-500 rounded-full shadow-lg border-2 border-white">
+                    {restaurantItemsCount > 99 ? '99+' : restaurantItemsCount}
                   </span>
                 )}
               </Link>
 
               {/* سلة المنتجات */}
-              <Link href="/cart" className="relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-50 rounded-lg md:rounded-xl transition-all duration-300 group">
-                <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-700 group-hover:text-purple-600 transition-colors" />
+              <Link href="/cart" className="relative group">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl bg-gradient-to-br from-purple-50 to-blue-50 hover:from-purple-100 hover:to-blue-100 flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:scale-105">
+                  <ShoppingCart className="w-4.5 h-4.5 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 text-purple-600 group-hover:text-purple-700 transition-colors" />
+                </div>
                 {cartCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 sm:top-0 sm:right-0 md:top-0.5 md:right-0.5 bg-purple-600 text-white text-[8px] sm:text-[9px] rounded-full w-3.5 h-3.5 sm:w-4 sm:h-4 flex items-center justify-center font-black shadow-lg border border-white">
-                    {cartCount}
+                  <span className="absolute -top-1 -right-1 min-w-[18px] sm:min-w-[20px] h-[18px] sm:h-5 px-1 sm:px-1.5 flex items-center justify-center text-[9px] sm:text-[10px] font-black text-white bg-gradient-to-r from-purple-600 to-blue-600 rounded-full shadow-lg border-2 border-white">
+                    {cartCount > 99 ? '99+' : cartCount}
                   </span>
                 )}
               </Link>
 
               {/* طلباتي - Desktop only */}
               {isLoggedIn && (
-                <Link href="/orders" className="hidden md:flex relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-50 rounded-xl md:rounded-2xl transition-all duration-300 group" title="طلباتي">
-                  <Package className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 group-hover:text-green-600 transition-colors" />
+                <Link href="/orders" className="hidden md:flex relative group" title="طلباتي">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:scale-105">
+                    <Package className="w-5.5 h-5.5 text-green-600 group-hover:text-green-700 transition-colors" />
+                  </div>
                 </Link>
               )}
             </div>
@@ -373,7 +383,7 @@ export default function Header() {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: -10, scale: 0.95 }}
                           transition={{ duration: 0.2 }}
-                          className="absolute left-0 top-full mt-2 w-60 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50"
+                          className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50"
                         >
                           {/* لوحة التحكم - للـ admin/vendor/driver أو المساعدين */}
                           {((userRole && userRole !== 'customer') || isVendorStaff || isRestaurantStaff) && (
