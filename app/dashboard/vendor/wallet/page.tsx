@@ -190,26 +190,10 @@ export default function VendorWalletPage() {
 
       if (error) throw error;
 
-      // تحديث قائمة الطلبات
+      // إعادة تحميل البيانات
       await fetchWalletData();
       
       alert('✅ تم إرسال طلب السحب بنجاح! سيتم مراجعته من قبل الإدارة.');
-      setShowPayoutModal(false);
-      setPayoutAmount('');
-      setBankName('');
-      setAccountNumber('');
-        .update({
-          current_balance: walletData.current_balance - amount,
-          pending_balance: walletData.pending_balance + amount,
-        })
-        .eq('vendor_id', vendorId);
-
-      if (updateError) throw updateError;
-
-      alert('✅ تم إرسال طلب السحب بنجاح! سيتم معالجته خلال 1-3 أيام عمل');
-      
-      // إعادة تحميل البيانات
-      await fetchWalletData();
       
       // إغلاق النافذة وإعادة تعيين الحقول
       setShowPayoutModal(false);
