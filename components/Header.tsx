@@ -180,7 +180,7 @@ export default function Header() {
   };
 
   return (
-    <header className="border-b sticky top-0 bg-white/80 backdrop-blur-md z-[10000] overflow-visible">
+    <header className="border-b sticky top-0 bg-white/80 backdrop-blur-md z-50">
       {/* Top Bar */}
       <div className="hidden md:block text-white py-1.5" style={{ background: 'linear-gradient(90deg, #6236FF 0%, #B621FE 50%, #FF219D 100%)' }}>
         <div className="container mx-auto px-3 sm:px-4 md:px-8 flex justify-between items-center text-[12px] font-medium max-w-full">
@@ -218,8 +218,8 @@ export default function Header() {
       </div>
 
       {/* Main Header */}
-      <div className="container mx-auto px-3 sm:px-4 md:px-8 py-2 sm:py-3 md:py-4 max-w-full overflow-visible">
-        <div className="flex items-center justify-between gap-2 md:gap-10 overflow-visible">
+      <div className="container mx-auto px-3 sm:px-4 md:px-8 py-2 sm:py-3 md:py-4 max-w-full">
+        <div className="flex items-center justify-between gap-2 md:gap-10">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group shrink-0">
             <div className="relative">
@@ -240,7 +240,7 @@ export default function Header() {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-1 sm:gap-2 md:gap-5 overflow-visible">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-5">
             {/* Dashboard Button - Desktop only */}
             {(userRole && userRole !== 'customer') || isVendorStaff || isRestaurantStaff ? (
               <Link
@@ -253,7 +253,7 @@ export default function Header() {
               </Link>
             ) : null}
             
-            <div className="flex items-center gap-0.5 sm:gap-1 overflow-visible">
+            <div className="flex items-center gap-0.5 sm:gap-1">
               {isLoggedIn && <NotificationDropdown />}
               
               {isLoggedIn && (
@@ -331,7 +331,7 @@ export default function Header() {
                 <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 fill-current" />
               </Link>
             ) : (
-              <div className="relative overflow-visible">
+              <div className="relative">
                 {/* Desktop Version - الأزرار المنفصلة */}
                 <div className="hidden md:flex items-center gap-2">
                   <Link
@@ -356,7 +356,7 @@ export default function Header() {
                 </div>
 
                 {/* Mobile Version - قائمة منسدلة محسّنة */}
-                <div className="md:hidden relative overflow-visible">
+                <div className="md:hidden relative">
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                     className="flex items-center gap-1 p-0.5 pr-1.5 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all duration-300 border border-gray-100"
@@ -373,7 +373,7 @@ export default function Header() {
                       <>  
                         {/* Backdrop */}
                         <div
-                          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[10001]"
+                          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
                           onClick={() => setIsUserMenuOpen(false)}
                         />
                         
@@ -383,7 +383,7 @@ export default function Header() {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: -10, scale: 0.95 }}
                           transition={{ duration: 0.2 }}
-                          className="absolute left-auto right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-y-auto max-h-[calc(100vh-100px)] z-[10002]"
+                          className="fixed right-2 top-[70px] w-[calc(100vw-16px)] max-w-[320px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50"
                         >
                           {/* لوحة التحكم - للـ admin/vendor/driver أو المساعدين */}
                           {((userRole && userRole !== 'customer') || isVendorStaff || isRestaurantStaff) && (
@@ -501,7 +501,7 @@ export default function Header() {
               </button>
               
               {/* Mega Menu */}
-              <div className="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[10003]">
+              <div className="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
                 <div className="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-[32px] border border-gray-100 overflow-hidden flex" style={{ width: '900px' }}>
                   {/* Sidebar Categories */}
                   <div className="w-1/3 bg-gray-50/50 p-6 border-l border-gray-100">
