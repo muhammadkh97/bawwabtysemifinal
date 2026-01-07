@@ -34,8 +34,12 @@ interface VendorWalletSummary {
   pending_balance: number;
   total_earned: number;
   total_withdrawn: number;
-  commission_rate: number;
-  last_payout_date: string | null;
+  completed_orders: number;
+  pending_orders: number;
+  total_commission: number;
+  avg_order_value: number;
+  can_request_payout: boolean;
+  min_payout_amount: number;
 }
 
 export default function VendorWalletPage() {
@@ -89,13 +93,18 @@ export default function VendorWalletPage() {
       if (summaryError) {
         console.error('Error fetching wallet summary:', summaryError);
       } else if (summary) {
+        // حساب نسبة العمولة من إجمالي الأرباح
+        const commissionRate = summary.total_earned > 0 
+          ? (summary.total_commission / summary.total_earned) * 100 
+          : 10;
+        
         setWalletData({
           current_balance: summary.current_balance || 0,
           pending_balance: summary.pending_balance || 0,
           total_earned: summary.total_earned || 0,
           total_withdrawn: summary.total_withdrawn || 0,
-          platform_commission_rate: summary.commission_rate || 10,
-          last_payout: summary.last_payout_date,
+          platform_commission_rate: commissionRate,
+          last_payout: null,
         });
       }
 

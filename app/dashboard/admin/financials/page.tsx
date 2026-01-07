@@ -84,12 +84,16 @@ export default function AdminFinancialsPage() {
     try {
       // 1. Platform Stats
       const { data: statsData, error: statsError } = await supabase.rpc('get_platform_financial_stats');
-      if (statsError) throw statsError;
+      if (statsError) {
+        console.error('Error loading platform stats:', statsError);
+      }
       if (statsData?.[0]) setStats(statsData[0]);
 
       // 2. Top Vendors
       const { data: vendorsData, error: vendorsError } = await supabase.rpc('get_vendors_earnings_report');
-      if (vendorsError) throw vendorsError;
+      if (vendorsError) {
+        console.error('Error loading vendors report:', vendorsError);
+      }
       if (vendorsData) setVendors(vendorsData.slice(0, 10));
 
       // 3. Daily Revenue
@@ -101,7 +105,9 @@ export default function AdminFinancialsPage() {
         p_start_date: startDate.toISOString().split('T')[0],
         p_end_date: new Date().toISOString().split('T')[0]
       });
-      if (revenueError) throw revenueError;
+      if (revenueError) {
+        console.error('Error loading daily revenue:', revenueError);
+      }
       if (revenueData) setDailyRevenue(revenueData);
 
       // 4. Pending Payout Requests
@@ -129,7 +135,9 @@ export default function AdminFinancialsPage() {
         .eq('status', 'pending')
         .order('requested_at', { ascending: false });
 
-      if (payoutsError) throw payoutsError;
+      if (payoutsError) {
+        console.error('Error loading payout requests:', payoutsError);
+      }
       if (payoutsData) {
         const formatted = payoutsData.map((p: any) => ({
           id: p.id,

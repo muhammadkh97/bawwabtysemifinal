@@ -70,17 +70,23 @@ export default function RestaurantOrdersPage() {
         .from('orders')
         .select(`
           *,
-          delivery_batches (batch_number),
+          delivery_batches!orders_batch_id_fkey (batch_number),
           customer:users!orders_customer_id_fkey(name, phone)
         `)
         .eq('vendor_id', vId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setOrders((data || []).map((order: any) => ({
-        ...order,
-        batch_number: order.delivery_batches?.batch_number
-      })));
+      if (error) {
+        console.error('Error fetching orders:', error);
+        return;
+      }
+      
+      if (data) {
+        setOrders(data.map((order: any) => ({
+          ...order,
+          batch_number: order.delivery_batches?.batch_number
+        })));
+      }
     } catch (error) {
       console.error('Error fetching orders:', error);
     }

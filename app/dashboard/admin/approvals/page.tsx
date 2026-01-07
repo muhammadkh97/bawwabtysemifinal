@@ -77,7 +77,90 @@ export default function ApprovalsPage() {
         })));
       }
 
-      // TODO: جلب البائعين والسائقين المعلقين عند إضافة جداولهم
+      // جلب البائعين المعلقين
+      const { data: vendors, error: vendorsError } = await supabase
+        .from('stores')
+        .select(`
+          id,
+          name,
+          name_ar,
+          shop_name,
+          shop_name_ar,
+          email,
+          phone,
+          address,
+          business_type,
+          category,
+          documents,
+          created_at,
+          users!stores_user_id_fkey (
+            id,
+            name,
+            email,
+            phone
+          )
+        `)
+        .eq('approval_status', 'pending')
+        .order('created_at', { ascending: false });
+
+      console.log('🏪 البائعين المعلقين:', vendors);
+      console.log('❌ خطأ في جلب البائعين:', vendorsError);
+
+      if (vendors) {
+        setPendingVendors(vendors.map((v: any) => ({
+          id: v.id,
+          shop_name: v.name_ar || v.shop_name_ar || v.name || v.shop_name || 'متجر',
+          name: v.users?.name || 'غير محدد',
+          email: v.email || v.users?.email || '',
+          phone: v.phone || v.users?.phone || '',
+          address: v.address || '',
+          business_type: v.business_type || 'retail',
+          category: v.category || '',
+          documents: v.documents || [],
+          created_at: v.created_at
+        })));
+      }
+
+      // جلب السائقين المعلقين
+      const { data: drivers, error: driversError } = await supabase
+        .from('drivers')
+        .select(`
+          id,
+          license_number,
+          vehicle_type,
+          vehicle_plate,
+          vehicle_model,
+          vehicle_color,
+          documents,
+          created_at,
+          users!drivers_user_id_fkey (
+            id,
+            name,
+            email,
+            phone
+          )
+        `)
+        .eq('approval_status', 'pending')
+        .order('created_at', { ascending: false });
+
+      console.log('🚗 السائقين المعلقين:', drivers);
+      console.log('❌ خطأ في جلب السائقين:', driversError);
+
+      if (drivers) {
+        setPendingDrivers(drivers.map((d: any) => ({
+          id: d.id,
+          name: d.users?.name || 'غير محدد',
+          email: d.users?.email || '',
+          phone: d.users?.phone || '',
+          license_number: d.license_number || '',
+          vehicle_type: d.vehicle_type || '',
+          vehicle_plate: d.vehicle_plate || '',
+          vehicle_model: d.vehicle_model || '',
+          vehicle_color: d.vehicle_color || '',
+          documents: d.documents || [],
+          created_at: d.created_at
+        })));
+      }
       
     } catch (error) {
       console.error('Error fetching pending items:', error);
@@ -125,7 +208,74 @@ export default function ApprovalsPage() {
         alert('✅ تمت الموافقة على المنتج بنجاح!');
         fetchPendingItems(); // إعادة تحميل القائمة
       }
-      // TODO: إضافة معالجة البائعين والسائقين
+      
+      if (type === 'vendor') {
+        const { error } = await supabase
+          .from('stores')
+          .update({ 
+            approval_status: 'approved',
+            is_active: true 
+          })
+          .eq('id', id);
+
+        if (error) throw error;
+
+        // إشعار البائع بقبول المتجر
+        const { data: store } = await supabase
+          .from('stores')
+          .select('name, name_ar, user_id')
+          .eq('id', id)
+          .single();
+
+        if (store?.user_id) {
+          await supabase.from('notifications').insert({
+            user_id: store.user_id,
+            type: 'store_approved',
+            title: '✅ تم قبول متجرك',
+            message: `تم قبول متجر "${store.name_ar || store.name}" وأصبح نشطاً`,
+            link: '/dashboard/vendor',
+            priority: 'high',
+            category: 'stores'
+          });
+        }
+        
+        alert('✅ تمت الموافقة على البائع بنجاح!');
+        fetchPendingItems();
+      }
+
+      if (type === 'driver') {
+        const { error } = await supabase
+          .from('drivers')
+          .update({ 
+            approval_status: 'approved',
+            is_active: true 
+          })
+          .eq('id', id);
+
+        if (error) throw error;
+
+        // إشعار السائق بقبول التسجيل
+        const { data: driver } = await supabase
+          .from('drivers')
+          .select('user_id')
+          .eq('id', id)
+          .single();
+
+        if (driver?.user_id) {
+          await supabase.from('notifications').insert({
+            user_id: driver.user_id,
+            type: 'driver_approved',
+            title: '✅ تم قبول تسجيلك كسائق',
+            message: 'تم قبول طلبك للعمل كسائق ويمكنك البدء في استلام الطلبات',
+            link: '/dashboard/driver',
+            priority: 'high',
+            category: 'drivers'
+          });
+        }
+        
+        alert('✅ تمت الموافقة على السائق بنجاح!');
+        fetchPendingItems();
+      }
     } catch (error) {
       console.error('Error approving:', error);
       alert('❌ حدث خطأ أثناء الموافقة');
@@ -172,7 +322,78 @@ export default function ApprovalsPage() {
         alert('❌ تم رفض المنتج');
         fetchPendingItems();
       }
-      // TODO: إضافة معالجة البائعين والسائقين
+      
+      if (type === 'vendor') {
+        const { error } = await supabase
+          .from('stores')
+          .update({ 
+            approval_status: 'rejected',
+            rejection_reason: reason,
+            is_active: false 
+          })
+          .eq('id', id);
+
+        if (error) throw error;
+
+        // إشعار البائع برفض المتجر
+        const { data: store } = await supabase
+          .from('stores')
+          .select('name, name_ar, user_id')
+          .eq('id', id)
+          .single();
+
+        if (store?.user_id) {
+          await supabase.from('notifications').insert({
+            user_id: store.user_id,
+            type: 'store_rejected',
+            title: '❌ تم رفض متجرك',
+            message: `تم رفض متجر "${store.name_ar || store.name}". السبب: ${reason}`,
+            link: '/dashboard/vendor',
+            priority: 'high',
+            category: 'stores',
+            data: { rejection_reason: reason }
+          });
+        }
+        
+        alert('❌ تم رفض البائع');
+        fetchPendingItems();
+      }
+
+      if (type === 'driver') {
+        const { error } = await supabase
+          .from('drivers')
+          .update({ 
+            approval_status: 'rejected',
+            rejection_reason: reason,
+            is_active: false 
+          })
+          .eq('id', id);
+
+        if (error) throw error;
+
+        // إشعار السائق برفض التسجيل
+        const { data: driver } = await supabase
+          .from('drivers')
+          .select('user_id')
+          .eq('id', id)
+          .single();
+
+        if (driver?.user_id) {
+          await supabase.from('notifications').insert({
+            user_id: driver.user_id,
+            type: 'driver_rejected',
+            title: '❌ تم رفض تسجيلك كسائق',
+            message: `تم رفض طلبك للعمل كسائق. السبب: ${reason}`,
+            link: '/dashboard/driver',
+            priority: 'high',
+            category: 'drivers',
+            data: { rejection_reason: reason }
+          });
+        }
+        
+        alert('❌ تم رفض السائق');
+        fetchPendingItems();
+      }
     } catch (error) {
       console.error('Error rejecting:', error);
       alert('❌ حدث خطأ أثناء الرفض');
