@@ -11,10 +11,12 @@ import { supabase } from '@/lib/supabase';
 import EmptyState from '@/components/EmptyState';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 export default function CartPage() {
   const { user } = useAuth();
   const { cartItems, loading, updateQuantity, removeFromCart } = useCart();
+  const { formatPrice } = useCurrency();
 
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<{code: string, discount: number} | null>(null);
@@ -228,33 +230,33 @@ export default function CartPage() {
                   <div className="space-y-4 mb-6">
                     <div className="flex items-center justify-between text-gray-700">
                       <span>المجموع الفرعي</span>
-                      <span className="font-bold">{subtotal.toFixed(2)} د.أ</span>
+                      <span className="font-bold">{formatPrice(subtotal)}</span>
                     </div>
 
                     {appliedCoupon && (
                       <div className="flex items-center justify-between text-green-600">
                         <span>خصم ({appliedCoupon.discount}%)</span>
-                        <span className="font-bold">-{discount.toFixed(2)} د.أ</span>
+                        <span className="font-bold">-{formatPrice(discount)}</span>
                       </div>
                     )}
 
                     {usePoints && pointsToUse > 0 && (
                       <div className="flex items-center justify-between text-yellow-600">
                         <span>خصم نقاط الولاء ({pointsToUse} نقطة)</span>
-                        <span className="font-bold">-{pointsDiscount.toFixed(2)} د.أ</span>
+                        <span className="font-bold">-{formatPrice(pointsDiscount)}</span>
                       </div>
                     )}
 
                     <div className="flex items-center justify-between text-gray-700">
                       <span>الشحن</span>
                       <span className="font-bold">
-                        {shipping === 0 ? 'مجاني' : `${shipping.toFixed(2)} د.أ`}
+                        {shipping === 0 ? 'مجاني' : formatPrice(shipping)}
                       </span>
                     </div>
 
                     {shipping > 0 && (
                       <p className="text-sm text-orange-600">
-                        💡 أضف {(200 - subtotal).toFixed(2)} د.أ للحصول على شحن مجاني
+                        💡 أضف {formatPrice(200 - subtotal)} للحصول على شحن مجاني
                       </p>
                     )}
 
@@ -263,7 +265,7 @@ export default function CartPage() {
                     <div className="flex items-center justify-between text-gray-900 text-xl">
                       <span className="font-bold">الإجمالي</span>
                       <span className="font-bold text-2xl text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
-                        {total.toFixed(2)} د.أ
+                        {formatPrice(total)}
                       </span>
                     </div>
                   </div>
