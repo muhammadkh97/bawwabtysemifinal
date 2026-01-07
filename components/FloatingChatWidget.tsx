@@ -79,6 +79,18 @@ export default function FloatingChatWidget() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       audioRef.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUKni7rZiHQU2jdXux3MnBSh+zPDhkUQMFF61%2BOutVhYKQ5zf67dhIQUrhM/z2og3CBlou/DknE0MDVCn4e62Yh0FN47V7sZyJwUpf83w4ZBEDBVetfjrrVYVCkGb3uu4YSEFKoXP89qINwgZaLzv5JxNDA1Qp%2BHutWIdBTaO1e7HcycFK3/N8OGQRA0VXbX467%2BWFQo/m93ruGAhBSiEz/Pah0cKGmm78OSbTQwNT6fh7rViFgU1jtXuxnMoBSp/zfDhkEQMFF20%2BOu/lhQKPprc67hfIQcrhM/z2odHChlouO/km04MDk%2Bn4u61YhYFM47V7sZyKQUqf87v4ZBEDBRctPjqv5cUCj2Z3Ou4XyEHKoTP89mHRwobaLjw45tODA5Sp%2BLutmIVBjOO1e7Gcioa');
+      
+      // Track user interaction
+      const markInteraction = () => {
+        hasInteracted.current = true;
+      };
+      document.addEventListener('click', markInteraction, { once: true });
+      document.addEventListener('keydown', markInteraction, { once: true });
+      
+      return () => {
+        document.removeEventListener('click', markInteraction);
+        document.removeEventListener('keydown', markInteraction);
+      };
     }
   }, []);
 
@@ -99,7 +111,7 @@ export default function FloatingChatWidget() {
   // Play sound when new unread message arrives
   const prevUnreadCount = useRef(unreadCount);
   useEffect(() => {
-    if (unreadCount > prevUnreadCount.current && !isOpen && audioRef.current) {
+    if (unreadCount > prevUnreadCount.current && !isOpen && audioRef.current && hasInteracted.current) {
       audioRef.current.play().catch(console.error);
     }
     prevUnreadCount.current = unreadCount;

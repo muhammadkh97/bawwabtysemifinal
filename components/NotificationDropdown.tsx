@@ -23,8 +23,23 @@ export default function NotificationDropdown() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const hasInteracted = useRef(false)
   const router = useRouter()
   const { user } = useAuth()
+
+  // Track user interaction for sound playback
+  useEffect(() => {
+    const markInteraction = () => {
+      hasInteracted.current = true
+    }
+    document.addEventListener('click', markInteraction, { once: true })
+    document.addEventListener('keydown', markInteraction, { once: true })
+    
+    return () => {
+      document.removeEventListener('click', markInteraction)
+      document.removeEventListener('keydown', markInteraction)
+    }
+  }, [])
 
   // Load notifications
   useEffect(() => {
@@ -117,6 +132,7 @@ export default function NotificationDropdown() {
   }
 
   const playNotificationSound = () => {
+    if (!hasInteracted.current) return
     const audio = new Audio('/notification-sound.mp3')
     audio.volume = 0.5
     audio.play().catch(() => {
