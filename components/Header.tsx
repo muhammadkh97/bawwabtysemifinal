@@ -241,33 +241,8 @@ export default function Header() {
 
           {/* Actions */}
           <div className="flex items-center gap-1 sm:gap-2 md:gap-5">
-            {/* Dashboard Button - Desktop only */}
-            {(userRole && userRole !== 'customer') || isVendorStaff || isRestaurantStaff ? (
-              <Link
-                href={getDashboardUrl()}
-                className="hidden md:flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 text-white rounded-xl md:rounded-2xl hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300 whitespace-nowrap font-bold text-xs sm:text-sm"
-                style={{ background: 'linear-gradient(135deg, #6236FF 0%, #B621FE 100%)' }}
-              >
-                <LayoutDashboard className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-                <span className="hidden sm:inline">لوحة التحكم</span>
-              </Link>
-            ) : null}
-            
             <div className="flex items-center gap-0.5 sm:gap-1">
               {isLoggedIn && <NotificationDropdown />}
-              
-              {isLoggedIn && (
-                <Link href="/chats" className="relative group hidden md:flex">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:scale-105">
-                    <MessageCircle className="w-4.5 h-4.5 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 text-purple-600 group-hover:text-purple-700 transition-colors" />
-                  </div>
-                  {unreadChatsCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[18px] sm:min-w-[20px] h-[18px] sm:h-5 px-1 sm:px-1.5 flex items-center justify-center text-[9px] sm:text-[10px] font-black text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-lg border-2 border-white">
-                      {unreadChatsCount > 99 ? '99+' : unreadChatsCount}
-                    </span>
-                  )}
-                </Link>
-              )}
               
               {/* Currency Selector */}
               <div className="hidden lg:block">
@@ -309,14 +284,6 @@ export default function Header() {
                 )}
               </Link>
 
-              {/* طلباتي - Desktop only */}
-              {isLoggedIn && (
-                <Link href="/orders" className="hidden md:flex relative group" title="طلباتي">
-                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:scale-105">
-                    <Package className="w-5.5 h-5.5 text-green-600 group-hover:text-green-700 transition-colors" />
-                  </div>
-                </Link>
-              )}
             </div>
 
             <div className="h-6 sm:h-8 w-[1px] bg-gray-100 hidden md:block"></div>
@@ -332,31 +299,8 @@ export default function Header() {
               </Link>
             ) : (
               <div className="relative">
-                {/* Desktop Version - الأزرار المنفصلة */}
-                <div className="hidden md:flex items-center gap-2">
-                  <Link
-                    href="/profile"
-                    className="flex items-center gap-1 sm:gap-2 p-1 pr-2 sm:pr-3 md:pr-4 bg-gray-50 hover:bg-gray-100 rounded-xl md:rounded-2xl transition-all duration-300 border border-gray-100"
-                  >
-                    <span className="text-xs sm:text-sm font-bold text-gray-700">حسابي</span>
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white">
-                      <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    </div>
-                  </Link>
-                  
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 text-white rounded-xl md:rounded-2xl hover:shadow-xl hover:shadow-red-500/20 transition-all duration-300 whitespace-nowrap font-bold text-xs sm:text-sm"
-                    style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}
-                    title="تسجيل الخروج"
-                  >
-                    <LogOut className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-                    <span>خروج</span>
-                  </button>
-                </div>
-
-                {/* Mobile Version - قائمة منسدلة محسّنة */}
-                <div className="md:hidden relative">
+                {/* User Menu - Unified for Mobile and Desktop */}
+                <div className="relative">
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                     className="flex items-center gap-1 p-0.5 pr-1.5 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all duration-300 border border-gray-100"
@@ -417,11 +361,11 @@ export default function Header() {
                             </div>
                           </Link>
 
-                          {/* الدردشات - Mobile only */}
+                          {/* الدردشات */}
                           <Link
                             href="/chats"
                             onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 md:hidden"
+                            className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100"
                           >
                             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center relative">
                               <MessageCircle className="w-5 h-5 text-white" />
