@@ -180,14 +180,21 @@ export default function NotificationDropdown() {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div
-          className="absolute right-0 mt-3 w-[90vw] sm:w-80 md:w-96 max-h-[500px] sm:max-h-[600px] rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-5 duration-300"
-          style={{
-            background: 'linear-gradient(135deg, rgba(15, 10, 30, 0.98) 0%, rgba(30, 15, 50, 0.98) 100%)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(98, 54, 255, 0.3)',
-          }}
-        >
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/10 z-[60]"
+            onClick={() => setIsOpen(false)}
+          />
+          
+          <div
+            className="absolute right-0 mt-3 w-[90vw] sm:w-80 md:w-96 max-h-[500px] sm:max-h-[600px] rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden z-[70] animate-in fade-in slide-in-from-top-5 duration-300"
+            style={{
+              background: 'linear-gradient(135deg, rgba(15, 10, 30, 0.98) 0%, rgba(30, 15, 50, 0.98) 100%)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(98, 54, 255, 0.3)',
+            }}
+          >
           {/* Header */}
           <div className="sticky top-0 z-10 px-3 sm:px-4 py-2.5 sm:py-3 border-b border-white/10"
             style={{

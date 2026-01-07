@@ -257,7 +257,7 @@ export default function Header() {
               {isLoggedIn && <NotificationDropdown />}
               
               {isLoggedIn && (
-                <Link href="/chats" className="relative group">
+                <Link href="/chats" className="relative group hidden md:flex">
                   <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:scale-105">
                     <MessageCircle className="w-4.5 h-4.5 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 text-purple-600 group-hover:text-purple-700 transition-colors" />
                   </div>
@@ -414,6 +414,26 @@ export default function Header() {
                             <div className="flex-1 text-right">
                               <p className="text-sm font-bold text-gray-900">حسابي</p>
                               <p className="text-xs text-gray-500">البيانات الشخصية</p>
+                            </div>
+                          </Link>
+
+                          {/* الدردشات - Mobile only */}
+                          <Link
+                            href="/chats"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 md:hidden"
+                          >
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center relative">
+                              <MessageCircle className="w-5 h-5 text-white" />
+                              {unreadChatsCount > 0 && (
+                                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 flex items-center justify-center text-[8px] font-black text-white bg-red-500 rounded-full border border-white">
+                                  {unreadChatsCount > 99 ? '99+' : unreadChatsCount}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex-1 text-right">
+                              <p className="text-sm font-bold text-gray-900">الدردشات</p>
+                              <p className="text-xs text-gray-500">رسائلك ومحادثاتك</p>
                             </div>
                           </Link>
 
