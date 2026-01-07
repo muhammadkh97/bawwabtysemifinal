@@ -240,15 +240,24 @@ export default function Header() {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-1 sm:gap-2 md:gap-5">
-            <div className="flex items-center gap-0.5 sm:gap-1">
-              {isLoggedIn && <NotificationDropdown />}
-              
-              {/* Currency Selector */}
-              <div className="hidden lg:block">
-                <CurrencySelector />
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+            {/* Group 1: Notifications & Currency */}
+            {isLoggedIn && (
+              <div className="flex items-center gap-2">
+                <NotificationDropdown />
+                
+                {/* Currency Selector */}
+                <div className="hidden lg:block">
+                  <CurrencySelector />
+                </div>
               </div>
+            )}
 
+            {/* Separator */}
+            {isLoggedIn && <div className="h-6 sm:h-8 w-[1px] bg-gray-200 hidden md:block"></div>}
+
+            {/* Group 2: Shopping Icons */}
+            <div className="flex items-center gap-2">
               <Link href="/wishlist" className="relative group">
                 <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl bg-gradient-to-br from-red-50 to-pink-50 hover:from-red-100 hover:to-pink-100 flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:scale-105">
                   <Heart className="w-4.5 h-4.5 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 text-red-500 group-hover:text-red-600 transition-colors" />
@@ -283,10 +292,10 @@ export default function Header() {
                   </span>
                 )}
               </Link>
-
             </div>
 
-            <div className="h-6 sm:h-8 w-[1px] bg-gray-100 hidden md:block"></div>
+            {/* Separator */}
+            <div className="h-6 sm:h-8 w-[1px] bg-gray-200 hidden md:block"></div>
             
             {!isLoggedIn ? (
               <Link
