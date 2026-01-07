@@ -57,7 +57,7 @@ export default function OrderTrackingPage() {
         .select(`
           *,
           stores!vendor_id(store_name, shop_name, shop_name_ar, phone),
-          delivery_batches (batch_number, status, scheduled_date, estimated_delivery)
+          delivery_batches (batch_number, status, scheduled_date, collection_deadline)
         `)
         .eq('id', params.id)
         .eq('customer_id', user.id)
