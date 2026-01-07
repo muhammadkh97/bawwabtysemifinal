@@ -164,14 +164,14 @@ export default function NotificationDropdown() {
       {/* Bell Icon Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-all duration-200"
+        className="relative p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-all duration-200"
       >
-        <Bell className="w-6 h-6 md:w-7 md:h-7 text-gray-700 hover:text-purple-600 transition-colors" />
+        <Bell className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-700 hover:text-purple-600 transition-colors" />
 
         {/* Unread Badge */}
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs font-bold text-white bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-full animate-pulse shadow-lg">
-            {unreadCount > 99 ? '99+' : unreadCount}
+          <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 min-w-[16px] sm:min-w-[20px] h-4 sm:h-5 px-1 sm:px-1.5 flex items-center justify-center text-[8px] sm:text-xs font-black text-white bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-full animate-pulse shadow-lg border border-white">
+            {unreadCount > 99 ? '99' : unreadCount}
           </span>
         )}
       </button>
@@ -179,7 +179,7 @@ export default function NotificationDropdown() {
       {/* Dropdown Menu */}
       {isOpen && (
         <div
-          className="absolute left-0 mt-3 w-96 max-h-[600px] rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-5 duration-300"
+          className="absolute left-0 mt-3 w-80 sm:w-96 max-h-[500px] sm:max-h-[600px] rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-5 duration-300"
           style={{
             background: 'linear-gradient(135deg, rgba(15, 10, 30, 0.98) 0%, rgba(30, 15, 50, 0.98) 100%)',
             backdropFilter: 'blur(20px)',
@@ -187,55 +187,55 @@ export default function NotificationDropdown() {
           }}
         >
           {/* Header */}
-          <div className="sticky top-0 z-10 px-4 py-3 border-b border-white/10"
+          <div className="sticky top-0 z-10 px-3 sm:px-4 py-2.5 sm:py-3 border-b border-white/10"
             style={{
               background: 'linear-gradient(135deg, rgba(98, 54, 255, 0.2) 0%, rgba(147, 51, 234, 0.2) 100%)',
             }}
           >
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                 🔔 الإشعارات
                 {unreadCount > 0 && (
-                  <span className="text-sm font-normal text-purple-300">
+                  <span className="text-xs sm:text-sm font-normal text-purple-300">
                     ({unreadCount} جديد)
                   </span>
                 )}
               </h3>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 {unreadCount > 0 && (
                   <button
                     onClick={handleMarkAllRead}
-                    className="p-1.5 rounded-lg hover:bg-white/10 transition-colors group"
+                    className="p-1 sm:p-1.5 rounded-lg hover:bg-white/10 transition-colors group"
                     title="تحديد الكل كمقروء"
                   >
-                    <CheckCheck className="w-4 h-4 text-purple-300 group-hover:text-white" />
+                    <CheckCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-300 group-hover:text-white" />
                   </button>
                 )}
 
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-1.5 rounded-lg hover:bg-white/10 transition-colors group"
+                  className="p-1 sm:p-1.5 rounded-lg hover:bg-white/10 transition-colors group"
                 >
-                  <X className="w-4 h-4 text-purple-300 group-hover:text-white" />
+                  <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-300 group-hover:text-white" />
                 </button>
               </div>
             </div>
           </div>
 
           {/* Notifications List */}
-          <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
+          <div className="max-h-[420px] sm:max-h-[500px] overflow-y-auto custom-scrollbar">
             {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+              <div className="flex items-center justify-center py-10 sm:py-12">
+                <div className="animate-spin rounded-full h-7 w-7 sm:h-8 sm:w-8 border-b-2 border-purple-500"></div>
               </div>
             ) : notifications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 px-4">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center mb-4">
-                  <Bell className="w-8 h-8 text-purple-400" />
+              <div className="flex flex-col items-center justify-center py-10 sm:py-12 px-4">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center mb-3 sm:mb-4">
+                  <Bell className="w-7 h-7 sm:w-8 sm:h-8 text-purple-400" />
                 </div>
-                <p className="text-white font-medium mb-1">لا توجد إشعارات</p>
-                <p className="text-gray-400 text-sm text-center">
+                <p className="text-white font-medium mb-1 text-sm sm:text-base">لا توجد إشعارات</p>
+                <p className="text-gray-400 text-xs sm:text-sm text-center">
                   سنقوم بإعلامك عند حدوث أي جديد
                 </p>
               </div>
@@ -245,7 +245,7 @@ export default function NotificationDropdown() {
                   <div
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
-                    className={`group p-4 cursor-pointer transition-all duration-300 hover:bg-white/5 ${
+                    className={`group p-3 sm:p-4 cursor-pointer transition-all duration-300 hover:bg-white/5 ${
                       !notification.is_read ? 'bg-purple-500/10' : ''
                     }`}
                   >

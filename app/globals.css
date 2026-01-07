@@ -4,6 +4,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* استيراد تحسينات الموبايل */
+@import './globals-mobile.css';
+
 * {
   font-family: 'Cairo', sans-serif;
 }

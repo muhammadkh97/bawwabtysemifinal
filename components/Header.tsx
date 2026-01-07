@@ -218,16 +218,16 @@ export default function Header() {
       </div>
 
       {/* Main Header */}
-      <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3 md:py-5">
-        <div className="flex items-center justify-between gap-4 md:gap-10">
+      <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3 md:py-4">
+        <div className="flex items-center justify-between gap-2 md:gap-10">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 md:gap-3 group shrink-0">
+          <Link href="/" className="flex items-center gap-2 group shrink-0">
             <div className="relative">
-              <div className="text-2xl sm:text-3xl md:text-4xl group-hover:scale-110 transition-transform duration-300">🛍️</div>
-              <div className="absolute -top-1 -right-1 w-2 h-2 md:w-3 md:h-3 bg-green-500 rounded-full border-2 border-white animate-ping"></div>
+              <div className="text-xl sm:text-2xl md:text-4xl group-hover:scale-110 transition-transform duration-300">🛍️</div>
+              <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full border-2 border-white animate-ping"></div>
             </div>
             <div className="flex flex-col">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-black bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 text-transparent bg-clip-text tracking-tighter">بوابتي</h1>
+              <h1 className="text-lg sm:text-xl md:text-3xl font-black bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 text-transparent bg-clip-text tracking-tighter">بوابتي</h1>
               <span className="hidden md:block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Premium Store</span>
             </div>
           </Link>
@@ -240,7 +240,7 @@ export default function Header() {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-2 md:gap-5">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-5">
             {/* Dashboard Button - Desktop only */}
             {(userRole && userRole !== 'customer') || isVendorStaff || isRestaurantStaff ? (
               <Link
@@ -253,72 +253,72 @@ export default function Header() {
               </Link>
             ) : null}
             
-            <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2">
+            <div className="flex items-center gap-0.5 sm:gap-1">
               {isLoggedIn && <NotificationDropdown />}
               
               {isLoggedIn && (
-                <Link href="/chats" className="relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-50 rounded-xl md:rounded-2xl transition-all duration-300 group">
-                  <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 group-hover:text-purple-600 transition-colors" />
+                <Link href="/chats" className="relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-50 rounded-lg md:rounded-xl transition-all duration-300 group">
+                  <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-700 group-hover:text-purple-600 transition-colors" />
                   {unreadChatsCount > 0 && (
-                    <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 md:top-1.5 md:right-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[9px] sm:text-[10px] rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-black shadow-lg border-2 border-white">
-                      {unreadChatsCount > 99 ? '99+' : unreadChatsCount}
+                    <span className="absolute -top-0.5 -right-0.5 sm:top-0 sm:right-0 md:top-0.5 md:right-0.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[8px] sm:text-[9px] rounded-full w-3.5 h-3.5 sm:w-4 sm:h-4 flex items-center justify-center font-black shadow-lg border border-white">
+                      {unreadChatsCount > 99 ? '99' : unreadChatsCount}
                     </span>
                   )}
                 </Link>
               )}
               
               {/* Currency Selector */}
-              <div className="hidden sm:block">
+              <div className="hidden lg:block">
                 <CurrencySelector />
               </div>
 
-              <Link href="/wishlist" className="relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-50 rounded-xl md:rounded-2xl transition-all duration-300 group">
-                <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 group-hover:text-red-500 transition-colors" />
+              <Link href="/wishlist" className="relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-50 rounded-lg md:rounded-xl transition-all duration-300 group">
+                <Heart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-700 group-hover:text-red-500 transition-colors" />
                 {wishlistCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 md:top-1.5 md:right-1.5 bg-red-500 text-white text-[9px] sm:text-[10px] rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-black shadow-lg border-2 border-white">
+                  <span className="absolute -top-0.5 -right-0.5 sm:top-0 sm:right-0 md:top-0.5 md:right-0.5 bg-red-500 text-white text-[8px] sm:text-[9px] rounded-full w-3.5 h-3.5 sm:w-4 sm:h-4 flex items-center justify-center font-black shadow-lg border border-white">
                     {wishlistCount}
                   </span>
                 )}
               </Link>
 
               {/* سلة المطاعم */}
-              <Link href="/restaurant-cart" className="relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-50 rounded-xl md:rounded-2xl transition-all duration-300 group">
-                <UtensilsCrossed className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 group-hover:text-orange-500 transition-colors" />
+              <Link href="/restaurant-cart" className="relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-50 rounded-lg md:rounded-xl transition-all duration-300 group">
+                <UtensilsCrossed className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-700 group-hover:text-orange-500 transition-colors" />
                 {restaurantItemsCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 md:top-1.5 md:right-1.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[9px] sm:text-[10px] rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-black shadow-lg border-2 border-white">
+                  <span className="absolute -top-0.5 -right-0.5 sm:top-0 sm:right-0 md:top-0.5 md:right-0.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[8px] sm:text-[9px] rounded-full w-3.5 h-3.5 sm:w-4 sm:h-4 flex items-center justify-center font-black shadow-lg border border-white">
                     {restaurantItemsCount}
                   </span>
                 )}
               </Link>
 
               {/* سلة المنتجات */}
-              <Link href="/cart" className="relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-50 rounded-xl md:rounded-2xl transition-all duration-300 group">
-                <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 group-hover:text-purple-600 transition-colors" />
+              <Link href="/cart" className="relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-50 rounded-lg md:rounded-xl transition-all duration-300 group">
+                <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-700 group-hover:text-purple-600 transition-colors" />
                 {cartCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 md:top-1.5 md:right-1.5 bg-purple-600 text-white text-[9px] sm:text-[10px] rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-black shadow-lg border-2 border-white">
+                  <span className="absolute -top-0.5 -right-0.5 sm:top-0 sm:right-0 md:top-0.5 md:right-0.5 bg-purple-600 text-white text-[8px] sm:text-[9px] rounded-full w-3.5 h-3.5 sm:w-4 sm:h-4 flex items-center justify-center font-black shadow-lg border border-white">
                     {cartCount}
                   </span>
                 )}
               </Link>
 
-              {/* طلباتي - متاح للجميع سواء مسجلين أو لا */}
+              {/* طلباتي - Desktop only */}
               {isLoggedIn && (
-                <Link href="/orders" className="relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-50 rounded-xl md:rounded-2xl transition-all duration-300 group" title="طلباتي">
+                <Link href="/orders" className="hidden md:flex relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-50 rounded-xl md:rounded-2xl transition-all duration-300 group" title="طلباتي">
                   <Package className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 group-hover:text-green-600 transition-colors" />
                 </Link>
               )}
             </div>
 
-            <div className="h-8 w-[1px] bg-gray-100 hidden md:block"></div>
+            <div className="h-6 sm:h-8 w-[1px] bg-gray-100 hidden md:block"></div>
             
             {!isLoggedIn ? (
               <Link
                 href="/auth/login"
-                className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 md:px-6 py-2 md:py-2.5 text-white rounded-xl md:rounded-2xl transition-all duration-300 font-bold text-xs sm:text-sm hover:shadow-xl hover:shadow-purple-500/20"
+                className="flex items-center gap-1 px-2.5 sm:px-3 md:px-6 py-1.5 sm:py-2 md:py-2.5 text-white rounded-lg md:rounded-2xl transition-all duration-300 font-bold text-[10px] sm:text-xs md:text-sm hover:shadow-xl hover:shadow-purple-500/20"
                 style={{ background: 'linear-gradient(135deg, #6236FF 0%, #B621FE 100%)' }}
               >
                 <span>دخول</span>
-                <Zap className="w-3 h-3 sm:w-4 sm:h-4 fill-current" />
+                <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 fill-current" />
               </Link>
             ) : (
               <div className="relative">
@@ -345,15 +345,15 @@ export default function Header() {
                   </button>
                 </div>
 
-                {/* Mobile Version - قائمة منسدلة */}
+                {/* Mobile Version - قائمة منسدلة محسّنة */}
                 <div className="md:hidden">
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center gap-1 p-1 pr-2 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all duration-300 border border-gray-100"
+                    className="flex items-center gap-1 p-0.5 pr-1.5 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all duration-300 border border-gray-100"
                   >
-                    <ChevronDown className={`w-4 h-4 text-gray-700 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white">
-                      <User className="w-4 h-4" />
+                    <ChevronDown className={`w-3 h-3 text-gray-700 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                    <div className="w-7 h-7 rounded-md bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white">
+                      <User className="w-3.5 h-3.5" />
                     </div>
                   </button>
 
@@ -363,17 +363,17 @@ export default function Header() {
                       <>
                         {/* Backdrop */}
                         <div
-                          className="fixed inset-0 z-40"
+                          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
                           onClick={() => setIsUserMenuOpen(false)}
                         />
                         
                         {/* القائمة */}
                         <motion.div
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
+                          initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -10, scale: 0.95 }}
                           transition={{ duration: 0.2 }}
-                          className="absolute left-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50"
+                          className="absolute left-0 top-full mt-2 w-60 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50"
                         >
                           {/* لوحة التحكم - للـ admin/vendor/driver أو المساعدين */}
                           {((userRole && userRole !== 'customer') || isVendorStaff || isRestaurantStaff) && (
@@ -449,7 +449,7 @@ export default function Header() {
         </div>
         
         {/* Mobile Search */}
-        <div className="md:hidden mt-4">
+        <div className="md:hidden mt-3">
           <SmartSearch />
         </div>
       </div>
