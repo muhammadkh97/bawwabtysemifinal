@@ -180,7 +180,7 @@ export default function Header() {
   };
 
   return (
-    <header className="border-b sticky top-0 bg-white/80 backdrop-blur-md z-50 overflow-x-hidden">
+    <header className="border-b sticky top-0 bg-white/80 backdrop-blur-md z-[9000] overflow-x-hidden">
       {/* Top Bar */}
       <div className="hidden md:block text-white py-1.5" style={{ background: 'linear-gradient(90deg, #6236FF 0%, #B621FE 50%, #FF219D 100%)' }}>
         <div className="container mx-auto px-3 sm:px-4 md:px-8 flex justify-between items-center text-[12px] font-medium max-w-full">
