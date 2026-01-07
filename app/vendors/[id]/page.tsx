@@ -164,42 +164,6 @@ export default function VendorStorePage() {
     }
   };
 
-  const fetchVendor = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('stores')
-        .select('*')
-        .eq('id', vendorId)
-        .single();
-
-      if (error) throw error;
-      setVendor(data);
-    } catch (error) {
-      console.error('Error fetching vendor:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchProducts = async () => {
-    try {
-      setProductsLoading(true);
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('vendor_id', vendorId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setProducts(data || []);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-    } finally {
-      setProductsLoading(false);
-    }
-  };
-
   if (loading) {
     return (
       <main className="min-h-screen bg-gray-50">
