@@ -83,11 +83,13 @@ export default function RestaurantWalletPage() {
       // استخدام الـ Function الاحترافية الجديدة
       const { data: summary, error: summaryError } = await supabase
         .rpc('get_vendor_wallet_summary', { p_vendor_id: vId })
-        .single();
+        .single<WalletSummary>();
 
       if (summaryError) throw summaryError;
-      setWalletSummary(summary);
-      setPayoutAmount(summary.current_balance);
+      if (summary) {
+        setWalletSummary(summary);
+        setPayoutAmount(summary.current_balance);
+      }
 
       // جلب المعاملات من الـ Function
       const { data: txns, error: txnsError } = await supabase
@@ -287,26 +289,26 @@ export default function RestaurantWalletPage() {
                   >
                     <div className="flex items-center gap-4">
                       <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                        transaction.type === 'income' 
+                        transaction.type === 'earning' 
                           ? 'bg-green-100' 
                           : 'bg-red-100'
                       }`}>
-                        {transaction.type === 'income' ? (
-                          <ArrowDownLeft className={`w-6 h-6 ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`} />
+                        {transaction.type === 'earning' ? (
+                          <ArrowDownLeft className={`w-6 h-6 ${transaction.type === 'earning' ? 'text-green-600' : 'text-red-600'}`} />
                         ) : (
                           <ArrowUpRight className="w-6 h-6 text-red-600" />
                         )}
                       </div>
                       <div>
                         <h3 className="font-bold text-gray-900">{transaction.description}</h3>
-                        <p className="text-sm text-gray-600">{transaction.date}</p>
+                        <p className="text-sm text-gray-600">{new Date(transaction.created_at).toLocaleDateString('ar-JO')}</p>
                       </div>
                     </div>
                     <div className="text-left">
                       <p className={`text-xl font-bold ${
-                        transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                        transaction.type === 'earning' ? 'text-green-600' : 'text-red-600'
                       }`}>
-                        {transaction.type === 'income' ? '+' : '-'}{transaction.amount.toFixed(2)} ₪
+                        {transaction.type === 'earning' ? '+' : '-'}{transaction.amount.toFixed(2)} ₪
                       </p>
                       <span className={`text-xs px-2 py-1 rounded-full ${
                         transaction.status === 'completed' 

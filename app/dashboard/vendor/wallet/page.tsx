@@ -29,6 +29,15 @@ interface PayoutRequest {
   rejection_reason?: string;
 }
 
+interface VendorWalletSummary {
+  current_balance: number;
+  pending_balance: number;
+  total_earned: number;
+  total_withdrawn: number;
+  commission_rate: number;
+  last_payout_date: string | null;
+}
+
 export default function VendorWalletPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'payouts'>('overview');
   const [showPayoutModal, setShowPayoutModal] = useState(false);
@@ -75,7 +84,7 @@ export default function VendorWalletPage() {
       // استخدام الـ Function الاحترافية الجديدة
       const { data: summary, error: summaryError } = await supabase
         .rpc('get_vendor_wallet_summary', { p_vendor_id: vendorData.id })
-        .single();
+        .single<VendorWalletSummary>();
 
       if (summaryError) {
         console.error('Error fetching wallet summary:', summaryError);
