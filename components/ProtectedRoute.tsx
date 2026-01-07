@@ -38,19 +38,24 @@ export default function ProtectedRoute({
   const lastCheckTimeRef = useRef<number>(0);
 
   useEffect(() => {
+    // ✅ إذا كان AuthContext لا يزال يحمل، انتظر
+    if (contextLoading) {
+      console.log('⏳ [ProtectedRoute] انتظار AuthContext...');
+      return;
+    }
+
     const now = Date.now();
     const timeSinceLastCheck = now - lastCheckTimeRef.current;
     
     // تحقق فقط إذا:
     // 1. لم يتم التحقق من قبل
     // 2. AuthContext انتهى من التحميل
-    // 3. مر أكثر من 5 ثواني على آخر تحقق
-    if (!hasCheckedRef.current && !contextLoading) {
+    if (!hasCheckedRef.current) {
       console.log('🔐 [ProtectedRoute] إجراء التحقق الأول...');
       checkAuth();
       hasCheckedRef.current = true;
       lastCheckTimeRef.current = now;
-    } else if (hasCheckedRef.current && !contextLoading && timeSinceLastCheck > 5000) {
+    } else if (timeSinceLastCheck > 5000) {
       // إعادة التحقق فقط إذا تغير الدور
       const prevRole = sessionStorage.getItem('lastCheckedRole');
       if (prevRole !== contextUserRole) {
@@ -64,12 +69,6 @@ export default function ProtectedRoute({
   const checkAuth = async () => {
     try {
       console.log('🔐 [ProtectedRoute] بدء التحقق من الصلاحيات...');
-      
-      // انتظار تحميل AuthContext أولاً
-      if (contextLoading) {
-        console.log('⏳ [ProtectedRoute] انتظار AuthContext...');
-        return;
-      }
 
       // التحقق من Session أولاً
       const { data: { session } } = await supabase.auth.getSession();
@@ -130,7 +129,8 @@ export default function ProtectedRoute({
     }
   };
 
-  if (isLoading || contextLoading) {
+  // ✅ عرض شاشة التحميل فقط في المرة الأولى
+  if ((isLoading && !hasCheckedRef.current) || contextLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 to-pink-900">
         <div className="text-center">
