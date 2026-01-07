@@ -10,7 +10,7 @@ export default function Hero() {
         <div className="absolute bottom-5 sm:bottom-10 right-5 sm:right-10 w-40 sm:w-64 md:w-96 h-40 sm:h-64 md:h-96 bg-yellow-300 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
-      <div className="container mx-auto px-3 sm:px-4 relative z-10">
+      <div className="container mx-auto px-3 sm:px-4 relative z-0">
         <div className="flex items-center justify-between gap-4 sm:gap-6 md:gap-12">
           {/* Text Content */}
           <div className="flex-1 text-white max-w-2xl">
