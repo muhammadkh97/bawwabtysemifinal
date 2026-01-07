@@ -88,24 +88,24 @@ export default function MyOrdersPage() {
         return;
       }
 
-      const { data, error } = await supabase.rpc('update_order_status_by_driver', {
-        p_order_id: orderId,
-        p_new_status: 'delivered',
-        p_driver_user_id: user.id
-      });
+      // استخدام UPDATE مباشر مع تحديد الأعمدة فقط
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          status: 'delivered',
+          delivered_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId);
 
       if (error) {
         console.error('❌ Error updating order:', error);
-        toast.error('فشل تحديث حالة الطلب');
+        toast.error('فشل تحديث حالة الطلب: ' + error.message);
         return;
       }
 
-      if (data?.success) {
-        toast.success('✅ تم إتمام التوصيل!');
-        loadMyOrders();
-      } else {
-        toast.error(data?.error || 'حدث خطأ أثناء تحديث الطلب');
-      }
+      toast.success('✅ تم إتمام التوصيل!');
+      loadMyOrders();
     } catch (error) {
       console.error('❌ Exception:', error);
       toast.error('حدث خطأ غير متوقع');
