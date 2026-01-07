@@ -76,19 +76,21 @@ export async function verifyPickupWithOTP(
   orderId: string,
   otp: string,
   driverId: string
-): Promise<boolean> {
+): Promise<{ success: boolean; message?: string }> {
   try {
     const { data, error } = await supabase.rpc('verify_pickup_otp', {
       order_uuid: orderId,
       provided_otp: otp,
-      driver_id: driverId,
+      driver_uuid: driverId,
     })
 
     if (error) throw error
-    return data === true
-  } catch (error) {
+    
+    // SQL function returns JSONB with {success, message}
+    return data || { success: false, message: 'فشل التحقق' }
+  } catch (error: any) {
     console.error('Error verifying pickup OTP:', error)
-    return false
+    return { success: false, message: error.message || 'حدث خطأ' }
   }
 }
 
@@ -101,21 +103,23 @@ export async function verifyDeliveryWithOTP(
   customerId: string,
   signature?: string,
   photo?: string
-): Promise<boolean> {
+): Promise<{ success: boolean; message?: string }> {
   try {
     const { data, error } = await supabase.rpc('verify_delivery_otp', {
       order_uuid: orderId,
       provided_otp: otp,
-      customer_id: customerId,
+      customer_uuid: customerId,
       signature_data: signature || null,
       photo_url: photo || null,
     })
 
     if (error) throw error
-    return data === true
-  } catch (error) {
+    
+    // SQL function returns JSONB with {success, message}
+    return data || { success: false, message: 'فشل التحقق' }
+  } catch (error: any) {
     console.error('Error verifying delivery OTP:', error)
-    return false
+    return { success: false, message: error.message || 'حدث خطأ' }
   }
 }
 
@@ -125,18 +129,18 @@ export async function verifyDeliveryWithOTP(
 export async function verifyPickupWithQR(
   qrData: string,
   driverId: string
-): Promise<boolean> {
+): Promise<{ success: boolean; message?: string }> {
   try {
     const parsed: QRCodeData = JSON.parse(qrData)
 
     if (parsed.type !== 'pickup') {
-      throw new Error('Invalid QR code type')
+      return { success: false, message: 'نوع رمز QR غير صحيح' }
     }
 
     return await verifyPickupWithOTP(parsed.order_id, parsed.otp, driverId)
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error verifying pickup QR:', error)
-    return false
+    return { success: false, message: error.message || 'رمز QR غير صالح' }
   }
 }
 
@@ -148,12 +152,12 @@ export async function verifyDeliveryWithQR(
   customerId: string,
   signature?: string,
   photo?: string
-): Promise<boolean> {
+): Promise<{ success: boolean; message?: string }> {
   try {
     const parsed: QRCodeData = JSON.parse(qrData)
 
     if (parsed.type !== 'delivery') {
-      throw new Error('Invalid QR code type')
+      return { success: false, message: 'نوع رمز QR غير صحيح' }
     }
 
     return await verifyDeliveryWithOTP(
@@ -163,9 +167,9 @@ export async function verifyDeliveryWithQR(
       signature,
       photo
     )
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error verifying delivery QR:', error)
-    return false
+    return { success: false, message: error.message || 'رمز QR غير صالح' }
   }
 }
 
