@@ -195,8 +195,8 @@ export default function NotificationDropdown() {
               border: '1px solid rgba(98, 54, 255, 0.3)',
             }}
           >
-          {/* Header */}
-          <div className="sticky top-0 z-10 px-3 sm:px-4 py-2.5 sm:py-3 border-b border-white/10"
+            {/* Header */}
+            <div className="sticky top-0 z-10 px-3 sm:px-4 py-2.5 sm:py-3 border-b border-white/10"
             style={{
               background: 'linear-gradient(135deg, rgba(98, 54, 255, 0.2) 0%, rgba(147, 51, 234, 0.2) 100%)',
             }}
@@ -314,7 +314,8 @@ export default function NotificationDropdown() {
               </button>
             </div>
           )}
-        </div>
+          </div>
+        </>
       )}
 
       {/* Custom Scrollbar Styles */}
