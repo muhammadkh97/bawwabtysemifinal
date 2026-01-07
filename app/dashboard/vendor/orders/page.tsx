@@ -408,6 +408,14 @@ export default function VendorOrdersPageImproved() {
                           {getStatusText(order.status)}
                         </span>
                         <span className="text-2xl font-bold text-white">{formatPrice(order.total_amount)}</span>
+                        {order.status === 'ready_for_pickup' && (
+                          <button
+                            onClick={() => window.location.href = `/dashboard/vendor/orders/${order.id}/pickup-qr`}
+                            className="px-4 py-2 bg-orange-600 text-white rounded-xl hover:bg-orange-700 font-medium text-sm flex items-center gap-2 whitespace-nowrap"
+                          >
+                            📦 عرض كود الاستلام
+                          </button>
+                        )}
                       </div>
                     </div>
 

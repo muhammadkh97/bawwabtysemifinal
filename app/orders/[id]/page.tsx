@@ -617,6 +617,21 @@ export default function OrderTrackingPage() {
           </button>
         </div>
 
+        {/* Pickup Order Button - Customer */}
+        {order.status === 'picked_up' && (
+          <div className="mt-4 bg-blue-50 border-2 border-blue-200 rounded-xl p-4 md:p-6 text-center">
+            <p className="text-lg font-semibold text-blue-800 mb-4">
+              🚚 السائق في الطريق إليك!
+            </p>
+            <button 
+              onClick={() => router.push(`/orders/${params.id}/delivery-scan`)}
+              className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center gap-2 mx-auto"
+            >
+              📸 استلام الطلب (مسح QR أو إدخال OTP)
+            </button>
+          </div>
+        )}
+
         {/* Delivered - Review Button */}
         {order.status === 'delivered' && (
           <div className="mt-4 bg-green-50 border-2 border-green-200 rounded-xl p-4 md:p-6 text-center">
