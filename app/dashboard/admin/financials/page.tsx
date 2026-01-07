@@ -127,9 +127,6 @@ export default function AdminFinancialsPage() {
           stores!payout_requests_vendor_id_fkey (
             name,
             phone
-          ),
-          vendor_wallets!payout_requests_vendor_id_fkey (
-            current_balance
           )
         `)
         .eq('status', 'pending')
@@ -138,6 +135,23 @@ export default function AdminFinancialsPage() {
       if (payoutsError) {
         console.error('Error loading payout requests:', payoutsError);
       }
+      
+      // جلب vendor_wallets بشكل منفصل
+      let walletsMap: Record<string, number> = {};
+      if (payoutsData && payoutsData.length > 0) {
+        const vendorIds = payoutsData.map((p: any) => p.vendor_id);
+        const { data: walletsData } = await supabase
+          .from('vendor_wallets')
+          .select('vendor_id, current_balance')
+          .in('vendor_id', vendorIds);
+        
+        if (walletsData) {
+          walletsMap = Object.fromEntries(
+            walletsData.map(w => [w.vendor_id, w.current_balance || 0])
+          );
+        }
+      }
+      
       if (payoutsData) {
         const formatted = payoutsData.map((p: any) => ({
           id: p.id,
@@ -152,7 +166,7 @@ export default function AdminFinancialsPage() {
           iban: p.iban || '',
           requested_at: p.requested_at,
           notes: p.notes || '',
-          current_balance: p.vendor_wallets?.current_balance || 0
+          current_balance: walletsMap[p.vendor_id] || 0
         }));
         setPayoutRequests(formatted);
       }
