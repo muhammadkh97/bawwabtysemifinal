@@ -130,7 +130,6 @@ export default function ApprovalsPage() {
           license_image,
           vehicle_type,
           vehicle_number,
-          documents,
           created_at,
           users!drivers_user_id_fkey (
             id,
@@ -155,7 +154,6 @@ export default function ApprovalsPage() {
           license_image: d.license_image || '',
           vehicle_type: d.vehicle_type || '',
           vehicle_number: d.vehicle_number || '',
-          documents: d.documents || [],
           created_at: d.created_at
         })));
       }
