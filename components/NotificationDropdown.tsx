@@ -160,11 +160,11 @@ export default function NotificationDropdown() {
   if (!user) return null
 
   return (
-    <div className="relative overflow-visible" ref={dropdownRef}>
+    <div className="relative" ref={dropdownRef}>
       {/* Bell Icon Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative group overflow-visible"
+        className="relative group"
       >
         <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:scale-105">
           <Bell className="w-4.5 h-4.5 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 text-purple-600 group-hover:text-purple-700 transition-colors" />
@@ -183,12 +183,12 @@ export default function NotificationDropdown() {
         <>
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-black/10 z-[10001]"
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
             onClick={() => setIsOpen(false)}
           />
           
           <div
-            className="absolute left-auto right-0 mt-3 w-[90vw] sm:w-80 md:w-96 max-h-[calc(100vh-100px)] rounded-xl sm:rounded-2xl shadow-2xl overflow-y-auto z-[10002] animate-in fade-in slide-in-from-top-5 duration-300"
+            className="fixed right-2 top-[70px] w-[calc(100vw-16px)] sm:w-80 md:w-96 max-h-[calc(100vh-100px)] rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-5 duration-300"
             style={{
               background: 'linear-gradient(135deg, rgba(15, 10, 30, 0.98) 0%, rgba(30, 15, 50, 0.98) 100%)',
               backdropFilter: 'blur(20px)',
