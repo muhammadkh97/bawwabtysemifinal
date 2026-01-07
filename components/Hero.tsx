@@ -3,14 +3,14 @@ import Image from 'next/image'
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden py-8 sm:py-12 md:py-16 lg:py-20" style={{ background: 'linear-gradient(90deg, #6236FF 0%, #B621FE 50%, #FF219D 100%)' }}>
+    <section className="relative overflow-hidden py-8 sm:py-12 md:py-16 lg:py-20 -z-10" style={{ background: 'linear-gradient(90deg, #6236FF 0%, #B621FE 50%, #FF219D 100%)' }}>
       {/* خلفية متحركة */}
-      <div className="absolute inset-0 opacity-20">
+      <div className="absolute inset-0 opacity-20 -z-10">
         <div className="absolute top-5 sm:top-10 left-5 sm:left-10 w-32 sm:w-48 md:w-72 h-32 sm:h-48 md:h-72 bg-white rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-5 sm:bottom-10 right-5 sm:right-10 w-40 sm:w-64 md:w-96 h-40 sm:h-64 md:h-96 bg-yellow-300 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
-      <div className="container mx-auto px-3 sm:px-4 relative">
+      <div className="container mx-auto px-3 sm:px-4 relative z-0">
         <div className="flex items-center justify-between gap-4 sm:gap-6 md:gap-12">
           {/* Text Content */}
           <div className="flex-1 text-white max-w-2xl">
