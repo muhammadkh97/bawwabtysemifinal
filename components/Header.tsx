@@ -331,7 +331,7 @@ export default function Header() {
                 <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 fill-current" />
               </Link>
             ) : (
-              <div className="relative">
+              <div className="relative overflow-visible">
                 {/* Desktop Version - الأزرار المنفصلة */}
                 <div className="hidden md:flex items-center gap-2">
                   <Link
@@ -383,7 +383,7 @@ export default function Header() {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: -10, scale: 0.95 }}
                           transition={{ duration: 0.2 }}
-                          className="fixed md:absolute right-3 md:right-0 top-[70px] md:top-full mt-0 md:mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-auto max-h-[80vh] z-[10002]"
+                          className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-y-auto max-h-[calc(100vh-80px)] z-[10002]"
                         >
                           {/* لوحة التحكم - للـ admin/vendor/driver أو المساعدين */}
                           {((userRole && userRole !== 'customer') || isVendorStaff || isRestaurantStaff) && (
