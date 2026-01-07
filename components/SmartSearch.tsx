@@ -135,7 +135,7 @@ export default function SmartSearch() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute top-full mt-2 w-full rounded-3xl overflow-hidden z-50 shadow-2xl"
+            className="absolute top-full mt-2 w-full rounded-3xl overflow-hidden z-[10002] shadow-2xl"
             style={{
               background: 'rgba(15, 10, 30, 0.95)',
               backdropFilter: 'blur(30px)',
@@ -271,7 +271,7 @@ export default function SmartSearch() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute top-full mt-2 w-full rounded-3xl overflow-hidden z-50 shadow-2xl p-10 text-center"
+            className="absolute top-full mt-2 w-full rounded-3xl overflow-hidden z-[10002] shadow-2xl p-10 text-center"
             style={{
               background: 'rgba(15, 10, 30, 0.95)',
               backdropFilter: 'blur(30px)',

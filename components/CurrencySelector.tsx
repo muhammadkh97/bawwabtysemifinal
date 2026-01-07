@@ -88,7 +88,7 @@ export default function CurrencySelector() {
         <>
           {/* Mobile Overlay */}
           <div 
-            className="fixed inset-0 bg-black/20 z-40 md:hidden"
+            className="fixed inset-0 bg-black/20 z-[10001] md:hidden"
             onClick={() => {
               setIsOpen(false);
               setSearchQuery('');
@@ -96,7 +96,7 @@ export default function CurrencySelector() {
           />
           
           {/* Dropdown Menu */}
-          <div className="fixed md:absolute left-1/2 md:left-0 top-1/2 md:top-auto md:mt-2 -translate-x-1/2 md:translate-x-0 -translate-y-1/2 md:translate-y-0 w-[90vw] max-w-sm md:w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 z-50 overflow-hidden">
+          <div className="fixed md:absolute left-1/2 md:left-0 top-1/2 md:top-auto md:mt-2 -translate-x-1/2 md:translate-x-0 -translate-y-1/2 md:translate-y-0 w-[90vw] max-w-sm md:w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 z-[10002] overflow-hidden">
             <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
               <span>اختر العملة</span>
               <button

@@ -180,7 +180,7 @@ export default function Header() {
   };
 
   return (
-    <header className="border-b sticky top-0 bg-white/80 backdrop-blur-md z-[9000] overflow-x-hidden">
+    <header className="border-b sticky top-0 bg-white/80 backdrop-blur-md z-[10000] overflow-x-hidden">
       {/* Top Bar */}
       <div className="hidden md:block text-white py-1.5" style={{ background: 'linear-gradient(90deg, #6236FF 0%, #B621FE 50%, #FF219D 100%)' }}>
         <div className="container mx-auto px-3 sm:px-4 md:px-8 flex justify-between items-center text-[12px] font-medium max-w-full">
@@ -373,7 +373,7 @@ export default function Header() {
                       <>  
                         {/* Backdrop */}
                         <div
-                          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[9998]"
+                          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[10001]"
                           onClick={() => setIsUserMenuOpen(false)}
                         />
                         
@@ -383,7 +383,7 @@ export default function Header() {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: -10, scale: 0.95 }}
                           transition={{ duration: 0.2 }}
-                          className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[9999]"
+                          className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[10002]"
                         >
                           {/* لوحة التحكم - للـ admin/vendor/driver أو المساعدين */}
                           {((userRole && userRole !== 'customer') || isVendorStaff || isRestaurantStaff) && (
@@ -501,7 +501,7 @@ export default function Header() {
               </button>
               
               {/* Mega Menu */}
-              <div className="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[9999]">
+              <div className="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[10003]">
                 <div className="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-[32px] border border-gray-100 overflow-hidden flex" style={{ width: '900px' }}>
                   {/* Sidebar Categories */}
                   <div className="w-1/3 bg-gray-50/50 p-6 border-l border-gray-100">

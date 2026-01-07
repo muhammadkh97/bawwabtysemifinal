@@ -183,12 +183,12 @@ export default function NotificationDropdown() {
         <>
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-black/10 z-[60]"
+            className="fixed inset-0 bg-black/10 z-[10001]"
             onClick={() => setIsOpen(false)}
           />
           
           <div
-            className="absolute right-0 mt-3 w-[90vw] sm:w-80 md:w-96 max-h-[500px] sm:max-h-[600px] rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden z-[70] animate-in fade-in slide-in-from-top-5 duration-300"
+            className="absolute right-0 mt-3 w-[90vw] sm:w-80 md:w-96 max-h-[500px] sm:max-h-[600px] rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden z-[10002] animate-in fade-in slide-in-from-top-5 duration-300"
             style={{
               background: 'linear-gradient(135deg, rgba(15, 10, 30, 0.98) 0%, rgba(30, 15, 50, 0.98) 100%)',
               backdropFilter: 'blur(20px)',
