@@ -14,6 +14,9 @@ import ToastProvider from '@/components/ToastProvider'
 export const metadata: Metadata = {
   title: 'بوابتي - متجرك الإلكتروني المميز',
   description: 'تسوق من آلاف المنتجات عالية الجودة بأفضل الأسعار',
+  icons: {
+    icon: '/favicon.ico',
+  },
 }
 
 export default function RootLayout({

@@ -14,6 +14,7 @@ interface Order {
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   total: number;
   stores?: {
+    store_name: string;
     shop_name: string;
     shop_name_ar: string;
   };
@@ -40,7 +41,7 @@ export default function OrdersPage() {
         .from('orders')
         .select(`
           *,
-          stores!vendor_id(shop_name, shop_name_ar),
+          stores!vendor_id(store_name, shop_name, shop_name_ar),
           order_items(id)
         `)
         .eq('customer_id', user.id)
@@ -153,7 +154,7 @@ export default function OrdersPage() {
                       
                       <div className="text-sm text-gray-600 space-y-1">
                         <p>📅 {new Date(order.created_at).toLocaleDateString('ar-SA')}</p>
-                        {order.stores && <p>🏪 {order.stores.shop_name_ar || order.stores.shop_name}</p>}
+                        {order.stores && <p>🏪 {order.stores.shop_name_ar || order.stores.shop_name || order.stores.store_name}</p>}
                         {order.order_items && <p>📦 {order.order_items.length} منتج</p>}
                       </div>
                     </div>
@@ -186,4 +187,3 @@ export default function OrdersPage() {
     </>
   );
 }
-
