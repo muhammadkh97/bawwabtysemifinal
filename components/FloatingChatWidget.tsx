@@ -30,6 +30,7 @@ export default function FloatingChatWidget() {
   const [isDragging, setIsDragging] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const hasInteracted = useRef(false);
   
   // Load saved position from localStorage or use default
   const [position, setPosition] = useState({ x: 0, y: 0 });
