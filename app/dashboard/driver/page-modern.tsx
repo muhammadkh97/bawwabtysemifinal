@@ -17,9 +17,11 @@ import {
   Star,
   Map as MapIcon
 } from 'lucide-react';
+// @ts-ignore
 import dynamic from 'next/dynamic';
 import { DriverOrder } from '@/types';
 
+// @ts-ignore
 const OrdersMapComponent = dynamic(() => import('@/components/OrdersMapComponent'), {
   ssr: false,
   loading: () => <div className="h-full flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div></div>
@@ -103,18 +105,18 @@ export default function DriverDashboard() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const totalDeliveries = allOrders?.filter(o => o.status === 'delivered').length || 0;
-      const pendingDeliveries = allOrders?.filter(o => ['ready_for_pickup', 'picked_up', 'in_transit', 'out_for_delivery'].includes(o.status)).length || 0;
-      const completedToday = allOrders?.filter(o => {
+      const totalDeliveries = allOrders?.filter((o: any) => o.status === 'delivered').length || 0;
+      const pendingDeliveries = allOrders?.filter((o: any) => ['ready_for_pickup', 'picked_up', 'in_transit', 'out_for_delivery'].includes(o.status)).length || 0;
+      const completedToday = allOrders?.filter((o: any) => {
         const orderDate = new Date(o.created_at);
         return o.status === 'delivered' && orderDate >= today;
       }).length || 0;
 
-      const totalEarnings = allOrders?.filter(o => o.status === 'delivered').reduce((sum, o) => sum + (o.delivery_fee || 0), 0) || 0;
-      const todayEarnings = allOrders?.filter(o => {
+      const totalEarnings = allOrders?.filter((o: any) => o.status === 'delivered').reduce((sum: number, o: any) => sum + (o.delivery_fee || 0), 0) || 0;
+      const todayEarnings = allOrders?.filter((o: any) => {
         const orderDate = new Date(o.created_at);
         return o.status === 'delivered' && orderDate >= today;
-      }).reduce((sum, o) => sum + (o.delivery_fee || 0), 0) || 0;
+      }).reduce((sum: number, o: any) => sum + (o.delivery_fee || 0), 0) || 0;
 
       setStats({
         total_deliveries: totalDeliveries,

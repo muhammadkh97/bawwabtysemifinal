@@ -104,7 +104,7 @@ function VendorDashboardContent() {
 
       // Calculate stats
       const totalOrders = ordersData?.length || 0;
-      const totalRevenue = ordersData?.reduce((sum, order) => sum + parseFloat(order.total || 0), 0) || 0;
+      const totalRevenue = ordersData?.reduce((sum: number, order: any) => sum + parseFloat(order.total || 0), 0) || 0;
       const activeProducts = productsData?.length || 0;
 
       // Fetch reviews
@@ -114,7 +114,7 @@ function VendorDashboardContent() {
         .eq('vendor_id', storeData.id);
 
       const averageRating = reviewsData && reviewsData.length > 0
-        ? reviewsData.reduce((sum, review) => sum + review.rating, 0) / reviewsData.length
+        ? reviewsData.reduce((sum: number, review: any) => sum + review.rating, 0) / reviewsData.length
         : 0;
 
       setStats({

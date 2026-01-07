@@ -95,9 +95,9 @@ export default function RestaurantDashboard() {
         .eq('vendor_id', restaurantId);
 
       const totalOrders = ordersData?.length || 0;
-      const totalRevenue = ordersData?.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0) || 0;
-      const todayOrders = ordersData?.filter(o => new Date(o.created_at) >= today).length || 0;
-      const pendingOrders = ordersData?.filter(o => o.status === 'pending').length || 0;
+      const totalRevenue = ordersData?.reduce((sum: number, order: any) => sum + (Number(order.total_amount) || 0), 0) || 0;
+      const todayOrders = ordersData?.filter((o: any) => new Date(o.created_at) >= today).length || 0;
+      const pendingOrders = ordersData?.filter((o: any) => o.status === 'pending').length || 0;
 
       // عدد المنتجات
       const { count: productsCount } = await supabase
@@ -112,7 +112,7 @@ export default function RestaurantDashboard() {
         .eq('vendor_id', restaurantId);
 
       const averageRating = reviewsData && reviewsData.length > 0
-        ? reviewsData.reduce((sum, r) => sum + r.rating, 0) / reviewsData.length
+        ? reviewsData.reduce((sum: number, r: any) => sum + r.rating, 0) / reviewsData.length
         : 0;
 
       setStats({
@@ -247,7 +247,9 @@ export default function RestaurantDashboard() {
           iconColor="text-yellow-400"
           gradient="from-yellow-500/10 to-orange-500/10"
           delay={0.1}
-        />
+        >
+          <div></div>
+        </ModernSection>
       )}
 
       {/* Main Stats */}

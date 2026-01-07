@@ -135,7 +135,7 @@ function AdminDashboardContent() {
 
       if (orderItemsData) {
         const productSales = new Map<string, any>();
-        orderItemsData.forEach(item => {
+        orderItemsData.forEach((item: any) => {
           if (item.products) {
             const existing = productSales.get(item.product_id) || {
               ...item.products,
