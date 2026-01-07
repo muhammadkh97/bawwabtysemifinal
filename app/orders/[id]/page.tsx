@@ -36,6 +36,22 @@ export default function OrderTrackingPage() {
 
   const [estimatedTime, setEstimatedTime] = useState(15); // دقائق
 
+  // Download Invoice
+  const downloadInvoice = () => {
+    const invoiceUrl = `/api/invoice/${params.id}`;
+    const link = document.createElement('a');
+    link.href = invoiceUrl;
+    link.download = `invoice-${order?.order_number || params.id}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Review Order
+  const reviewOrder = () => {
+    router.push(`/orders/${params.id}/review`);
+  };
+
   // Fetch order details
   useEffect(() => {
     if (params.id) {
@@ -593,7 +609,10 @@ export default function OrderTrackingPage() {
           >
             ← العودة للطلبات
           </button>
-          <button className="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">
+          <button 
+            onClick={downloadInvoice}
+            className="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium"
+          >
             📄 تحميل الفاتورة
           </button>
         </div>
@@ -604,7 +623,10 @@ export default function OrderTrackingPage() {
             <p className="text-lg font-semibold text-green-800 mb-4">
               🎉 تم توصيل طلبك بنجاح!
             </p>
-            <button className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+            <button 
+              onClick={reviewOrder}
+              className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
+            >
               ⭐ تقييم الطلب والبائع
             </button>
           </div>
