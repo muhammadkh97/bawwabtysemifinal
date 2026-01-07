@@ -383,7 +383,7 @@ export default function Header() {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: -10, scale: 0.95 }}
                           transition={{ duration: 0.2 }}
-                          className="fixed right-2 top-16 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-y-auto max-h-[calc(100vh-80px)] z-[10002]"
+                          className="absolute left-auto right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-y-auto max-h-[calc(100vh-100px)] z-[10002]"
                         >
                           {/* لوحة التحكم - للـ admin/vendor/driver أو المساعدين */}
                           {((userRole && userRole !== 'customer') || isVendorStaff || isRestaurantStaff) && (
