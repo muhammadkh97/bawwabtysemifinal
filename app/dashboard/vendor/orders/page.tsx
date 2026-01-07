@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
@@ -43,40 +43,7 @@ export default function VendorOrdersPageImproved() {
   const { userId } = useAuth();
   const { formatPrice } = useCurrency();
 
-  useEffect(() => {
-    if (userId) {
-      fetchOrders();
-    }
-  }, [userId]);
-
-  const handleUpdateOrderStatus = async (orderId: string, newStatus: OrderStatus) => {
-    if (!userId) {
-      toast.error('يجب تسجيل الدخول أولاً');
-      return;
-    }
-
-    setUpdatingOrderId(orderId);
-    
-    try {
-      const result = await updateOrderStatus(orderId, newStatus, userId);
-      
-      if (result.success) {
-        toast.success('تم تحديث حالة الطلب بنجاح');
-        
-        // تحديث القائمة المحلية
-        await fetchOrders();
-      } else {
-        toast.error(result.error || 'فشل تحديث حالة الطلب');
-      }
-    } catch (error: any) {
-      console.error('Error updating order status:', error);
-      toast.error('حدث خطأ غير متوقع');
-    } finally {
-      setUpdatingOrderId(null);
-    }
-  };
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     if (!userId) return;
     
     try {
@@ -176,7 +143,40 @@ export default function VendorOrdersPageImproved() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  const handleUpdateOrderStatus = useCallback(async (orderId: string, newStatus: OrderStatus) => {
+    if (!userId) {
+      toast.error('يجب تسجيل الدخول أولاً');
+      return;
+    }
+
+    setUpdatingOrderId(orderId);
+    
+    try {
+      const result = await updateOrderStatus(orderId, newStatus, userId);
+      
+      if (result.success) {
+        toast.success('تم تحديث حالة الطلب بنجاح');
+        
+        // تحديث القائمة المحلية
+        await fetchOrders();
+      } else {
+        toast.error(result.error || 'فشل تحديث حالة الطلب');
+      }
+    } catch (error: any) {
+      console.error('Error updating order status:', error);
+      toast.error('حدث خطأ غير متوقع');
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  }, [userId, fetchOrders]);
+
+  useEffect(() => {
+    if (userId) {
+      fetchOrders();
+    }
+  }, [userId, fetchOrders]);
 
   const filteredOrders = activeFilter === 'all' 
     ? orders 

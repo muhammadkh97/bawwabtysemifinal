@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -47,141 +47,141 @@ function ProductsContent() {
   const [error, setError] = useState<string | null>(null);
 
   // Fetch categories with subcategories from Supabase
-  useEffect(() => {
-    async function fetchCategories() {
-      try {
-        console.log('🔍 [Products Page] بدء جلب التصنيفات...');
-        
-        // جلب التصنيفات الرئيسية
-        const { data: mainCats, error: fetchError } = await supabase
-          .from('categories')
-          .select('id, name, name_ar, is_active, parent_id')
-          .is('parent_id', null)
-          .order('display_order', { ascending: true });
+  const fetchCategories = useCallback(async () => {
+    try {
+      console.log('🔍 [Products Page] بدء جلب التصنيفات...');
+      
+      // جلب التصنيفات الرئيسية
+      const { data: mainCats, error: fetchError } = await supabase
+        .from('categories')
+        .select('id, name, name_ar, is_active, parent_id')
+        .is('parent_id', null)
+        .order('display_order', { ascending: true });
 
-        console.log('📊 [Products Page] نتيجة الاستعلام:', { mainCats, fetchError });
+      console.log('📊 [Products Page] نتيجة الاستعلام:', { mainCats, fetchError });
 
-        if (fetchError) {
-          console.error('❌ [Products Page] خطأ في جلب التصنيفات:', fetchError);
-          throw fetchError;
-        }
-
-        // فلترة التصنيفات النشطة فقط
-        const activeCats = (mainCats || []).filter((cat: any) => cat.is_active === true);
-        console.log('✅ [Products Page] التصنيفات النشطة:', activeCats);
-
-        const formattedCategories = [
-          { id: 'all', name: 'الكل' },
-          ...activeCats.map((cat: any) => ({
-            id: cat.id,
-            name: cat.name_ar || cat.name
-          }))
-        ];
-
-        console.log('✅ [Products Page] التصنيفات المنسقة:', formattedCategories);
-        setCategories(formattedCategories);
-      } catch (err) {
-        console.error('Error fetching categories:', err);
-      }
-    }
-
-    fetchCategories();
-  }, []);
-
-  // Fetch subcategories when category changes
-  useEffect(() => {
-    async function fetchSubcategories() {
-      if (selectedCategory === 'all') {
-        setSubcategories([]);
-        return;
+      if (fetchError) {
+        console.error('❌ [Products Page] خطأ في جلب التصنيفات:', fetchError);
+        throw fetchError;
       }
 
-      try {
-        const { data, error: fetchError } = await supabase
-          .from('categories')
-          .select('id, name, name_ar')
-          .eq('parent_id', selectedCategory)
-          .eq('is_active', true)
-          .order('display_order', { ascending: true });
+      // فلترة التصنيفات النشطة فقط
+      const activeCats = (mainCats || []).filter((cat: any) => cat.is_active === true);
+      console.log('✅ [Products Page] التصنيفات النشطة:', activeCats);
 
-        if (fetchError) throw fetchError;
-
-        const formatted = (data || []).map((cat: any) => ({
+      const formattedCategories = [
+        { id: 'all', name: 'الكل' },
+        ...activeCats.map((cat: any) => ({
           id: cat.id,
           name: cat.name_ar || cat.name
-        }));
+        }))
+      ];
 
-        setSubcategories(formatted);
-      } catch (err) {
-        console.error('Error fetching subcategories:', err);
-        setSubcategories([]);
-      }
+      console.log('✅ [Products Page] التصنيفات المنسقة:', formattedCategories);
+      setCategories(formattedCategories);
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  // Fetch subcategories when category changes
+  const fetchSubcategories = useCallback(async () => {
+    if (selectedCategory === 'all') {
+      setSubcategories([]);
+      return;
     }
 
-    fetchSubcategories();
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('categories')
+        .select('id, name, name_ar')
+        .eq('parent_id', selectedCategory)
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+
+      if (fetchError) throw fetchError;
+
+      const formatted = (data || []).map((cat: any) => ({
+        id: cat.id,
+        name: cat.name_ar || cat.name
+      }));
+
+      setSubcategories(formatted);
+    } catch (err) {
+      console.error('Error fetching subcategories:', err);
+      setSubcategories([]);
+    }
   }, [selectedCategory]);
 
-  // Fetch products from Supabase
   useEffect(() => {
-    async function fetchProducts() {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        let query = supabase
-          .from('products')
-          .select('*, categories!products_category_id_fkey(name, name_ar), vendors!inner(vendor_type)')
-          .eq('status', 'approved')
-          .neq('vendors.vendor_type', 'restaurant');
+    fetchSubcategories();
+  }, [fetchSubcategories]);
 
-        // Apply category filter
-        if (selectedCategory !== 'all') {
-          query = query.eq('category_id', selectedCategory);
-        }
+  // Fetch products from Supabase
+  const fetchProducts = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      let query = supabase
+        .from('products')
+        .select('*, categories!products_category_id_fkey(name, name_ar), vendors!inner(vendor_type)')
+        .eq('status', 'approved')
+        .neq('vendors.vendor_type', 'restaurant');
 
-        // Apply subcategory filter
-        if (selectedSubcategory) {
-          query = query.eq('subcategory_id', selectedSubcategory);
-        }
-
-        // Apply sorting
-        switch (sortBy) {
-          case 'newest':
-            query = query.order('created_at', { ascending: false });
-            break;
-          case 'price-low':
-            query = query.order('price', { ascending: true });
-            break;
-          case 'price-high':
-            query = query.order('price', { ascending: false });
-            break;
-          case 'rating':
-            query = query.order('rating', { ascending: false });
-            break;
-        }
-
-        const { data, error: fetchError } = await query;
-
-        if (fetchError) throw fetchError;
-        
-        // Map products to ensure images field is used correctly
-        const mappedProducts = (data || []).map((product: any) => ({
-          ...product,
-          category: product.categories?.name || product.categories?.name_ar || 'غير محدد',
-          image_url: product.images?.[0] || product.featured_image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'
-        }));
-        
-        setProducts(mappedProducts);
-      } catch (err) {
-        console.error('Error fetching products:', err);
-        setError('حدث خطأ في تحميل المنتجات');
-      } finally {
-        setLoading(false);
+      // Apply category filter
+      if (selectedCategory !== 'all') {
+        query = query.eq('category_id', selectedCategory);
       }
-    }
 
-    fetchProducts();
+      // Apply subcategory filter
+      if (selectedSubcategory) {
+        query = query.eq('subcategory_id', selectedSubcategory);
+      }
+
+      // Apply sorting
+      switch (sortBy) {
+        case 'newest':
+          query = query.order('created_at', { ascending: false });
+          break;
+        case 'price-low':
+          query = query.order('price', { ascending: true });
+          break;
+        case 'price-high':
+          query = query.order('price', { ascending: false });
+          break;
+        case 'rating':
+          query = query.order('rating', { ascending: false });
+          break;
+      }
+
+      const { data, error: fetchError } = await query;
+
+      if (fetchError) throw fetchError;
+      
+      // Map products to ensure images field is used correctly
+      const mappedProducts = (data || []).map((product: any) => ({
+        ...product,
+        category: product.categories?.name || product.categories?.name_ar || 'غير محدد',
+        image_url: product.images?.[0] || product.featured_image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'
+      }));
+      
+      setProducts(mappedProducts);
+    } catch (err) {
+      console.error('Error fetching products:', err);
+      setError('حدث خطأ في تحميل المنتجات');
+    } finally {
+      setLoading(false);
+    }
   }, [selectedCategory, selectedSubcategory, sortBy]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   useEffect(() => {
     if (categoryFromUrl) {

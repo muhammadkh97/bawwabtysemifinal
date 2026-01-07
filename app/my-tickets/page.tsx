@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -64,34 +64,7 @@ export default function MyTicketsPage() {
   const [sendingReply, setSendingReply] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    checkAuthAndFetchTickets();
-  }, [filter]);
-
-  useEffect(() => {
-    if (selectedTicket) {
-      fetchReplies(selectedTicket.id);
-    } else {
-      setReplies([]);
-      setReplyText('');
-    }
-  }, [selectedTicket]);
-
-  const checkAuthAndFetchTickets = async () => {
-    try {
-      const { user } = await getCurrentUser();
-      if (!user) {
-        router.push('/auth/login');
-        return;
-      }
-      await fetchTickets(user.id);
-    } catch (error) {
-      console.error('خطأ في التحقق من المصادقة:', error);
-      router.push('/auth/login');
-    }
-  };
-
-  const fetchTickets = async (userId: string) => {
+  const fetchTickets = useCallback(async (userId: string) => {
     try {
       setLoading(true);
       let query = supabase
@@ -127,9 +100,9 @@ export default function MyTicketsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
 
-  const fetchReplies = async (ticketId: string) => {
+  const fetchReplies = useCallback(async (ticketId: string) => {
     try {
       const { data, error } = await supabase
         .from('ticket_replies')
@@ -157,7 +130,34 @@ export default function MyTicketsPage() {
       console.error('Error fetching replies:', error);
       setReplies([]);
     }
-  };
+  }, []);
+
+  const checkAuthAndFetchTickets = useCallback(async () => {
+    try {
+      const { user } = await getCurrentUser();
+      if (!user) {
+        router.push('/auth/login');
+        return;
+      }
+      await fetchTickets(user.id);
+    } catch (error) {
+      console.error('خطأ في التحقق من المصادقة:', error);
+      router.push('/auth/login');
+    }
+  }, [fetchTickets, router]);
+
+  useEffect(() => {
+    checkAuthAndFetchTickets();
+  }, [checkAuthAndFetchTickets]);
+
+  useEffect(() => {
+    if (selectedTicket) {
+      fetchReplies(selectedTicket.id);
+    } else {
+      setReplies([]);
+      setReplyText('');
+    }
+  }, [selectedTicket, fetchReplies]);
 
   const handleSendReply = async () => {
     if (!selectedTicket || !replyText.trim()) return;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
@@ -30,11 +30,22 @@ export default function RestaurantProductsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [vendorId, setVendorId] = useState<string>('');
 
-  useEffect(() => {
-    checkAuth();
+  const fetchProducts = useCallback(async (vId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('vendor_id', vId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
   }, []);
 
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -60,22 +71,11 @@ export default function RestaurantProductsPage() {
       console.error('Error:', error);
       router.push('/auth/login');
     }
-  };
+  }, [router, fetchProducts]);
 
-  const fetchProducts = async (vId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('vendor_id', vId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setProducts(data || []);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-    }
-  };
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   const toggleProductStatus = async (productId: string, currentStatus: boolean) => {
     try {

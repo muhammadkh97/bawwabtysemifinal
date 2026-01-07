@@ -26,8 +26,6 @@ const nextConfig = {
   reactStrictMode: true,
   // Optimize production build
   compress: true,
-  // Disable static optimization for admin pages with dynamic content
-  staticOptimizationPages: [],
 }
 
 module.exports = nextConfig

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
@@ -33,38 +33,7 @@ export default function RestaurantOrdersPage() {
   const [vendorId, setVendorId] = useState<string>('');
   const [activeFilter, setActiveFilter] = useState<string>('all');
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        router.push('/auth/login');
-        return;
-      }
-
-      const { data: vendorData } = await supabase
-        .from('stores')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (vendorData) {
-        setVendorId(vendorData.id);
-        await fetchOrders(vendorData.id);
-      }
-
-      setLoading(false);
-    } catch (error) {
-      console.error('Error:', error);
-      router.push('/auth/login');
-    }
-  };
-
-  const fetchOrders = async (vId: string) => {
+  const fetchOrders = useCallback(async (vId: string) => {
     try {
       const { data, error } = await supabase
         .from('orders')
@@ -90,7 +59,38 @@ export default function RestaurantOrdersPage() {
     } catch (error) {
       console.error('Error fetching orders:', error);
     }
-  };
+  }, []);
+
+  const checkAuth = useCallback(async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        router.push('/auth/login');
+        return;
+      }
+
+      const { data: vendorData } = await supabase
+        .from('stores')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (vendorData) {
+        setVendorId(vendorData.id);
+        await fetchOrders(vendorData.id);
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Error:', error);
+      router.push('/auth/login');
+    }
+  }, [router, fetchOrders]);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   const getStatusColor = (status: string) => {
     switch (status) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -47,11 +47,52 @@ export default function VendorStorePage() {
 
   const following = isFollowing(vendorId);
 
+  const fetchVendor = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('stores')
+        .select('*')
+        .eq('id', vendorId)
+        .single();
+
+      if (error) throw error;
+      setVendor(data);
+    } catch (error) {
+      console.error('Error fetching vendor:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [vendorId]);
+
+  const fetchProducts = useCallback(async () => {
+    try {
+      setProductsLoading(true);
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('vendor_id', vendorId)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setProductsLoading(false);
+    }
+  }, [vendorId]);
+
+  const loadFollowersCount = useCallback(async () => {
+    const count = await getFollowersCount(vendorId);
+    setFollowersCount(count);
+  }, [vendorId, getFollowersCount]);
+
   useEffect(() => {
     fetchVendor();
     fetchProducts();
     loadFollowersCount();
-  }, [vendorId]);
+  }, [fetchVendor, fetchProducts, loadFollowersCount]);
 
   // تأثير الأنيميشن عند تغيير عدد المتابعين
   useEffect(() => {
@@ -61,12 +102,7 @@ export default function VendorStorePage() {
     }
   }, [followersCountAnimation]);
 
-  const loadFollowersCount = async () => {
-    const count = await getFollowersCount(vendorId);
-    setFollowersCount(count);
-  };
-
-  const handleChatWithVendor = async () => {
+  const handleChatWithVendor = useCallback(async () => {
     if (!user) {
       toast.error('يجب تسجيل الدخول أولاً');
       return;

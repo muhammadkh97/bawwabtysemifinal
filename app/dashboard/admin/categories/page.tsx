@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -75,12 +75,7 @@ export default function AdminCategoriesPage() {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'approved' | 'pending'>('approved');
 
-  useEffect(() => {
-    fetchCategories();
-    fetchPendingCategories();
-  }, []);
-
-  async function fetchCategories() {
+  const fetchCategories = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -119,9 +114,9 @@ export default function AdminCategoriesPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  async function fetchPendingCategories() {
+  const fetchPendingCategories = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('categories')
@@ -145,7 +140,12 @@ export default function AdminCategoriesPage() {
     } catch (error) {
       console.error('Error fetching pending categories:', error);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    fetchCategories();
+    fetchPendingCategories();
+  }, [fetchCategories, fetchPendingCategories]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();

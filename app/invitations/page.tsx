@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -37,25 +37,7 @@ export default function InvitationsPage() {
     manage_settings: 'إدارة الإعدادات',
   };
 
-  useEffect(() => {
-    checkAuthAndFetchInvitations();
-  }, []);
-
-  const checkAuthAndFetchInvitations = async () => {
-    try {
-      const { user } = await getCurrentUser();
-      if (!user) {
-        router.push('/auth/login');
-        return;
-      }
-      await fetchInvitations(user.email);
-    } catch (error) {
-      console.error('خطأ في التحقق من المصادقة:', error);
-      router.push('/auth/login');
-    }
-  };
-
-  const fetchInvitations = async (email: string) => {
+  const fetchInvitations = useCallback(async (email: string) => {
     try {
       setLoading(true);
 
@@ -128,7 +110,25 @@ export default function InvitationsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const checkAuthAndFetchInvitations = useCallback(async () => {
+    try {
+      const { user } = await getCurrentUser();
+      if (!user) {
+        router.push('/auth/login');
+        return;
+      }
+      await fetchInvitations(user.email);
+    } catch (error) {
+      console.error('خطأ في التحقق من المصادقة:', error);
+      router.push('/auth/login');
+    }
+  }, [fetchInvitations, router]);
+
+  useEffect(() => {
+    checkAuthAndFetchInvitations();
+  }, [checkAuthAndFetchInvitations]);
 
   const handleAcceptInvitation = async (invitation: Invitation) => {
     try {

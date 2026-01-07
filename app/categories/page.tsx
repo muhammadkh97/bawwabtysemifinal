@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Package, ChevronRight, ArrowLeft, Star, Zap, ShieldCheck, TrendingUp, Smartphone, Shirt, Home, ShoppingBasket, Sparkles, UtensilsCrossed, Box } from 'lucide-react';
@@ -46,43 +46,43 @@ export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchCategories() {
-      try {
-        // جلب جميع التصنيفات النشطة
-        const { data, error } = await supabase
-          .from('categories')
-          .select('*, products_count:products(count)')
-          .eq('is_active', true)
-          .order('display_order', { ascending: true });
+  const fetchCategories = useCallback(async () => {
+    try {
+      // جلب جميع التصنيفات النشطة
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*, products_count:products(count)')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
 
-        if (error) throw error;
+      if (error) throw error;
 
-        // تنظيم البيانات في هيكل شجري
-        const mainCategories = data.filter(cat => !cat.parent_id);
-        const subCategories = data.filter(cat => cat.parent_id);
+      // تنظيم البيانات في هيكل شجري
+      const mainCategories = data.filter(cat => !cat.parent_id);
+      const subCategories = data.filter(cat => cat.parent_id);
 
-        const formattedCategories = mainCategories.map(main => ({
-          ...main,
-          productsCount: main.products_count?.[0]?.count || 0,
-          subcategories: subCategories
-            .filter(sub => sub.parent_id === main.id)
-            .map(sub => ({
-              ...sub,
-              productsCount: sub.products_count?.[0]?.count || 0
-            }))
-        }));
+      const formattedCategories = mainCategories.map(main => ({
+        ...main,
+        productsCount: main.products_count?.[0]?.count || 0,
+        subcategories: subCategories
+          .filter(sub => sub.parent_id === main.id)
+          .map(sub => ({
+            ...sub,
+            productsCount: sub.products_count?.[0]?.count || 0
+          }))
+      }));
 
-        setCategories(formattedCategories);
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-      } finally {
-        setLoading(false);
-      }
+      setCategories(formattedCategories);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    } finally {
+      setLoading(false);
     }
-
-    fetchCategories();
   }, []);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
