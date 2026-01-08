@@ -11,6 +11,8 @@ import ChatComponent from '@/components/ChatComponent';
 import ReviewForm from '@/components/ReviewForm';
 import ReviewsList from '@/components/ReviewsList';
 import ShareButtons from '@/components/ShareButtons';
+import SimilarProducts from '@/components/SimilarProducts';
+import ProductDescription from '@/components/ProductDescription';
 import { supabase } from '@/lib/supabase';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
@@ -494,6 +496,9 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
+        {/* الوصف التفصيلي الاحترافي */}
+        <ProductDescription description={product.description} productName={product.name} />
+
         {/* التقييمات والمراجعات */}
         <div className="mt-12">
           <div className="text-center mb-12">
@@ -530,6 +535,13 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* قسم المنتجات المشابهة */}
+      <SimilarProducts 
+        currentProductId={product.id} 
+        category={product.category}
+        vendorId={product.vendor_id}
+      />
 
       {/* مكون الدردشة */}
       {product.vendor && (
