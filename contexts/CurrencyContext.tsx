@@ -135,8 +135,15 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       // حساب أسعار التحويل إلى العملة المستهدفة (عبر USD)
       const rates: Record<string, number> = {};
       
+      // الحصول على جميع العملات المتاحة
+      const allCurrencies = new Set<string>();
+      Object.keys(ratesMap).forEach(base => {
+        allCurrencies.add(base);
+        Object.keys(ratesMap[base]).forEach(target => allCurrencies.add(target));
+      });
+      
       // للتحويل من أي عملة إلى العملة المستهدفة
-      Object.keys(ratesMap).forEach(fromCurrency => {
+      allCurrencies.forEach(fromCurrency => {
         if (fromCurrency === selectedCurrency) {
           rates[fromCurrency] = 1;
         } else if (ratesMap[fromCurrency]?.[selectedCurrency]) {
@@ -145,6 +152,12 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         } else if (ratesMap[fromCurrency]?.['USD'] && ratesMap['USD']?.[selectedCurrency]) {
           // التحويل عبر USD: fromCurrency → USD → selectedCurrency
           rates[fromCurrency] = ratesMap[fromCurrency]['USD'] * ratesMap['USD'][selectedCurrency];
+        } else if (ratesMap[selectedCurrency]?.[fromCurrency]) {
+          // التحويل العكسي: إذا كان لدينا selectedCurrency → fromCurrency، نعكسه
+          rates[fromCurrency] = 1 / ratesMap[selectedCurrency][fromCurrency];
+        } else if (ratesMap['USD']?.[fromCurrency] && ratesMap[selectedCurrency]?.['USD']) {
+          // التحويل عبر USD بالعكس: USD → fromCurrency و selectedCurrency → USD
+          rates[fromCurrency] = ratesMap['USD'][fromCurrency] * ratesMap[selectedCurrency]['USD'];
         }
       });
       
