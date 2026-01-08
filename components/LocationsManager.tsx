@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { MapPin, Plus, Edit, Trash2, Star, Home, Briefcase, Navigation } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PostGISGeography } from '@/types/geo';
 
 interface UserLocation {
   id: string;
@@ -12,7 +13,7 @@ interface UserLocation {
   address: string;
   lat: number;   // بدلاً من latitude
   lng: number;   // بدلاً من longitude
-  location?: any; // PostGIS point
+  location?: PostGISGeography; // PostGIS point
   type?: string;  // نوع الموقع
   is_default: boolean;
 }

@@ -3,6 +3,8 @@
 // Matches the new database schema from force_rebuild.sql
 // ==========================================
 
+import { PostGISGeography } from './geo';
+
 // ============ ENUMS ============
 
 export type UserRole = 'customer' | 'vendor' | 'driver' | 'admin';
@@ -40,7 +42,7 @@ export interface Store {
   address?: string;
   lat?: number;
   lng?: number;
-  location?: any; // PostGIS GEOGRAPHY type
+  location?: PostGISGeography; // PostGIS GEOGRAPHY type
   opening_hours?: {
     [key: string]: string; // e.g., { "monday": "9:00-22:00" }
   };
@@ -126,7 +128,7 @@ export interface Order {
   delivery_address?: string;
   delivery_lat?: number;
   delivery_lng?: number;
-  delivery_location?: any; // PostGIS GEOGRAPHY
+  delivery_location?: PostGISGeography; // PostGIS GEOGRAPHY
   delivery_notes?: string;
   delivery_time?: string;
   estimated_delivery?: string;
@@ -172,7 +174,7 @@ export interface Driver {
   status: DeliveryStatus;
   current_lat?: number;
   current_lng?: number;
-  current_location?: any; // PostGIS GEOGRAPHY
+  current_location?: PostGISGeography; // PostGIS GEOGRAPHY
   is_available: boolean;
   is_active: boolean;
   rating: number;

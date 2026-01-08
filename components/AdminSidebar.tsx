@@ -19,16 +19,23 @@ import {
   LayoutGrid
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import type { LucideIcon } from 'lucide-react'
+
+interface BadgeCounts {
+  approvals?: number;
+  disputes?: number;
+  [key: string]: number | undefined;
+}
 
 interface NavItem {
   title: string
   href: string
-  icon: any
+  icon: LucideIcon
   badge?: number
   badgeKey?: string
 }
 
-const getAdminNavItems = (badges: any): NavItem[] => [
+const getAdminNavItems = (badges: BadgeCounts): NavItem[] => [
   {
     title: 'لوحة التحكم',
     href: '/admin',

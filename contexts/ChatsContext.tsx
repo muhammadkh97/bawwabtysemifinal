@@ -4,6 +4,14 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { supabase } from '@/lib/supabase';
 import { getCurrentUser } from '@/lib/auth';
 import toast from 'react-hot-toast';
+import type { 
+  ChatParticipants, 
+  ChatMetadata, 
+  MessageAttachments, 
+  MessageReadStatuses, 
+  MessageEditHistoryList,
+  MessageMetadata 
+} from '@/types/chat';
 
 // =====================================================
 // 🎯 Types - محدّثة للنظام الجديد
@@ -27,8 +35,8 @@ interface Chat {
   archived_by: string | null;
   archived_at: string | null;
   order_id: string | null;
-  participants: any[] | null;
-  metadata: any | null;
+  participants: ChatParticipants;
+  metadata: ChatMetadata | null;
   created_at: string;
   updated_at: string;
   // معلومات الطرف الآخر (computed)
@@ -46,14 +54,14 @@ interface Message {
   sender_role: 'customer' | 'vendor' | 'restaurant' | 'driver' | 'admin' | 'staff';
   content: string;
   message_type: 'text' | 'image' | 'file' | 'voice' | 'video' | 'system';
-  attachments: any[] | null;
+  attachments: MessageAttachments;
   reply_to_id: string | null;
   is_read: boolean;
   read_at: string | null;
-  read_by: any[] | null;
+  read_by: MessageReadStatuses;
   is_edited: boolean;
   edited_at: string | null;
-  edit_history: any[] | null;
+  edit_history: MessageEditHistoryList;
   is_deleted: boolean;
   deleted_at: string | null;
   deleted_by: string | null;
@@ -61,7 +69,7 @@ interface Message {
   report_reason: string | null;
   reported_by: string | null;
   reported_at: string | null;
-  metadata: any | null;
+  metadata: MessageMetadata | null;
   created_at: string;
 }
 
@@ -88,9 +96,33 @@ interface ChatsContextType {
 }
 
 interface SendMessageOptions {
-  attachments?: any[];
+  attachments?: MessageAttachments;
   reply_to_id?: string;
   message_type?: 'text' | 'image' | 'file' | 'voice';
+}
+
+interface DatabaseChatRow {
+  id: string;
+  customer_id: string;
+  vendor_id: string;
+  chat_type: 'direct' | 'group' | 'support';
+  last_message: string | null;
+  last_message_at: string | null;
+  last_message_sender_id: string | null;
+  last_message_sender_role: string | null;
+  customer_unread_count: number;
+  vendor_unread_count: number;
+  admin_unread_count: number;
+  driver_unread_count: number;
+  is_active: boolean;
+  is_archived: boolean;
+  archived_by: string | null;
+  archived_at: string | null;
+  order_id: string | null;
+  participants: ChatParticipants;
+  metadata: ChatMetadata | null;
+  created_at: string;
+  updated_at: string;
 }
 
 const ChatsContext = createContext<ChatsContextType | undefined>(undefined);
@@ -196,7 +228,7 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
       }
 
       // تنسيق البيانات حسب دور المستخدم
-      const formattedChats = (data || []).map((chat: any) => {
+      const formattedChats = (data || []).map((chat: DatabaseChatRow) => {
         return formatChatForUser(chat, userRole as string, userId as string);
       });
 
@@ -218,7 +250,7 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
   // 🎨 Format Chat for User - دالة موحدة
   // =====================================================
 
-  const formatChatForUser = (chat: any, role: string, uid: string): Chat => {
+  const formatChatForUser = (chat: DatabaseChatRow, role: string, uid: string): Chat => {
     let formattedChat: Chat = { ...chat };
 
     // تحديد من هو "الطرف الآخر" بناءً على customer_id
@@ -297,7 +329,17 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
     if (!userId || !userRole || !content.trim()) return;
 
     try {
-      const messageData: any = {
+      interface MessageInsert {
+        chat_id: string;
+        sender_id: string;
+        sender_role: string;
+        content: string;
+        message_type: 'text' | 'image' | 'file' | 'voice' | 'video' | 'system';
+        attachments?: MessageAttachments;
+        reply_to_id?: string;
+      }
+
+      const messageData: MessageInsert = {
         chat_id: chatId,
         sender_id: userId,
         sender_role: userRole,

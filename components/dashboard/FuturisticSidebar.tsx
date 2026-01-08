@@ -34,11 +34,12 @@ import {
   Truck,
   Gift
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 interface NavItem {
   name: string;
   href: string;
-  icon: any;
+  icon: LucideIcon;
   badge?: number;
   requiredPermission?: string; // الصلاحية المطلوبة لعرض هذا العنصر
 }

@@ -15,11 +15,12 @@ import {
 } from 'lucide-react'
 import { signOut } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
+import type { LucideIcon } from 'lucide-react'
 
 interface NavItem {
   title: string
   href: string
-  icon: any
+  icon: LucideIcon
   badge?: number
 }
 
