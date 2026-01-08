@@ -71,7 +71,7 @@ export default function ProtectedRoute({
       
       if (!session) {
         setIsLoading(false);
-        router.push(`${redirectTo}?redirect=${window.location.pathname}`);
+        router.push(`${redirectTo}?redirect=${(typeof window !== 'undefined' ? window.location.pathname : undefined)}`);
         return;
       }
 

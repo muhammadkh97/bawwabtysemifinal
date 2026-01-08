@@ -242,7 +242,7 @@ export async function GET(
     <p>شكراً لتسوقكم معنا! 🛍️</p>
     <p>تم إنشاء هذه الفاتورة بواسطة منصة بوابتي</p>
     <p style="margin-top: 10px;">
-      <button class="no-print" onclick="window.print()" style="padding: 10px 30px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">
+      <button class="no-print" onclick="(typeof window !== 'undefined' ? window.print : undefined)()" style="padding: 10px 30px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">
         🖨️ طباعة الفاتورة
       </button>
     </p>

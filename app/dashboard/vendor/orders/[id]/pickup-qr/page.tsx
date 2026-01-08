@@ -62,7 +62,6 @@ export default function VendorPickupQRPage() {
           filter: `id=eq.${params.id}`,
         },
         (payload) => {
-          console.log('Order updated:', payload)
           if (payload.new.status === 'picked_up') {
             toast.success('✅ تم استلام الطلب من قبل المندوب!')
             setTimeout(() => {

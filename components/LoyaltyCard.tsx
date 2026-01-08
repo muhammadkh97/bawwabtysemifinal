@@ -24,10 +24,10 @@ export default function LoyaltyCard() {
       fetchLoyaltyData();
     };
 
-    window.addEventListener('loyaltyPointsUpdated', handlePointsUpdate);
+    (typeof window !== 'undefined' ? window.addEventListener : undefined)('loyaltyPointsUpdated', handlePointsUpdate);
 
     return () => {
-      window.removeEventListener('loyaltyPointsUpdated', handlePointsUpdate);
+      (typeof window !== 'undefined' ? window.removeEventListener : undefined)('loyaltyPointsUpdated', handlePointsUpdate);
     };
   }, []);
 

@@ -51,7 +51,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       loadUserPreferredCurrency();
     } else {
       // إذا لم يكن المستخدم مسجلاً الدخول، استخدم localStorage
-      const savedCurrency = localStorage.getItem('preferred_currency');
+      const savedCurrency = (typeof window !== 'undefined' ? localStorage.getItem('preferred_currency') : null);
       if (savedCurrency) {
         setSelectedCurrency(savedCurrency);
       }
@@ -191,7 +191,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       const preferredCurrency = await getUserPreferredCurrency(user.id);
       if (preferredCurrency && SUPPORTED_CURRENCIES[preferredCurrency]) {
         setSelectedCurrency(preferredCurrency);
-        localStorage.setItem('preferred_currency', preferredCurrency);
+        (typeof window !== 'undefined' ? localStorage.setItem('preferred_currency', preferredCurrency) : null);
       }
     } catch (error) {
       console.error('Error loading user preferred currency:', error);
@@ -208,7 +208,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     if (!SUPPORTED_CURRENCIES[currency]) return;
     
     setSelectedCurrency(currency);
-    localStorage.setItem('preferred_currency', currency);
+    (typeof window !== 'undefined' ? localStorage.setItem('preferred_currency', currency) : null);
     
     // إذا كان المستخدم مسجلاً الدخول، حفظ في قاعدة البيانات
     if (user?.id) {

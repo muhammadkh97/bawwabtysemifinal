@@ -124,7 +124,7 @@ export default function FuturisticUserCard({
                 }}
               >
                 <button 
-                  onClick={() => window.location.href = `/dashboard/admin/users/${id}`}
+                  onClick={() => (typeof window !== 'undefined' ? window.location.href : undefined) = `/dashboard/admin/users/${id}`}
                   className="w-full px-4 py-3 text-right text-white hover:bg-white/5 transition-colors flex items-center gap-2"
                 >
                   <Eye className="w-4 h-4" />

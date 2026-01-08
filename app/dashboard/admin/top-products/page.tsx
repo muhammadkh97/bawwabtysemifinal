@@ -127,7 +127,7 @@ export default function TopProductsPage() {
             >
               <div className="flex items-center gap-3 mb-2">
                 <button 
-                  onClick={() => window.history.back()}
+                  onClick={() => (typeof window !== 'undefined' ? window.history.back : undefined)()}
                   className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
                 >
                   <ArrowLeft className="w-5 h-5 text-purple-300" />

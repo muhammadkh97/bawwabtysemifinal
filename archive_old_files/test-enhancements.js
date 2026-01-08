@@ -8,7 +8,6 @@
 const fs = require('fs');
 const path = require('path');
 
-console.log('🔍 بدء اختبار التحسينات...\n');
 
 const checks = [];
 
@@ -131,7 +130,6 @@ checks.push({
 });
 
 // Print Results
-console.log('📊 نتائج الاختبار:\n');
 
 let passedCount = 0;
 let failedCount = 0;
@@ -140,25 +138,16 @@ checks.forEach((check, index) => {
   const icon = check.passed ? '✅' : '❌';
   const status = check.passed ? 'نجح' : 'فشل';
   
-  console.log(`${icon} [${index + 1}/${checks.length}] ${check.name}`);
   if (!check.passed) {
-    console.log(`   ⚠️  المسار: ${check.path}`);
   }
   
   if (check.passed) passedCount++;
   else failedCount++;
 });
 
-console.log(`\n📈 الإحصائيات:`);
-console.log(`   ✅ ناجح: ${passedCount}/${checks.length}`);
-console.log(`   ❌ فاشل: ${failedCount}/${checks.length}`);
-console.log(`   📊 النسبة: ${Math.round((passedCount / checks.length) * 100)}%`);
 
 if (failedCount === 0) {
-  console.log('\n🎉 ممتاز! جميع الاختبارات نجحت!');
-  console.log('✨ المشروع جاهز للتشغيل\n');
   process.exit(0);
 } else {
-  console.log(`\n⚠️  ${failedCount} اختبار فشل. راجع الأخطاء أعلاه.\n`);
   process.exit(1);
 }

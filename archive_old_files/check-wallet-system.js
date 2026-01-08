@@ -6,7 +6,6 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function checkWalletSystem() {
-  console.log('🔍 Checking vendor_wallets table...\n');
   
   // Query vendor_wallets
   const { data: wallets, error: walletsError } = await supabase
@@ -17,11 +16,8 @@ async function checkWalletSystem() {
   if (walletsError) {
     console.error('❌ Error querying vendor_wallets:', walletsError);
   } else {
-    console.log('✅ vendor_wallets data:');
-    console.log(JSON.stringify(wallets, null, 2));
   }
   
-  console.log('\n🔍 Checking wallet_transactions table...\n');
   
   // Check if wallet_transactions exists
   const { data: transactions, error: transError } = await supabase
@@ -31,16 +27,12 @@ async function checkWalletSystem() {
   
   if (transError) {
     if (transError.code === '42P01') {
-      console.log('❌ wallet_transactions table does NOT exist');
     } else {
       console.error('❌ Error querying wallet_transactions:', transError);
     }
   } else {
-    console.log('✅ wallet_transactions data:');
-    console.log(JSON.stringify(transactions, null, 2));
   }
   
-  console.log('\n🔍 Checking order_items commission fields...\n');
   
   // Query order_items
   const { data: orderItems, error: orderError } = await supabase
@@ -51,8 +43,6 @@ async function checkWalletSystem() {
   if (orderError) {
     console.error('❌ Error querying order_items:', orderError);
   } else {
-    console.log('✅ order_items commission columns:');
-    console.log(JSON.stringify(orderItems, null, 2));
   }
 }
 

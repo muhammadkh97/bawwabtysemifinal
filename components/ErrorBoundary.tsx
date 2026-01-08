@@ -30,11 +30,11 @@ export default class ErrorBoundary extends Component<Props, State> {
 
   handleReset = () => {
     this.setState({ hasError: false, error: null });
-    window.location.reload();
+    (typeof window !== 'undefined' ? window.location.reload : undefined)();
   };
 
   handleGoHome = () => {
-    window.location.href = '/';
+    (typeof window !== 'undefined' ? window.location.href : undefined) = '/';
   };
 
   render() {

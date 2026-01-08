@@ -537,13 +537,13 @@ export default function CheckoutPage() {
       // إفراغ السلة من قاعدة البيانات و localStorage
       await clearCart();
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('cartItems');
+        (typeof window !== 'undefined' ? localStorage.removeItem('cartItems') : null);
       }
 
       alert(`✅ تم إتمام الطلب بنجاح! 🎉\nرقم الطلب: ${orderNumber}\n${discount > 0 ? `وفرت ${discount.toFixed(2)} ₪ 💰` : ''}`);
       
       setTimeout(() => {
-        window.location.href = '/orders';
+        (typeof window !== 'undefined' ? window.location.href : undefined) = '/orders';
       }, 1500);
 
     } catch (error) {

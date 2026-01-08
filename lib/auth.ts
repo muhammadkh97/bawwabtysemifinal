@@ -394,7 +394,7 @@ export async function changePassword(newPassword: string): Promise<DataResponse<
 export async function resetPassword(email: string): Promise<DataResponse<unknown>> {
   try {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/reset-password`,
+      redirectTo: `${typeof window !== 'undefined' ? (typeof window !== 'undefined' ? window.location.origin : undefined) : ''}/auth/reset-password`,
     })
 
     if (error) {
@@ -417,7 +417,7 @@ export async function signInWithOAuth(provider: 'google' | 'facebook' | 'apple')
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`,
+        redirectTo: `${typeof window !== 'undefined' ? (typeof window !== 'undefined' ? window.location.origin : undefined) : ''}/auth/callback`,
       },
     })
 

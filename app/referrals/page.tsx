@@ -131,7 +131,7 @@ export default function ReferralPage() {
   };
 
   const copyReferralLink = () => {
-    const link = `${window.location.origin}/register?ref=${referralCode}`;
+    const link = `${(typeof window !== 'undefined' ? window.location.origin : undefined)}/register?ref=${referralCode}`;
     navigator.clipboard.writeText(link);
     setCopied(true);
     toast.success('تم نسخ رابط الدعوة!');
@@ -139,9 +139,9 @@ export default function ReferralPage() {
   };
 
   const shareViaWhatsApp = () => {
-    const link = `${window.location.origin}/register?ref=${referralCode}`;
+    const link = `${(typeof window !== 'undefined' ? window.location.origin : undefined)}/register?ref=${referralCode}`;
     const message = `انضم إلى بوابتي واحصل على ${stats.referralBonus} نقطة مجاناً! استخدم كود الإحالة: ${referralCode}\n${link}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    (typeof window !== 'undefined' ? window.open : undefined)(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   if (loading) {
@@ -295,7 +295,7 @@ export default function ReferralPage() {
               <div className="flex gap-3">
                 <div className="flex-1 px-6 py-4 bg-white/5 border border-purple-500/30 rounded-2xl">
                   <div className="text-white truncate" dir="ltr">
-                    {window.location.origin}/register?ref={referralCode}
+                    {(typeof window !== 'undefined' ? window.location.origin : undefined)}/register?ref={referralCode}
                   </div>
                 </div>
                 <button

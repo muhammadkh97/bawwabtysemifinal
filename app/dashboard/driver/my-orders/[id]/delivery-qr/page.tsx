@@ -62,7 +62,6 @@ export default function DriverDeliveryQRPage() {
           filter: `id=eq.${params.id}`,
         },
         (payload) => {
-          console.log('Order updated:', payload)
           if (payload.new.status === 'delivered') {
             toast.success('✅ تم تأكيد التسليم من قبل العميل!')
             setTimeout(() => {
@@ -185,7 +184,7 @@ export default function DriverDeliveryQRPage() {
 
     if (finalLat && finalLng) {
       // فتح خرائط جوجل
-      window.open(
+      (typeof window !== 'undefined' ? window.open : undefined)(
         `https://www.google.com/maps/dir/?api=1&destination=${finalLat},${finalLng}`,
         '_blank'
       )

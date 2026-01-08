@@ -63,7 +63,7 @@ export default function NotificationSettingsPage() {
   };
 
   const loadSettings = () => {
-    const saved = localStorage.getItem('notificationSettings');
+    const saved = (typeof window !== 'undefined' ? localStorage.getItem('notificationSettings') : null);
     if (saved) {
       setSettings(JSON.parse(saved));
     }
@@ -71,7 +71,7 @@ export default function NotificationSettingsPage() {
 
   const saveSettings = (newSettings: NotificationSettings) => {
     setSettings(newSettings);
-    localStorage.setItem('notificationSettings', JSON.stringify(newSettings));
+    (typeof window !== 'undefined' ? localStorage.setItem('notificationSettings', JSON.stringify(newSettings) : null));
     showToast('تم حفظ الإعدادات بنجاح', 'success');
   };
 

@@ -420,7 +420,7 @@ function ChatsContent() {
                         {/* Delete Button */}
                         <button
                           onClick={async () => {
-                            if (window.confirm('هل أنت متأكد من حذف هذه المحادثة؟')) {
+                            if ((typeof window !== 'undefined' ? window.confirm : undefined)('هل أنت متأكد من حذف هذه المحادثة؟')) {
                               await deleteChat(selectedChatData.id);
                             }
                           }}

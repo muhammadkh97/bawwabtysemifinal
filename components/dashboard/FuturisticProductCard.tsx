@@ -76,7 +76,7 @@ export default function FuturisticProductCard({
       if (error) throw error;
 
       // Reload the page to refresh the products list
-      window.location.reload();
+      (typeof window !== 'undefined' ? window.location.reload : undefined)();
     } catch (error) {
       console.error('Error deleting product:', error);
       alert('حدث خطأ أثناء حذف المنتج');

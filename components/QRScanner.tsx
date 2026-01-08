@@ -90,7 +90,6 @@ export default function QRScanner({
         },
         (errorMessage: string) => {
           // Ignore decoding errors (happens continuously while scanning)
-          // console.log('Scan error:', errorMessage)
         }
       )
 

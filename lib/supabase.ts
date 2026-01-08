@@ -9,7 +9,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true, // حفظ الجلسة في localStorage
     autoRefreshToken: true, // تحديث التوكن تلقائياً
     detectSessionInUrl: true, // كشف الجلسة من الرابط
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined, // استخدام localStorage
+    storage: typeof window !== 'undefined' ? (typeof window !== 'undefined' ? window.localStorage : undefined) : undefined, // استخدام localStorage
     storageKey: 'supabase.auth.token', // مفتاح التخزين
   },
 })

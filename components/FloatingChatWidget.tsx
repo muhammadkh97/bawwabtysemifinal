@@ -37,7 +37,7 @@ export default function FloatingChatWidget() {
   
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedPosition = localStorage.getItem('floatingChatPosition');
+      const savedPosition = (typeof window !== 'undefined' ? localStorage.getItem('floatingChatPosition') : null);
       if (savedPosition) {
         setPosition(JSON.parse(savedPosition));
       }
@@ -70,9 +70,9 @@ export default function FloatingChatWidget() {
       }
     };
 
-    window.addEventListener('openVendorChat' as any, handleOpenVendorChat as any);
+    (typeof window !== 'undefined' ? window.addEventListener : undefined)('openVendorChat' as any, handleOpenVendorChat as any);
     return () => {
-      window.removeEventListener('openVendorChat' as any, handleOpenVendorChat as any);
+      (typeof window !== 'undefined' ? window.removeEventListener : undefined)('openVendorChat' as any, handleOpenVendorChat as any);
     };
   }, [chats, createOrGetChat, setCurrentChatId]);
 
@@ -203,7 +203,7 @@ export default function FloatingChatWidget() {
           // Save position to localStorage
           const newPosition = { x: info.point.x, y: info.point.y };
           setPosition(newPosition);
-          localStorage.setItem('floatingChatPosition', JSON.stringify(newPosition));
+          (typeof window !== 'undefined' ? localStorage.setItem('floatingChatPosition', JSON.stringify(newPosition) : null));
         }}
         className="fixed z-50"
         style={{

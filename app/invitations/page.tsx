@@ -215,7 +215,7 @@ export default function InvitationsPage() {
       
       // إعادة تحميل الصفحة بعد ثانية لتحديث كل شيء
       setTimeout(() => {
-        window.location.reload();
+        (typeof window !== 'undefined' ? window.location.reload : undefined)();
       }, 1500);
 
     } catch (error: any) {

@@ -39,6 +39,6 @@ export function getCurrentDemoUser(): DemoAccount | null {
 export function logoutDemo(): void {
   // لا يوجد حسابات تجريبية لتسجيل الخروج منها
   if (typeof window !== 'undefined') {
-    localStorage.removeItem('demoUser');
+    (typeof window !== 'undefined' ? localStorage.removeItem('demoUser') : null);
   }
 }

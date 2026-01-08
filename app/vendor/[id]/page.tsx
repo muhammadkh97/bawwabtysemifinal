@@ -132,7 +132,7 @@ export default function VendorDetailsPage() {
 
   // ✅ دالة لزر المشاركة
   const handleShare = async () => {
-    const url = window.location.href;
+    const url = (typeof window !== 'undefined' ? window.location.href : undefined);
     const title = vendor?.name_ar || vendor?.name;
     
     if (navigator.share) {
@@ -143,7 +143,6 @@ export default function VendorDetailsPage() {
           url: url,
         });
       } catch (err) {
-        console.log('إلغاء المشاركة');
       }
     } else {
       // Fallback: نسخ الرابط
@@ -156,10 +155,10 @@ export default function VendorDetailsPage() {
   const handleOpenMap = () => {
     if (vendor?.latitude && vendor?.longitude) {
       const url = `https://www.google.com/maps?q=${vendor.latitude},${vendor.longitude}`;
-      window.open(url, '_blank');
+      (typeof window !== 'undefined' ? window.open : undefined)(url, '_blank');
     } else if (vendor?.store_address) {
       const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(vendor.store_address)}`;
-      window.open(url, '_blank');
+      (typeof window !== 'undefined' ? window.open : undefined)(url, '_blank');
     }
   };
 

@@ -7,7 +7,6 @@ const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = createClient(url, key);
 
 async function checkProductSchema() {
-  console.log('Checking products table schema...\n');
   
   // Get a sample product to see the structure
   const { data, error } = await supabase
@@ -21,16 +20,11 @@ async function checkProductSchema() {
   }
   
   if (data && data.length > 0) {
-    console.log('Sample product structure:');
-    console.log(JSON.stringify(data[0], null, 2));
-    console.log('\nField types:');
     Object.entries(data[0]).forEach(([key, value]) => {
-      console.log(`  ${key}: ${typeof value} (${value === null ? 'null' : value.constructor.name})`);
     });
   }
   
   // Try to insert a test to see what fails
-  console.log('\n\nTesting insert with proper types...');
   const testData = {
     name: 'Test Product',
     description: 'Test',
@@ -41,7 +35,6 @@ async function checkProductSchema() {
     status: 'draft',
   };
   
-  console.log('Test data:', JSON.stringify(testData, null, 2));
 }
 
 checkProductSchema().then(() => process.exit(0));

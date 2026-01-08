@@ -378,22 +378,22 @@ export function handleNotificationClick(notification: Notification, action?: str
 
   switch (data.type) {
     case 'order':
-      window.location.href = `/orders/${data.orderNumber}`;
+      (typeof window !== 'undefined' ? window.location.href : undefined) = `/orders/${data.orderNumber}`;
       break;
     case 'message':
-      window.location.href = '/chats';
+      (typeof window !== 'undefined' ? window.location.href : undefined) = '/chats';
       break;
     case 'payout':
-      window.location.href = '/dashboard/vendor/wallet';
+      (typeof window !== 'undefined' ? window.location.href : undefined) = '/dashboard/vendor/wallet';
       break;
     case 'dispute':
-      window.location.href = '/dashboard/admin/disputes';
+      (typeof window !== 'undefined' ? window.location.href : undefined) = '/dashboard/admin/disputes';
       break;
     case 'delivery':
-      window.location.href = `/orders/${data.orderNumber}`;
+      (typeof window !== 'undefined' ? window.location.href : undefined) = `/orders/${data.orderNumber}`;
       break;
     default:
-      window.location.href = '/dashboard';
+      (typeof window !== 'undefined' ? window.location.href : undefined) = '/dashboard';
   }
 
   notification.close();

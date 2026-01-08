@@ -89,7 +89,6 @@ export default function MealDetailsPage() {
           });
         },
         (error) => {
-          console.log('Could not get location:', error);
         }
       );
     }
