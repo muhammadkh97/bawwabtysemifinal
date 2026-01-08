@@ -326,6 +326,7 @@ function ProductsContent() {
               </div>
             ) : filteredProducts.length === 0 ? (
               <EmptyState 
+                type="products"
                 title="لا توجد منتجات"
                 description="لم نجد أي منتجات تطابق بحثك حالياً"
               />
@@ -370,7 +371,7 @@ function ProductsContent() {
                               <button 
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  addToCart(product);
+                                  addToCart(product.id);
                                 }}
                                 className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-xl sm:rounded-2xl flex items-center justify-center text-gray-900 hover:bg-purple-600 hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-300"
                               >
