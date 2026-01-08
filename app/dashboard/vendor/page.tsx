@@ -325,17 +325,3 @@ export default function VendorDashboardPage() {
     </div>
   );
 }
-
-export default function VendorDashboardPage() {
-  return (
-    <div className="min-h-screen bg-slate-950">
-      <FuturisticSidebarLuxury role="vendor" />
-      <div className="md:mr-[280px] transition-all duration-300">
-        <FuturisticNavbarLuxury userRole="vendor" />
-        <main className="pt-24 px-4 md:px-8 lg:px-10 pb-10">
-          <VendorDashboardContent />
-        </main>
-      </div>
-    </div>
-  );
-}

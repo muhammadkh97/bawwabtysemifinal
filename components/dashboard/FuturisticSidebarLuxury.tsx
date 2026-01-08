@@ -256,10 +256,10 @@ export default function FuturisticSidebarLuxury({ role }: FuturisticSidebarLuxur
     if (role === 'restaurant' && !isRestaurantStaff) return true;
     if (!item.requiredPermission) return true;
     if (role === 'vendor' && isVendorStaff) {
-      return hasPermission(staffPermissions, item.requiredPermission);
+      return hasPermission(staffPermissions, item.requiredPermission as any);
     }
     if (role === 'restaurant' && isRestaurantStaff) {
-      return hasPermission(staffPermissions, item.requiredPermission);
+      return hasPermission(staffPermissions, item.requiredPermission as any);
     }
     return true;
   });
