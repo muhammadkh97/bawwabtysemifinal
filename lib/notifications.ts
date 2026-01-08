@@ -10,7 +10,7 @@ export interface NotificationPayload {
   badge?: string;
   image?: string;
   tag?: string;
-  data?: any;
+  data?: { [key: string]: unknown };
   actions?: Array<{
     action: string;
     title: string;
@@ -70,7 +70,23 @@ export async function sendLocalNotification(payload: NotificationPayload): Promi
 
   try {
     const registration = await navigator.serviceWorker.ready;
-    const options: any = {
+    
+    interface NotificationOptions {
+      body: string;
+      icon: string;
+      badge: string;
+      tag: string;
+      data?: { [key: string]: unknown };
+      vibrate: number[];
+      requireInteraction: boolean;
+      actions?: Array<{
+        action: string;
+        title: string;
+        icon?: string;
+      }>;
+    }
+    
+    const options: NotificationOptions = {
       body: payload.body,
       icon: payload.icon || '/icon-192x192.png',
       badge: payload.badge || '/badge-72x72.png',
