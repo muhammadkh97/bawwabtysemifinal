@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
-import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
-import ModernDashboardLayout, { ModernStatCard, ModernSection } from '@/components/dashboard/ModernDashboardLayout';
+import FuturisticSidebarLuxury from '@/components/dashboard/FuturisticSidebarLuxury';
+import FuturisticNavbarLuxury from '@/components/dashboard/FuturisticNavbarLuxury';
+import ModernDashboardLayoutLuxury, { ModernStatCardLuxury, ModernSectionLuxury } from '@/components/dashboard/ModernDashboardLayoutLuxury';
 import { supabase } from '@/lib/supabase';
 import {
   Users,
@@ -175,18 +175,19 @@ function AdminDashboardContent() {
 
   return (
     <div className="md:mr-[280px] transition-all duration-300">
-      <FuturisticNavbar userName="المدير" userRole="admin" />
+      <FuturisticNavbarLuxury userName="المدير" userRole="admin" />
       
       <main className="pt-24 px-4 md:px-8 lg:px-10 pb-10">
-        <ModernDashboardLayout 
+        <ModernDashboardLayoutLuxury 
           title="لوحة تحكم المدير 👑" 
           subtitle="نظرة شاملة على أداء المنصة"
           icon={Crown}
+          role="admin"
         >
           {/* Main Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {stats.map((stat, index) => (
-              <ModernStatCard
+              <ModernStatCardLuxury
                 key={stat.title}
                 title={stat.title}
                 value={stat.value}
@@ -194,6 +195,7 @@ function AdminDashboardContent() {
                 gradient={stat.gradient}
                 trend={stat.trend}
                 delay={index * 0.1}
+                role="admin"
               />
             ))}
           </div>
@@ -222,7 +224,7 @@ function AdminDashboardContent() {
           </div>
 
           {/* Recent Users Section */}
-          <ModernSection title="أحدث المستخدمين" icon={Users} delay={0.8}>
+          <ModernSectionLuxury title="أحدث المستخدمين" icon={Users} delay={0.8} role="admin">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {recentUsers.map((user, index) => (
                 <motion.div
@@ -260,10 +262,10 @@ function AdminDashboardContent() {
                 </motion.div>
               ))}
             </div>
-          </ModernSection>
+          </ModernSectionLuxury>
 
           {/* Top Products Section */}
-          <ModernSection title="أفضل المنتجات مبيعاً" icon={BarChart3} delay={1.2}>
+          <ModernSectionLuxury title="أفضل المنتجات مبيعاً" icon={BarChart3} delay={1.2} role="admin">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {topProducts.map((product, index) => (
                 <motion.div
@@ -297,7 +299,7 @@ function AdminDashboardContent() {
                 </motion.div>
               ))}
             </div>
-          </ModernSection>
+          </ModernSectionLuxury>
 
           {/* Activity Indicator */}
           <motion.div
@@ -311,7 +313,7 @@ function AdminDashboardContent() {
               <span className="text-white/70 text-sm">النظام يعمل بشكل طبيعي</span>
             </div>
           </motion.div>
-        </ModernDashboardLayout>
+        </ModernDashboardLayoutLuxury>
       </main>
     </div>
   );
@@ -319,8 +321,8 @@ function AdminDashboardContent() {
 
 export default function AdminDashboard() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <FuturisticSidebar role="admin" />
+    <div className="min-h-screen bg-slate-950">
+      <FuturisticSidebarLuxury role="admin" />
       <AdminDashboardContent />
     </div>
   );

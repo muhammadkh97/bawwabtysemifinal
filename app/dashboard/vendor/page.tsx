@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import ModernDashboardLayout, { ModernStatCard, ModernSection } from '@/components/dashboard/ModernDashboardLayout';
+import ModernDashboardLayoutLuxury, { ModernStatCardLuxury, ModernSectionLuxury } from '@/components/dashboard/ModernDashboardLayoutLuxury';
+import FuturisticSidebarLuxury from '@/components/dashboard/FuturisticSidebarLuxury';
+import FuturisticNavbarLuxury from '@/components/dashboard/FuturisticNavbarLuxury';
 import {
   Package,
   ShoppingCart,
@@ -192,20 +194,16 @@ function VendorDashboardContent() {
   ];
 
   return (
-    <ModernDashboardLayout
+    <ModernDashboardLayoutLuxury
       title="مرحباً بك في متجرك! 🏪"
       subtitle="إدارة منتجاتك وطلباتك وأرباحك"
       loading={loading}
-      blobColors={{
-        primary: '#6366f1',
-        secondary: '#fbbf24',
-        tertiary: '#ec4899',
-      }}
+      role="vendor"
     >
       {/* Main Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {statsCards.map((stat, index) => (
-          <ModernStatCard
+          <ModernStatCardLuxury
             key={stat.title}
             title={stat.title}
             value={stat.value}
@@ -213,6 +211,7 @@ function VendorDashboardContent() {
             trend={stat.trend}
             gradient={stat.gradient}
             delay={index * 0.1}
+            role="vendor"
           />
         ))}
       </div>
@@ -220,7 +219,7 @@ function VendorDashboardContent() {
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {quickStats.map((item, index) => (
-          <ModernStatCard
+          <ModernStatCardLuxury
             key={item.label}
             title={item.label}
             value={item.value}
@@ -228,19 +227,19 @@ function VendorDashboardContent() {
             gradient={item.color}
             delay={0.4 + index * 0.1}
             compact
+            role="vendor"
           />
         ))}
       </div>
 
       {/* Low Stock Alert */}
       {lowStockProducts.length > 0 && (
-        <ModernSection
+        <ModernSectionLuxury
           title="تنبيه: منتجات منخفضة المخزون"
           subtitle={`لديك ${lowStockProducts.length} منتج بحاجة لإعادة التخزين`}
           icon={AlertTriangle}
-          iconColor="text-orange-400"
-          gradient="from-orange-500/10 to-red-500/10"
           delay={0.5}
+          role="vendor"
         >
           <div className="flex flex-wrap gap-2">
             {lowStockProducts.slice(0, 5).map(product => (
@@ -249,11 +248,11 @@ function VendorDashboardContent() {
               </span>
             ))}
           </div>
-        </ModernSection>
+        </ModernSectionLuxury>
       )}
 
       {/* Recent Products */}
-      <ModernSection
+      <ModernSectionLuxury
         title="أحدث المنتجات"
         action={
           <Link 
@@ -264,6 +263,7 @@ function VendorDashboardContent() {
           </Link>
         }
         delay={0.6}
+        role="vendor"
       >
         {products.length === 0 ? (
           <div className="text-center py-12">
@@ -307,11 +307,35 @@ function VendorDashboardContent() {
             ))}
           </div>
         )}
-      </ModernSection>
-    </ModernDashboardLayout>
+      </ModernSectionLuxury>
+    </ModernDashboardLayoutLuxury>
   );
 }
 
 export default function VendorDashboardPage() {
-  return <VendorDashboardContent />;
+  return (
+    <div className="min-h-screen bg-slate-950">
+      <FuturisticSidebarLuxury role="vendor" />
+      <div className="md:mr-[280px] transition-all duration-300">
+        <FuturisticNavbarLuxury userRole="vendor" />
+        <main className="pt-24 px-4 md:px-8 lg:px-10 pb-10">
+          <VendorDashboardContent />
+        </main>
+      </div>
+    </div>
+  );
+}
+
+export default function VendorDashboardPage() {
+  return (
+    <div className="min-h-screen bg-slate-950">
+      <FuturisticSidebarLuxury role="vendor" />
+      <div className="md:mr-[280px] transition-all duration-300">
+        <FuturisticNavbarLuxury userRole="vendor" />
+        <main className="pt-24 px-4 md:px-8 lg:px-10 pb-10">
+          <VendorDashboardContent />
+        </main>
+      </div>
+    </div>
+  );
 }

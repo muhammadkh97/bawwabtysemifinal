@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
-import ModernDashboardLayout, { ModernStatCard, ModernSection } from '@/components/dashboard/ModernDashboardLayout';
+import ModernDashboardLayoutLuxury, { ModernStatCardLuxury, ModernSectionLuxury } from '@/components/dashboard/ModernDashboardLayoutLuxury';
+import FuturisticSidebarLuxury from '@/components/dashboard/FuturisticSidebarLuxury';
+import FuturisticNavbarLuxury from '@/components/dashboard/FuturisticNavbarLuxury';
 import { 
   Package, 
   DollarSign, 
@@ -36,7 +38,7 @@ interface DashboardStats {
   average_rating: number;
 }
 
-export default function DriverDashboard() {
+function DriverDashboardContent() {
   const router = useRouter();
   
   const [loading, setLoading] = useState(true);
@@ -284,15 +286,11 @@ export default function DriverDashboard() {
   ];
 
   return (
-    <ModernDashboardLayout
+    <ModernDashboardLayoutLuxury
       title="لوحة تحكم المندوب 🚗"
       subtitle="تابع طلباتك وأرباحك في الوقت الفعلي"
       loading={loading}
-      blobColors={{
-        primary: '#10b981',
-        secondary: '#22c55e',
-        tertiary: '#34d399',
-      }}
+      role="driver"
       headerAction={
         <button
           onClick={toggleAvailability}
@@ -310,13 +308,14 @@ export default function DriverDashboard() {
       {/* Main Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {statsCards.map((stat, index) => (
-          <ModernStatCard
+          <ModernStatCardLuxury
             key={stat.title}
             title={stat.title}
             value={stat.value}
             icon={stat.icon}
             gradient={stat.gradient}
             delay={index * 0.1}
+            role="driver"
           />
         ))}
       </div>
@@ -324,7 +323,7 @@ export default function DriverDashboard() {
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {quickStats.map((item, index) => (
-          <ModernStatCard
+          <ModernStatCardLuxury
             key={item.label}
             title={item.label}
             value={item.value}
@@ -332,6 +331,7 @@ export default function DriverDashboard() {
             gradient={item.color}
             delay={0.4 + index * 0.1}
             compact
+            role="driver"
           />
         ))}
       </div>
@@ -339,12 +339,13 @@ export default function DriverDashboard() {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Map Section */}
-        <ModernSection
+        <ModernSectionLuxury
           title="خريطة الطلبات النشطة"
           subtitle={`${activeOrders.length} طلب نشط`}
           icon={MapIcon}
           delay={0.5}
           className="lg:col-span-2"
+          role="driver"
         >
           <div className="h-[500px] -m-6 mt-0 bg-[#0A0515] rounded-b-2xl overflow-hidden">
             {driverLocation && activeOrders.length > 0 ? (
@@ -365,14 +366,15 @@ export default function DriverDashboard() {
               </div>
             )}
           </div>
-        </ModernSection>
+          </ModernSectionLuxury>
 
-        {/* Active Orders List + Quick Actions */}
+          {/* Active Orders List + Quick Actions */}
         <div className="space-y-6">
-          <ModernSection
+          <ModernSectionLuxury
             title="الطلبات النشطة"
             icon={Zap}
             delay={0.6}
+            role="driver"
           >
             <div className="max-h-[300px] overflow-y-auto -m-6 p-6 mt-0">
               {activeOrders.length === 0 ? (
@@ -441,12 +443,13 @@ export default function DriverDashboard() {
                 </div>
               )}
             </div>
-          </ModernSection>
+          </ModernSectionLuxury>
 
           {/* Quick Actions */}
-          <ModernSection
+          <ModernSectionLuxury
             title="إجراءات سريعة"
             delay={0.7}
+            role="driver"
           >
             <div className="space-y-3">
               <button
@@ -471,18 +474,17 @@ export default function DriverDashboard() {
                 الأرباح
               </button>
             </div>
-          </ModernSection>
+          </ModernSectionLuxury>
         </div>
       </div>
 
       {/* Earnings Summary */}
-      <ModernSection
+      <ModernSectionLuxury
         title="إجمالي الأرباح"
         subtitle={`من ${stats.total_deliveries} توصيل مكتمل`}
         icon={DollarSign}
-        iconColor="text-emerald-400"
-        gradient="from-green-500/10 to-emerald-500/10"
         delay={0.8}
+        role="driver"
         action={
           <button
             onClick={() => router.push('/dashboard/driver/wallet')}
@@ -495,7 +497,21 @@ export default function DriverDashboard() {
         <div className="text-5xl font-bold text-white">
           {stats.total_earnings.toFixed(2)} ر.س
         </div>
-      </ModernSection>
-    </ModernDashboardLayout>
+      </ModernSectionLuxury>
+    </ModernDashboardLayoutLuxury>
+  );
+}
+
+export default function DriverDashboard() {
+  return (
+    <div className="min-h-screen bg-slate-950">
+      <FuturisticSidebarLuxury role="driver" />
+      <div className="md:mr-[280px] transition-all duration-300">
+        <FuturisticNavbarLuxury userRole="driver" />
+        <main className="pt-24 px-4 md:px-8 lg:px-10 pb-10">
+          <DriverDashboardContent />
+        </main>
+      </div>
+    </div>
   );
 }

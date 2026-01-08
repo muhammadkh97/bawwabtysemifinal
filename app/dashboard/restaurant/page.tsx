@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import ModernDashboardLayout, { ModernStatCard, ModernSection } from '@/components/dashboard/ModernDashboardLayout';
+import ModernDashboardLayoutLuxury, { ModernStatCardLuxury, ModernSectionLuxury } from '@/components/dashboard/ModernDashboardLayoutLuxury';
+import FuturisticSidebarLuxury from '@/components/dashboard/FuturisticSidebarLuxury';
+import FuturisticNavbarLuxury from '@/components/dashboard/FuturisticNavbarLuxury';
 import { 
   ShoppingBag, 
   DollarSign, 
@@ -26,7 +28,7 @@ interface Stats {
   pendingOrders: number;
 }
 
-export default function RestaurantDashboard() {
+function RestaurantDashboardContent() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>('');
@@ -206,15 +208,11 @@ export default function RestaurantDashboard() {
   ];
 
   return (
-    <ModernDashboardLayout
-      title={`مرحباً بك في ${restaurantInfo?.shop_name_ar || 'مطعمك'}! 🍽️`}
+    <ModernDashboardLayoutLuxury
+      title={`مرحباً بك في ${restaurantInfo?.shop_name_ar || 'مطعمك'}! 🙴`}
       subtitle="إدارة طلباتك ووجباتك وإيراداتك"
       loading={loading}
-      blobColors={{
-        primary: '#ef4444',
-        secondary: '#f97316',
-        tertiary: '#fb923c',
-      }}
+      role="restaurant"
       headerAction={
         <button
           onClick={toggleOnlineStatus}
@@ -240,28 +238,28 @@ export default function RestaurantDashboard() {
     >
       {/* Online Status Alert */}
       {!isOnline && (
-        <ModernSection
+        <ModernSectionLuxury
           title="تنبيه"
           subtitle="المطعم غير متصل - لن يظهر للعملاء في الصفحة الرئيسية"
           icon={AlertCircle}
-          iconColor="text-yellow-400"
-          gradient="from-yellow-500/10 to-orange-500/10"
           delay={0.1}
+          role="restaurant"
         >
           <div></div>
-        </ModernSection>
+        </ModernSectionLuxury>
       )}
 
       {/* Main Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {statCards.map((stat, index) => (
-          <ModernStatCard
+          <ModernStatCardLuxury
             key={stat.title}
             title={stat.title}
             value={stat.value}
             icon={stat.icon}
             gradient={stat.gradient}
             delay={index * 0.1}
+            role="restaurant"
           />
         ))}
       </div>
@@ -269,7 +267,7 @@ export default function RestaurantDashboard() {
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         {quickStats.map((item, index) => (
-          <ModernStatCard
+          <ModernStatCardLuxury
             key={item.label}
             title={item.label}
             value={item.value}
@@ -277,12 +275,13 @@ export default function RestaurantDashboard() {
             gradient={item.color}
             delay={0.4 + index * 0.1}
             large
+            role="restaurant"
           />
         ))}
       </div>
 
       {/* Recent Orders */}
-      <ModernSection
+      <ModernSectionLuxury
         title="آخر الطلبات 📋"
         action={
           <button
@@ -293,6 +292,7 @@ export default function RestaurantDashboard() {
           </button>
         }
         delay={0.5}
+        role="restaurant"
       >
         {recentOrders.length === 0 ? (
           <div className="text-center py-12">
@@ -338,7 +338,7 @@ export default function RestaurantDashboard() {
             ))}
           </div>
         )}
-      </ModernSection>
+      </ModernSectionLuxury>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
@@ -369,6 +369,20 @@ export default function RestaurantDashboard() {
           <p className="text-orange-200 text-sm">تحديث معلومات المطعم</p>
         </button>
       </div>
-    </ModernDashboardLayout>
+    </ModernDashboardLayoutLuxury>
+  );
+}
+
+export default function RestaurantDashboard() {
+  return (
+    <div className="min-h-screen bg-slate-950">
+      <FuturisticSidebarLuxury role="restaurant" />
+      <div className="md:mr-[280px] transition-all duration-300">
+        <FuturisticNavbarLuxury userRole="restaurant" />
+        <main className="pt-24 px-4 md:px-8 lg:px-10 pb-10">
+          <RestaurantDashboardContent />
+        </main>
+      </div>
+    </div>
   );
 }
