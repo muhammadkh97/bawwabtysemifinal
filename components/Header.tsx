@@ -84,18 +84,29 @@ export default function Header() {
       }
 
       const categoriesWithSubs: Category[] = await Promise.all(
-        (mainCategories || []).map(async (category: Category) => {
+        (mainCategories || []).map(async (category: Category): Promise<Category> => {
           const { data: subs } = await supabase
             .from('categories')
             .select('id, name, name_ar, slug, icon')
             .eq('parent_id', category.id)
             .order('display_order', { ascending: true });
 
+          const subcategories = (subs || []).map(sub => ({
+            id: sub.id,
+            name: sub.name,
+            name_ar: sub.name_ar,
+            slug: sub.slug,
+            icon: sub.icon
+          }));
 
           return {
-            ...category,
-            subcategories: subs || []
-          } as Category;
+            id: category.id,
+            name: category.name,
+            name_ar: category.name_ar,
+            slug: category.slug,
+            icon: category.icon,
+            subcategories
+          };
         })
       );
 
