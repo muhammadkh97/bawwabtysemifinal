@@ -16,6 +16,32 @@ function getErrorMessage(error: unknown): string {
 
 export type BucketName = 'products' | 'profiles' | 'documents' | 'chat-attachments' | 'product-images' | 'avatars';
 
+/**
+ * Validate image file
+ * التحقق من صحة ملف الصورة
+ */
+export function validateImage(file: File, maxSize: number = 5 * 1024 * 1024): { valid: boolean; error?: string } {
+  // Check file type
+  const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+  if (!validTypes.includes(file.type)) {
+    return {
+      valid: false,
+      error: 'نوع الملف غير مدعوم. يرجى رفع صورة (JPG, PNG, GIF, WEBP)',
+    };
+  }
+
+  // Check file size
+  if (file.size > maxSize) {
+    const maxSizeMB = (maxSize / (1024 * 1024)).toFixed(1);
+    return {
+      valid: false,
+      error: `حجم الملف كبير جداً. الحد الأقصى ${maxSizeMB} ميجابايت`,
+    };
+  }
+
+  return { valid: true };
+}
+
 export interface UploadOptions {
   bucket: BucketName;
   folder?: string;
