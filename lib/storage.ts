@@ -14,8 +14,10 @@ function getErrorMessage(error: unknown): string {
 // وظائف مساعدة للتخزين والصور
 // ============================================
 
+export type BucketName = 'products' | 'profiles' | 'documents' | 'chat-attachments' | 'product-images' | 'avatars';
+
 export interface UploadOptions {
-  bucket: 'products' | 'profiles' | 'documents' | 'chat-attachments' | 'product-images' | 'avatars';
+  bucket: BucketName;
   folder?: string;
   filename?: string;
   public?: boolean;
@@ -27,16 +29,24 @@ export interface ImageTransformOptions {
   quality?: number;
 }
 
+export interface UploadResult {
+  success: boolean;
+  path?: string;
+  url?: string;
+  fullPath?: string;
+  error?: string;
+}
+
 /**
  * Upload a single file to Supabase Storage
  * رفع ملف واحد إلى Supabase
  */
-export async function uploadFile(file: File, options: UploadOptions) {
-  const { bucket, folder, filename, public: isPublic = true } = options;
+export async function uploadFile(file: File, options: UploadOptions): Promise<UploadResult> {
+  const { bucket, folder, filename } = options;
 
   try {
     // Validate file size based on bucket
-    const maxSizes = {
+    const maxSizes: Record<BucketName, number> = {
       products: 5 * 1024 * 1024, // 5MB
       'product-images': 5 * 1024 * 1024, // 5MB
       profiles: 2 * 1024 * 1024, // 2MB
@@ -50,7 +60,7 @@ export async function uploadFile(file: File, options: UploadOptions) {
     }
 
     // Validate MIME type
-    const allowedTypes = {
+    const allowedTypes: Record<BucketName, string[]> = {
       products: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'],
       'product-images': ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'],
       profiles: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
@@ -137,7 +147,7 @@ export async function getSignedUrl(
   bucket: string,
   path: string,
   expiresIn: number = 3600 // 1 hour default
-) {
+): Promise<{ success: boolean; url?: string; error?: string }> {
   try {
     const { data, error } = await supabase.storage
       .from(bucket)
@@ -160,7 +170,7 @@ export async function getSignedUrl(
 /**
  * Download a file
  */
-export async function downloadFile(bucket: string, path: string) {
+export async function downloadFile(bucket: string, path: string): Promise<{ success: boolean; data?: Blob; error?: string }> {
   try {
     const { data, error } = await supabase.storage.from(bucket).download(path);
 
@@ -185,7 +195,7 @@ export async function downloadFile(bucket: string, path: string) {
 /**
  * Delete a single file
  */
-export async function deleteFile(bucket: string, path: string) {
+export async function deleteFile(bucket: string, path: string): Promise<{ success: boolean; error?: string }> {
   try {
     const { error } = await supabase.storage.from(bucket).remove([path]);
 
@@ -203,7 +213,7 @@ export async function deleteFile(bucket: string, path: string) {
 /**
  * Delete multiple files
  */
-export async function deleteMultipleFiles(bucket: string, paths: string[]) {
+export async function deleteMultipleFiles(bucket: string, paths: string[]): Promise<{ success: boolean; deletedCount?: number; error?: string }> {
   try {
     const { error } = await supabase.storage.from(bucket).remove(paths);
 
@@ -225,7 +235,7 @@ export async function deleteMultipleFiles(bucket: string, paths: string[]) {
 /**
  * List files in a folder
  */
-export async function listFiles(bucket: string, folder?: string) {
+export async function listFiles(bucket: string, folder?: string): Promise<{ success: boolean; files?: any[]; error?: string }> {
   try {
     const { data, error } = await supabase.storage
       .from(bucket)
@@ -257,16 +267,6 @@ export async function listFiles(bucket: string, folder?: string) {
 /**
  * Get transformed image URL with specific dimensions and quality
  * الحصول على صورة محولة بمقاسات وجودة محددة
- * 
- * @example
- * // For product thumbnails (300x300)
- * getTransformedImageUrl('products', 'vendor_id/product.jpg', { width: 300, height: 300 })
- * 
- * // For product detail page (600x600)
- * getTransformedImageUrl('products', 'vendor_id/product.jpg', { width: 600 })
- * 
- * // For mobile optimized (responsive width)
- * getTransformedImageUrl('products', 'vendor_id/product.jpg', { width: 400, quality: 75 })
  */
 export function getTransformedImageUrl(
   bucket: string,
@@ -334,11 +334,6 @@ export function getProfileImageUrl(
   return getTransformedImageUrl('profiles', path, size);
 }
 
-// ============================================
-// Product Image Upload Helper
-// مساعد رفع صور المنتجات
-// ============================================
-
 /**
  * Upload product images with vendor ID organization
  * رفع صور المنتجات مع تنظيم حسب ID البائع
@@ -347,7 +342,7 @@ export async function uploadProductImages(
   vendorId: string,
   productId: string,
   files: File[]
-) {
+): Promise<{ successful: string[]; failed: string[] }> {
   const uploadPromises = files.map(async (file, index) => {
     return uploadFile(file, {
       bucket: 'products',
@@ -358,124 +353,11 @@ export async function uploadProductImages(
 
   const results = await Promise.all(uploadPromises);
   
-  const successful = results.filter((r) => r.success);
-  const failed = results.filter((r) => !r.success);
+  const successful = results.filter((r) => r.success && r.url).map(r => r.url as string);
+  const failed = results.filter((r) => !r.success).map(r => r.error || 'Unknown error');
 
   return {
-    successful: successful.map(r => r.url),
+    successful,
     failed,
-    totalUploaded: successful.length,
-    totalFailed: failed.length,
-  };
-}
-
-/**
- * Upload profile avatar
- * رفع صورة البروفايل
- */
-export async function uploadProfileAvatar(
-  userId: string,
-  file: File
-) {
-  return uploadFile(file, {
-    bucket: 'profiles',
-    folder: userId,
-    filename: 'avatar.' + file.name.split('.').pop(),
-  });
-}
-
-/**
- * Upload vendor documents
- * رفع وثائق البائع
- */
-export async function uploadVendorDocument(
-  vendorId: string,
-  documentType: 'id_card_front' | 'id_card_back' | 'commercial_register' | 'driving_license',
-  file: File
-) {
-  return uploadFile(file, {
-    bucket: 'documents',
-    folder: vendorId,
-    filename: `${documentType}.${file.name.split('.').pop()}`,
-  });
-}
-
-// ============================================
-// Utility Functions
-// وظائف مساعدة
-// ============================================
-
-/**
- * Validate image file
- * التحقق من صحة ملف الصورة
- */
-export function validateImage(file: File, maxSize: number = 5242880): { valid: boolean; error?: string } {
-  // Check file type
-  const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
-  if (!validTypes.includes(file.type)) {
-    return {
-      valid: false,
-      error: 'نوع الملف غير مدعوم. يرجى رفع صورة (JPG, PNG, WebP, GIF)',
-    };
-  }
-
-  // Check file size
-  if (file.size > maxSize) {
-    const maxMB = maxSize / 1024 / 1024;
-    return {
-      valid: false,
-      error: `حجم الملف كبير جداً. الحد الأقصى ${maxMB}MB`,
-    };
-  }
-
-  return { valid: true };
-}
-
-/**
- * Generate unique filename
- * توليد اسم ملف فريد
- */
-export function generateUniqueFilename(originalName: string, prefix?: string): string {
-  const timestamp = Date.now();
-  const randomStr = Math.random().toString(36).substring(2, 9);
-  const ext = originalName.split('.').pop();
-  
-  if (prefix) {
-    return `${prefix}_${timestamp}_${randomStr}.${ext}`;
-  }
-  
-  return `${timestamp}_${randomStr}.${ext}`;
-}
-
-/**
- * Extract vendor ID from product image path
- * استخراج ID البائع من مسار صورة المنتج
- */
-export function extractVendorIdFromPath(path: string): string | null {
-  const parts = path.split('/');
-  return parts.length > 0 ? parts[0] : null;
-}
-
-/**
- * Generate thumbnail URL
- */
-export function getThumbnailUrl(bucket: string, path: string): string {
-  return getTransformedImageUrl(bucket, path, {
-    width: 300,
-    height: 300,
-    quality: 80,
-  });
-}
-
-/**
- * Generate responsive image URLs
- */
-export function getResponsiveImageUrls(bucket: string, path: string) {
-  return {
-    thumbnail: getThumbnailUrl(bucket, path),
-    small: getTransformedImageUrl(bucket, path, { width: 640, quality: 80 }),
-    medium: getTransformedImageUrl(bucket, path, { width: 1024, quality: 85 }),
-    large: getTransformedImageUrl(bucket, path, { width: 1920, quality: 90 }),
-    original: getPublicUrl(bucket, path),
   };
 }

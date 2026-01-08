@@ -1,20 +1,25 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MapPin, Plus, Edit, Trash2, Star, Home, Briefcase, Navigation } from 'lucide-react';
+import { MapPin, Plus, Edit, Trash2, Star, Home, Briefcase } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PostGISGeography } from '@/types/geo';
+
+// تعريف هيكل GeoJSON لضمان دقة إحداثيات الخريطة
+export interface GeoJSONPoint {
+  type: 'Point';
+  coordinates: [number, number]; // [longitude, latitude]
+}
 
 interface UserLocation {
   id: string;
   user_id: string;
-  name: string;  // بدلاً من title
+  name: string;
   address: string;
-  lat: number;   // بدلاً من latitude
-  lng: number;   // بدلاً من longitude
-  location?: PostGISGeography; // PostGIS point
-  type?: string;  // نوع الموقع
+  lat: number;
+  lng: number;
+  location?: GeoJSONPoint;
+  type?: string;
   is_default: boolean;
 }
 
@@ -68,7 +73,6 @@ export default function LocationsManager({ userId }: LocationsManagerProps) {
           const { latitude, longitude } = position.coords;
           
           try {
-            // استخدام OpenStreetMap Nominatim API للحصول على العنوان
             const response = await fetch(
               `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=ar`
             );
@@ -84,7 +88,6 @@ export default function LocationsManager({ userId }: LocationsManagerProps) {
             }
           } catch (error) {
             console.error('Error getting address:', error);
-            // حتى لو فشل الحصول على العنوان، احفظ الإحداثيات
             setFormData(prev => ({
               ...prev,
               lat: latitude,
@@ -109,26 +112,38 @@ export default function LocationsManager({ userId }: LocationsManagerProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (formData.lat === null || formData.lng === null) {
+      alert('يرجى تحديد الموقع على الخريطة');
+      return;
+    }
+
+    // تحويل الإحداثيات إلى GeoJSON Point لـ PostGIS
+    const locationData = {
+      ...formData,
+      user_id: userId,
+      location: {
+        type: 'Point',
+        coordinates: [formData.lng, formData.lat] // GeoJSON uses [lng, lat]
+      }
+    };
+    
     try {
       if (editingLocation) {
         const { error } = await supabase
           .from('user_locations')
-          .update(formData)
+          .update(locationData)
           .eq('id', editingLocation.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('user_locations')
-          .insert([{ ...formData, user_id: userId }]);
+          .insert([locationData]);
 
         if (error) throw error;
       }
 
-      // إعادة تحميل المواقع
       await fetchLocations();
-      
-      // إغلاق النموذج وإعادة تعيينه
       setShowForm(false);
       setEditingLocation(null);
       setFormData({
@@ -205,7 +220,6 @@ export default function LocationsManager({ userId }: LocationsManagerProps) {
         </button>
       </div>
 
-      {/* قائمة المواقع */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <AnimatePresence>
           {locations.map((location) => (
@@ -285,7 +299,6 @@ export default function LocationsManager({ userId }: LocationsManagerProps) {
         )}
       </div>
 
-      {/* نموذج إضافة/تعديل الموقع */}
       <AnimatePresence>
         {showForm && (
           <motion.div
@@ -307,83 +320,52 @@ export default function LocationsManager({ userId }: LocationsManagerProps) {
               </h3>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* زر تحديد الموقع الحالي */}
                 <button
                   type="button"
                   onClick={handleGetCurrentLocation}
                   disabled={gettingLocation}
-                  className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold hover:shadow-lg transition disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-purple-50 text-purple-600 rounded-xl font-bold hover:bg-purple-100 transition flex items-center justify-center gap-2"
                 >
-                  <Navigation className={`w-5 h-5 ${gettingLocation ? 'animate-spin' : ''}`} />
-                  {gettingLocation ? 'جاري تحديد الموقع...' : 'تحديد موقعي الحالي'}
+                  <MapPin className="w-5 h-5" />
+                  {gettingLocation ? 'جاري تحديد الموقع...' : 'استخدام موقعي الحالي'}
                 </button>
 
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">نوع الموقع *</label>
-                    <select
-                      value={formData.type}
-                      onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500"
-                      required
-                    >
-                      <option value="home">🏠 منزل</option>
-                      <option value="work">💼 عمل</option>
-                      <option value="other">📍 آخر</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">اسم الموقع *</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-sm font-bold text-gray-600">اسم الموقع</label>
                     <input
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500"
-                      placeholder="مثال: منزلي، مكتبي..."
+                      className="w-full p-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-purple-500 outline-none transition"
+                      placeholder="مثلاً: المنزل، العمل"
                       required
                     />
                   </div>
+                  <div className="space-y-1">
+                    <label className="text-sm font-bold text-gray-600">النوع</label>
+                    <select
+                      value={formData.type}
+                      onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                      className="w-full p-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-purple-500 outline-none transition"
+                    >
+                      <option value="home">منزل</option>
+                      <option value="work">عمل</option>
+                      <option value="other">آخر</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">العنوان الكامل *</label>
+                <div className="space-y-1">
+                  <label className="text-sm font-bold text-gray-600">العنوان بالتفصيل</label>
                   <textarea
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500"
+                    className="w-full p-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-purple-500 outline-none transition"
+                    placeholder="الشارع، البناية، رقم الشقة..."
                     rows={3}
-                    placeholder="العنوان التفصيلي..."
                     required
                   />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">خط الطول</label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={formData.lat || ''}
-                      onChange={(e) => setFormData({ ...formData, lat: e.target.value ? parseFloat(e.target.value) : null })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500"
-                      placeholder="Latitude"
-                      disabled
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">خط العرض</label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={formData.lng || ''}
-                      onChange={(e) => setFormData({ ...formData, lng: e.target.value ? parseFloat(e.target.value) : null })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500"
-                      placeholder="Longitude"
-                      disabled
-                    />
-                  </div>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -392,24 +374,24 @@ export default function LocationsManager({ userId }: LocationsManagerProps) {
                     id="is_default"
                     checked={formData.is_default}
                     onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
-                    className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
+                    className="w-5 h-5 rounded-lg text-purple-600 focus:ring-purple-500"
                   />
-                  <label htmlFor="is_default" className="text-sm font-medium">
-                    جعل هذا الموقع افتراضياً
+                  <label htmlFor="is_default" className="text-sm font-bold text-gray-600">
+                    تعيين كموقع افتراضي للتوصيل
                   </label>
                 </div>
 
                 <div className="flex gap-3 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:shadow-lg transition"
+                    className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl font-bold hover:shadow-lg transition"
                   >
                     {editingLocation ? 'حفظ التعديلات' : 'إضافة الموقع'}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowForm(false)}
-                    className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition"
+                    className="flex-1 py-4 bg-gray-100 text-gray-600 rounded-2xl font-bold hover:bg-gray-200 transition"
                   >
                     إلغاء
                   </button>

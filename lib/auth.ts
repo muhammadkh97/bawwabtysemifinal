@@ -5,25 +5,56 @@ import type { AuthChangeEvent, Session, User, AuthError } from '@supabase/supaba
 // TYPE DEFINITIONS
 // ============================================
 
-type DbUser = {
-  id?: string
-  email?: string | null
-  full_name?: string | null
+export type UserRole = 'customer' | 'vendor' | 'driver' | 'admin' | 'restaurant';
+
+export interface DbUser {
+  id: string
+  email: string | null
+  full_name: string | null
+  name?: string | null
+  phone?: string | null
+  role: UserRole
   user_role?: string | null
-  role?: string | null
+  avatar_url?: string | null
+  is_active?: boolean
+  vendor_id?: string | null
+  loyalty_points?: number
+  created_at?: string
+  updated_at?: string
+  total_earned_points?: number
+  referral_code?: string | null
+  date_of_birth?: string | null
+  gender?: 'male' | 'female' | null
+  country?: string | null
+  preferred_currency?: string
 }
 
-const toDbUser = (data: unknown): DbUser | null => (data && typeof data === 'object' ? (data as DbUser) : null)
-
-const resolveRole = (data: unknown) => {
-  const user = toDbUser(data)
-  return user?.role || user?.user_role || 'customer'
+const toDbUser = (data: unknown): DbUser | null => {
+  if (data && typeof data === 'object' && 'id' in data && 'role' in data) {
+    return data as DbUser;
+  }
+  return null;
 }
 
-const ensureUserObject = (data: unknown): DbUser => toDbUser(data) || ({} as DbUser)
+const resolveRole = (data: unknown): UserRole => {
+  const user = data as DbUser | null;
+  const role = user?.role || (user?.user_role as UserRole) || 'customer';
+  return role as UserRole;
+}
+
+const ensureUserObject = (data: unknown): DbUser => {
+  const user = toDbUser(data);
+  if (user) return user;
+  return {
+    id: '',
+    email: '',
+    full_name: '',
+    role: 'customer'
+  };
+}
 
 // User profile update interface
-interface UserProfileUpdate {
+export interface UserProfileUpdate {
   full_name?: string
   phone?: string
   avatar_url?: string
@@ -33,20 +64,20 @@ interface UserProfileUpdate {
 }
 
 // Extended User type with custom properties
-interface ExtendedUser extends User {
-  role?: string
-  full_name?: string
-  user_role?: string
-  [key: string]: unknown
+export interface ExtendedUser extends User {
+  role: UserRole
+  full_name?: string | null
+  user_role?: string | null
+  name?: string | null
 }
 
 // Auth response interfaces
-interface AuthResponse {
+export interface AuthResponse {
   user: ExtendedUser | null
   error: string | null
 }
 
-interface DataResponse<T = unknown> {
+export interface DataResponse<T = unknown> {
   data: T | null
   error: string | null
 }
@@ -73,7 +104,7 @@ export async function signUp(
   userData: {
     name: string
     phone?: string
-    role: string
+    role: UserRole
     // حقول إضافية للبائع
     store_name?: string
     business_type?: string
@@ -84,7 +115,7 @@ export async function signUp(
     driver_license_url?: string
     vehicle_license_url?: string
   }
-) {
+): Promise<AuthResponse> {
   try {
     // إنشاء حساب في Supabase Auth مع البيانات في metadata
     const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -111,10 +142,17 @@ export async function signUp(
       return { user: null, error: authError.message }
     }
 
-    // الـ Trigger في قاعدة البيانات سيقوم بإنشاء السجل في public.users تلقائياً
-    // لا حاجة لإنشائه يدوياً
+    if (!authData.user) {
+        return { user: null, error: 'فشل إنشاء الحساب' }
+    }
 
-    return { user: authData.user, error: null }
+    const extendedUser: ExtendedUser = {
+        ...authData.user,
+        role: userData.role,
+        full_name: userData.name
+    };
+
+    return { user: extendedUser, error: null }
   } catch (error: unknown) {
     console.error('SignUp error:', getAuthErrorMessage(error))
     return { user: null, error: getAuthErrorMessage(error) }
@@ -124,9 +162,8 @@ export async function signUp(
 /**
  * تسجيل الدخول - FIXED
  */
-export async function signIn(email: string, password: string) {
+export async function signIn(email: string, password: string): Promise<AuthResponse> {
   try {
-    
     // تسجيل الدخول في Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email,
@@ -141,13 +178,6 @@ export async function signIn(email: string, password: string) {
     if (!authData.user) {
       console.error('❌ لا توجد بيانات مستخدم في الاستجابة');
       return { user: null, error: 'فشل تسجيل الدخول' }
-    }
-
-
-    // التحقق من Session
-    if (!authData.session) {
-      console.warn('⚠️ تحذير: لم يتم إنشاء Session');
-    } else {
     }
 
     // جلب بيانات المستخدم من public.users باستخدام دالة آمنة
@@ -169,15 +199,14 @@ export async function signIn(email: string, password: string) {
         ...authData.user,
         id: authData.user.id,
         email: authData.user.email,
-        role: directData?.user_role || authData.user.user_metadata?.role || 'customer',
-        name: directData?.full_name || authData.user.user_metadata?.name || authData.user.email?.split('@')[0],
+        role: (directData?.user_role as UserRole) || (authData.user.user_metadata?.role as UserRole) || 'customer',
+        full_name: directData?.full_name || authData.user.user_metadata?.name || authData.user.email?.split('@')[0],
       };
       return { 
         user, 
         error: null 
       }
     }
-
 
     // دمج بيانات auth مع بيانات public.users
     const safeUserData = ensureUserObject(userData)
@@ -203,7 +232,7 @@ export async function signIn(email: string, password: string) {
 /**
  * تسجيل الخروج
  */
-export async function signOut() {
+export async function signOut(): Promise<{ error: string | null }> {
   try {
     const { error } = await supabase.auth.signOut()
     if (error) {
@@ -222,10 +251,8 @@ export async function signOut() {
  */
 export async function getCurrentUser(): Promise<AuthResponse> {
   try {
-    // الحصول على بيانات المستخدم من Supabase Auth
-    // في Supabase v2.45، لا توجد طريقة مباشرة getUser، نستخدم onAuthStateChange
     return new Promise((resolve) => {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
         subscription.unsubscribe();
         
         if (!session?.user) {
@@ -253,7 +280,7 @@ export async function getCurrentUser(): Promise<AuthResponse> {
           resolve({ 
             user: {
               ...user,
-              role: directData?.user_role || 'customer',
+              role: (directData?.user_role as UserRole) || 'customer',
               full_name: directData?.full_name
             } as ExtendedUser, 
             error: null 
@@ -280,13 +307,11 @@ export async function getCurrentUser(): Promise<AuthResponse> {
 /**
  * الحصول على بيانات المستخدم بشكل آمن - FIXED
  */
-export async function getUserData(userId: string) {
+export async function getUserData(userId: string): Promise<DbUser | null> {
   try {
-    // استخدام دالة get_current_user من قاعدة البيانات
-    // هذه الدالة تستخدم SECURITY DEFINER لتجاوز RLS
     const { data, error } = await supabase
       .rpc('get_current_user')
-      .single()
+      .single<DbUser>()
 
     if (error) {
       console.error('Error fetching user data:', error)
@@ -303,7 +328,7 @@ export async function getUserData(userId: string) {
 /**
  * التحقق من صلاحية المستخدم
  */
-export async function checkUserRole(requiredRole: string | string[]) {
+export async function checkUserRole(requiredRole: UserRole | UserRole[]): Promise<boolean> {
   const { user } = await getCurrentUser()
   
   if (!user || !user.role) return false
@@ -321,14 +346,14 @@ export async function checkUserRole(requiredRole: string | string[]) {
 export async function updateUserProfile(
   userId: string, 
   updates: UserProfileUpdate
-): Promise<DataResponse> {
+): Promise<DataResponse<DbUser>> {
   try {
     const { data, error } = await supabase
       .from('users')
       .update(updates)
       .eq('id', userId)
       .select()
-      .single()
+      .single<DbUser>()
 
     if (error) {
       console.error('Update profile error:', error)
@@ -345,7 +370,7 @@ export async function updateUserProfile(
 /**
  * تغيير كلمة المرور
  */
-export async function changePassword(newPassword: string) {
+export async function changePassword(newPassword: string): Promise<DataResponse<User>> {
   try {
     const { data, error } = await supabase.auth.updateUser({
       password: newPassword
@@ -356,7 +381,7 @@ export async function changePassword(newPassword: string) {
       return { data: null, error: error.message }
     }
     
-    return { data, error: null }
+    return { data: data.user, error: null }
   } catch (error: unknown) {
     console.error('Change password error:', getAuthErrorMessage(error))
     return { data: null, error: getAuthErrorMessage(error) }
@@ -366,7 +391,7 @@ export async function changePassword(newPassword: string) {
 /**
  * إعادة تعيين كلمة المرور
  */
-export async function resetPassword(email: string) {
+export async function resetPassword(email: string): Promise<DataResponse<unknown>> {
   try {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/reset-password`,
@@ -387,7 +412,7 @@ export async function resetPassword(email: string) {
 /**
  * تسجيل الدخول باستخدام OAuth (Google, Facebook, Apple)
  */
-export async function signInWithOAuth(provider: 'google' | 'facebook' | 'apple') {
+export async function signInWithOAuth(provider: 'google' | 'facebook' | 'apple'): Promise<DataResponse<unknown>> {
   try {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
@@ -411,20 +436,20 @@ export async function signInWithOAuth(provider: 'google' | 'facebook' | 'apple')
 /**
  * تسجيل الدخول باستخدام Google
  */
-export async function signInWithGoogle() {
+export async function signInWithGoogle(): Promise<DataResponse<unknown>> {
   return signInWithOAuth('google')
 }
 
 /**
  * تسجيل الدخول باستخدام Facebook
  */
-export async function signInWithFacebook() {
+export async function signInWithFacebook(): Promise<DataResponse<unknown>> {
   return signInWithOAuth('facebook')
 }
 
 /**
  * تسجيل الدخول باستخدام Apple
  */
-export async function signInWithApple() {
+export async function signInWithApple(): Promise<DataResponse<unknown>> {
   return signInWithOAuth('apple')
 }

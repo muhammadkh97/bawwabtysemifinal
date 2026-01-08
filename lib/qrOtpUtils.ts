@@ -26,6 +26,17 @@ export interface OTPData {
   expiresAt: Date
 }
 
+export interface VerificationResponse {
+  success: boolean
+  message?: string
+}
+
+export interface RPCResponse {
+  qr_code: string
+  otp: string
+  expires_at: string
+}
+
 /**
  * Generate pickup codes (QR + OTP) for driver to pick up from vendor
  */
@@ -41,10 +52,13 @@ export async function generatePickupCodes(orderId: string): Promise<{
 
     if (error) throw error
 
+    const result = data as RPCResponse[];
+    if (!result || result.length === 0) return null;
+
     return {
-      qrCode: data[0].qr_code,
-      otp: data[0].otp,
-      expiresAt: new Date(data[0].expires_at),
+      qrCode: result[0].qr_code,
+      otp: result[0].otp,
+      expiresAt: new Date(result[0].expires_at),
     }
   } catch (error) {
     console.error('Error generating pickup codes:', error)
@@ -67,10 +81,13 @@ export async function generateDeliveryCodes(orderId: string): Promise<{
 
     if (error) throw error
 
+    const result = data as RPCResponse[];
+    if (!result || result.length === 0) return null;
+
     return {
-      qrCode: data[0].qr_code,
-      otp: data[0].otp,
-      expiresAt: new Date(data[0].expires_at),
+      qrCode: result[0].qr_code,
+      otp: result[0].otp,
+      expiresAt: new Date(result[0].expires_at),
     }
   } catch (error) {
     console.error('Error generating delivery codes:', error)
@@ -85,7 +102,7 @@ export async function verifyPickupWithOTP(
   orderId: string,
   otp: string,
   driverId: string
-): Promise<{ success: boolean; message?: string }> {
+): Promise<VerificationResponse> {
   try {
     const { data, error } = await supabase.rpc('verify_pickup_otp', {
       order_uuid: orderId,
@@ -95,8 +112,7 @@ export async function verifyPickupWithOTP(
 
     if (error) throw error
     
-    // SQL function returns JSONB with {success, message}
-    return data || { success: false, message: 'فشل التحقق' }
+    return (data as VerificationResponse) || { success: false, message: 'فشل التحقق' }
   } catch (error: unknown) {
     console.error('Error verifying pickup OTP:', error)
     return { success: false, message: getErrorMessage(error) }
@@ -112,7 +128,7 @@ export async function verifyDeliveryWithOTP(
   customerId: string,
   signature?: string,
   photo?: string
-): Promise<{ success: boolean; message?: string }> {
+): Promise<VerificationResponse> {
   try {
     const { data, error } = await supabase.rpc('verify_delivery_otp', {
       order_uuid: orderId,
@@ -124,8 +140,7 @@ export async function verifyDeliveryWithOTP(
 
     if (error) throw error
     
-    // SQL function returns JSONB with {success, message}
-    return data || { success: false, message: 'فشل التحقق' }
+    return (data as VerificationResponse) || { success: false, message: 'فشل التحقق' }
   } catch (error: unknown) {
     console.error('Error verifying delivery OTP:', error)
     return { success: false, message: getErrorMessage(error) }
@@ -138,7 +153,7 @@ export async function verifyDeliveryWithOTP(
 export async function verifyPickupWithQR(
   qrData: string,
   driverId: string
-): Promise<{ success: boolean; message?: string }> {
+): Promise<VerificationResponse> {
   try {
     const parsed: QRCodeData = JSON.parse(qrData)
 
@@ -161,7 +176,7 @@ export async function verifyDeliveryWithQR(
   customerId: string,
   signature?: string,
   photo?: string
-): Promise<{ success: boolean; message?: string }> {
+): Promise<VerificationResponse> {
   try {
     const parsed: QRCodeData = JSON.parse(qrData)
 
@@ -218,7 +233,7 @@ export function getOTPTimeRemaining(expiresAt: Date): string {
 /**
  * Get handoff history for an order
  */
-export async function getOrderHandoffs(orderId: string) {
+export async function getOrderHandoffs(orderId: string): Promise<any[]> {
   try {
     const { data, error } = await supabase
       .from('order_handoffs')
@@ -231,7 +246,7 @@ export async function getOrderHandoffs(orderId: string) {
       .order('created_at', { ascending: false })
 
     if (error) throw error
-    return data
+    return data || []
   } catch (error) {
     console.error('Error fetching handoffs:', error)
     return []
@@ -291,7 +306,7 @@ export function validateQRData(qrData: string): {
       return { valid: false, error: 'رمز OTP غير صالح' }
     }
 
-    return { valid: true, data: parsed }
+    return { valid: true, data: parsed as QRCodeData }
   } catch (error) {
     return { valid: false, error: 'بيانات QR تالفة' }
   }
