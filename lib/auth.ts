@@ -1,4 +1,9 @@
 import { supabase } from './supabase'
+import type { AuthChangeEvent, Session, User, AuthError } from '@supabase/supabase-js'
+
+// ============================================
+// TYPE DEFINITIONS
+// ============================================
 
 type DbUser = {
   id?: string
@@ -16,6 +21,36 @@ const resolveRole = (data: unknown) => {
 }
 
 const ensureUserObject = (data: unknown): DbUser => toDbUser(data) || ({} as DbUser)
+
+// User profile update interface
+interface UserProfileUpdate {
+  full_name?: string
+  phone?: string
+  avatar_url?: string
+  address?: string
+  preferred_currency?: string
+  language?: string
+}
+
+// Auth response interfaces
+interface AuthResponse<T = User> {
+  user: T | null
+  error: string | null
+}
+
+interface DataResponse<T = unknown> {
+  data: T | null
+  error: string | null
+}
+
+// Error helper function
+function getAuthErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as AuthError).message)
+  }
+  return 'حدث خطأ غير متوقع'
+}
 
 // ============================================
 // AUTH FUNCTIONS - FIXED VERSION
@@ -72,9 +107,9 @@ export async function signUp(
     // لا حاجة لإنشائه يدوياً
 
     return { user: authData.user, error: null }
-  } catch (error: any) {
-    console.error('SignUp error:', error)
-    return { user: null, error: error.message || 'حدث خطأ أثناء التسجيل' }
+  } catch (error: unknown) {
+    console.error('SignUp error:', getAuthErrorMessage(error))
+    return { user: null, error: getAuthErrorMessage(error) }
   }
 }
 
@@ -149,9 +184,9 @@ export async function signIn(email: string, password: string) {
       user, 
       error: null 
     }
-  } catch (error: any) {
-    console.error('❌ خطأ غير متوقع في signIn:', error);
-    return { user: null, error: error.message || 'حدث خطأ أثناء تسجيل الدخول' }
+  } catch (error: unknown) {
+    console.error('❌ خطأ غير متوقع في signIn:', getAuthErrorMessage(error));
+    return { user: null, error: getAuthErrorMessage(error) }
   }
 }
 
@@ -166,21 +201,21 @@ export async function signOut() {
       return { error: error.message }
     }
     return { error: null }
-  } catch (error: any) {
-    console.error('SignOut error:', error)
-    return { error: error.message || 'حدث خطأ أثناء تسجيل الخروج' }
+  } catch (error: unknown) {
+    console.error('SignOut error:', getAuthErrorMessage(error))
+    return { error: getAuthErrorMessage(error) }
   }
 }
 
 /**
  * الحصول على المستخدم الحالي - FIXED
  */
-export async function getCurrentUser(): Promise<{ user: any | null; error: string | null }> {
+export async function getCurrentUser(): Promise<AuthResponse> {
   try {
     // الحصول على بيانات المستخدم من Supabase Auth
     // في Supabase v2.45، لا توجد طريقة مباشرة getUser، نستخدم onAuthStateChange
     return new Promise((resolve) => {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
         subscription.unsubscribe();
         
         if (!session?.user) {
@@ -226,9 +261,9 @@ export async function getCurrentUser(): Promise<{ user: any | null; error: strin
         });
       });
     });
-  } catch (error: any) {
-    console.error('GetCurrentUser error:', error)
-    return { user: null, error: error.message || 'حدث خطأ' }
+  } catch (error: unknown) {
+    console.error('GetCurrentUser error:', getAuthErrorMessage(error))
+    return { user: null, error: getAuthErrorMessage(error) }
   }
 }
 
@@ -273,7 +308,10 @@ export async function checkUserRole(requiredRole: string | string[]) {
 /**
  * تحديث ملف المستخدم
  */
-export async function updateUserProfile(userId: string, updates: any) {
+export async function updateUserProfile(
+  userId: string, 
+  updates: UserProfileUpdate
+): Promise<DataResponse> {
   try {
     const { data, error } = await supabase
       .from('users')
@@ -288,9 +326,9 @@ export async function updateUserProfile(userId: string, updates: any) {
     }
     
     return { data, error: null }
-  } catch (error: any) {
-    console.error('Update profile error:', error)
-    return { data: null, error: error.message || 'حدث خطأ أثناء التحديث' }
+  } catch (error: unknown) {
+    console.error('Update profile error:', getAuthErrorMessage(error))
+    return { data: null, error: getAuthErrorMessage(error) }
   }
 }
 
@@ -309,9 +347,9 @@ export async function changePassword(newPassword: string) {
     }
     
     return { data, error: null }
-  } catch (error: any) {
-    console.error('Change password error:', error)
-    return { data: null, error: error.message || 'حدث خطأ أثناء تغيير كلمة المرور' }
+  } catch (error: unknown) {
+    console.error('Change password error:', getAuthErrorMessage(error))
+    return { data: null, error: getAuthErrorMessage(error) }
   }
 }
 
@@ -330,9 +368,9 @@ export async function resetPassword(email: string) {
     }
     
     return { data, error: null }
-  } catch (error: any) {
-    console.error('Reset password error:', error)
-    return { data: null, error: error.message || 'حدث خطأ أثناء إعادة تعيين كلمة المرور' }
+  } catch (error: unknown) {
+    console.error('Reset password error:', getAuthErrorMessage(error))
+    return { data: null, error: getAuthErrorMessage(error) }
   }
 }
 
@@ -354,9 +392,9 @@ export async function signInWithOAuth(provider: 'google' | 'facebook' | 'apple')
     }
     
     return { data, error: null }
-  } catch (error: any) {
-    console.error('OAuth error:', error)
-    return { data: null, error: error.message || 'حدث خطأ أثناء تسجيل الدخول' }
+  } catch (error: unknown) {
+    console.error('OAuth error:', getAuthErrorMessage(error))
+    return { data: null, error: getAuthErrorMessage(error) }
   }
 }
 
