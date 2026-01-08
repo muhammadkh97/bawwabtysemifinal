@@ -604,9 +604,6 @@ export default function PagesManagementPage() {
                         <option value="vendors">البائعون</option>
                         <option value="deals">العروض</option>
                         <option value="about">من نحن</option>
-                      </select>
-                    </div>
-                  </div>
                         <option value="contact">اتصل بنا</option>
                       </select>
                     </div>
