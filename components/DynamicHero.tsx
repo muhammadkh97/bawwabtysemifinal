@@ -9,17 +9,20 @@ import { ChevronLeft, ChevronRight, Sparkles, TrendingUp, Zap } from 'lucide-rea
 interface HeroSlide {
   id: string;
   title: string;
-  title_ar: string;
-  description: string;
-  description_ar: string;
-  image_url: string;
-  button_text: string;
-  button_text_ar: string;
-  button_link: string;
-  background_gradient: string;
-  is_active: boolean;
-  display_order: number;
-  created_at: string;
+  title_ar?: string;
+  subtitle?: string;
+  subtitle_ar?: string;
+  image_url?: string;
+  mobile_image_url?: string;
+  button_text?: string;
+  button_text_ar?: string;
+  button_link?: string;
+  background_color?: string;
+  text_color?: string;
+  is_active?: boolean;
+  display_order?: number;
+  page?: string;
+  created_at?: string;
 }
 
 export default function DynamicHero() {
@@ -45,9 +48,10 @@ export default function DynamicHero() {
   const fetchHeroSlides = async () => {
     try {
       const { data, error } = await supabase
-        .from('hero_slides')
+        .from('hero_sections')
         .select('*')
         .eq('is_active', true)
+        .eq('page', 'home')
         .order('display_order', { ascending: true });
 
       if (error) throw error;
@@ -72,45 +76,51 @@ export default function DynamicHero() {
       id: '1',
       title: 'Welcome to Bawwabty',
       title_ar: 'مرحباً بك في بوابتي 🛍️',
-      description: 'Shop thousands of high-quality products at the best prices with fast and secure shipping',
-      description_ar: 'تسوق من آلاف المنتجات عالية الجودة بأفضل الأسعار مع شحن سريع وآمن',
+      subtitle: 'Shop thousands of high-quality products at the best prices with fast and secure shipping',
+      subtitle_ar: 'تسوق من آلاف المنتجات عالية الجودة بأفضل الأسعار مع شحن سريع وآمن',
       image_url: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200',
       button_text: 'Shop Now',
       button_text_ar: 'تسوق الآن',
       button_link: '/products',
-      background_gradient: 'linear-gradient(90deg, #6236FF 0%, #B621FE 50%, #FF219D 100%)',
+      background_color: '#6236FF',
+      text_color: '#FFFFFF',
       is_active: true,
       display_order: 1,
+      page: 'home',
       created_at: new Date().toISOString(),
     },
     {
       id: '2',
       title: 'Exclusive Deals',
       title_ar: 'عروض حصرية 🔥',
-      description: 'Discounts up to 70% on selected products',
-      description_ar: 'خصومات تصل إلى 70% على منتجات مختارة',
+      subtitle: 'Discounts up to 70% on selected products',
+      subtitle_ar: 'خصومات تصل إلى 70% على منتجات مختارة',
       image_url: 'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?w=1200',
       button_text: 'View Deals',
       button_text_ar: 'اكتشف العروض',
       button_link: '/deals',
-      background_gradient: 'linear-gradient(135deg, #FF6B6B 0%, #FFD93D 50%, #6BCB77 100%)',
+      background_color: '#FF6B6B',
+      text_color: '#FFFFFF',
       is_active: true,
       display_order: 2,
+      page: 'home',
       created_at: new Date().toISOString(),
     },
     {
       id: '3',
       title: 'Premium Quality',
       title_ar: 'جودة فاخرة ✨',
-      description: 'Authentic and certified products guaranteed',
-      description_ar: 'منتجات أصلية ومعتمدة 100%',
+      subtitle: 'Authentic and certified products guaranteed',
+      subtitle_ar: 'منتجات أصلية ومعتمدة 100%',
       image_url: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200',
       button_text: 'Discover',
       button_text_ar: 'اكتشف المزيد',
       button_link: '/categories',
-      background_gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background_color: '#667eea',
+      text_color: '#FFFFFF',
       is_active: true,
       display_order: 3,
+      page: 'home',
       created_at: new Date().toISOString(),
     },
   ];
@@ -150,7 +160,10 @@ export default function DynamicHero() {
   return (
     <section 
       className="relative overflow-hidden py-8 sm:py-12 md:py-16 lg:py-20 transition-all duration-1000"
-      style={{ background: currentSlideData.background_gradient }}
+      style={{ 
+        backgroundColor: currentSlideData.background_color || '#FF6B35',
+        color: currentSlideData.text_color || '#FFFFFF'
+      }}
     >
       {/* خلفية متحركة */}
       <div className="absolute inset-0 opacity-20">
@@ -186,19 +199,19 @@ export default function DynamicHero() {
             </div>
 
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-3 sm:mb-4 md:mb-6 leading-tight animate-fade-in">
-              {currentSlideData.title_ar}
+              {currentSlideData.title_ar || currentSlideData.title}
             </h1>
             
             <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-white/90 mb-4 sm:mb-6 md:mb-8 leading-relaxed animate-fade-in" style={{ animationDelay: '0.2s' }}>
-              {currentSlideData.description_ar}
+              {currentSlideData.subtitle_ar || currentSlideData.subtitle}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4 animate-fade-in" style={{ animationDelay: '0.4s' }}>
               <Link
-                href={currentSlideData.button_link}
+                href={currentSlideData.button_link || '/products'}
                 className="group px-5 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 bg-white text-purple-600 rounded-lg sm:rounded-xl hover:bg-yellow-300 hover:text-purple-700 transition-all font-bold text-sm sm:text-base md:text-lg shadow-2xl transform hover:scale-105 text-center flex items-center justify-center gap-2"
               >
-                <span>{currentSlideData.button_text_ar}</span>
+                <span>{currentSlideData.button_text_ar || currentSlideData.button_text || 'تسوق الآن'}</span>
                 <ChevronRight className="w-5 h-5 group-hover:translate-x-[-4px] transition-transform" />
               </Link>
               
@@ -236,8 +249,8 @@ export default function DynamicHero() {
           <div className="flex-1 hidden xl:block">
             <div className="relative w-full h-[400px] rounded-3xl overflow-hidden shadow-2xl">
               <Image
-                src={currentSlideData.image_url}
-                alt={currentSlideData.title_ar}
+                src={currentSlideData.image_url || 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200'}
+                alt={currentSlideData.title_ar || currentSlideData.title}
                 fill
                 className="object-cover transition-transform duration-700 hover:scale-110"
                 priority
