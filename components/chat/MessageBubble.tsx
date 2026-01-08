@@ -24,9 +24,9 @@ interface MessageBubbleProps {
   isMe: boolean;
   showRole?: boolean;
   replyToMessage?: Message | null;
-  onEdit?: (messageId: string) => void;
-  onDelete?: (messageId: string) => void;
-  onReply?: (message: Message) => void;
+  onEdit?: (messageId: string, newContent: string) => void | Promise<void>;
+  onDelete?: (messageId: string) => void | Promise<void>;
+  onReply?: (messageId: string) => void | Promise<void>;
 }
 
 export default function MessageBubble({

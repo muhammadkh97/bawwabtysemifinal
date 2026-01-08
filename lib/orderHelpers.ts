@@ -7,6 +7,16 @@
 
 import { supabase } from './supabase';
 
+// واجهة بيانات الطلب الكاملة
+interface OrderData {
+  id: string;
+  customer_id: string;
+  vendor_id?: string;
+  status: string;
+  total_amount: number;
+  [key: string]: any;
+}
+
 // واجهة بيانات تحديث الطلب
 interface OrderUpdateData {
   status: OrderStatus;

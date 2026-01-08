@@ -30,7 +30,7 @@ interface BadgeCounts {
 interface NavItem {
   title: string
   href: string
-  icon: Icon
+  icon: React.ComponentType<{ className?: string }>
   badge?: number
   badgeKey?: string
 }

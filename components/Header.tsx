@@ -99,7 +99,7 @@ export default function Header() {
         })
       );
 
-      setCategories(categoriesWithSubs);
+      setCategories(categoriesWithSubs as Category[]);
     } catch (error) {
       console.error('❌ خطأ في جلب التصنيفات:', error);
       setCategories([]);
