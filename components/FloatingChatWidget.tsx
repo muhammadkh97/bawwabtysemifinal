@@ -203,7 +203,7 @@ export default function FloatingChatWidget() {
           // Save position to localStorage
           const newPosition = { x: info.point.x, y: info.point.y };
           setPosition(newPosition);
-          (typeof window !== 'undefined' ? localStorage.setItem('floatingChatPosition', JSON.stringify(newPosition) : null));
+          (typeof window !== 'undefined' ? localStorage.setItem('floatingChatPosition', JSON.stringify(newPosition)) : null);
         }}
         className="fixed z-50"
         style={{

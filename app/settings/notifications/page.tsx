@@ -71,7 +71,7 @@ export default function NotificationSettingsPage() {
 
   const saveSettings = (newSettings: NotificationSettings) => {
     setSettings(newSettings);
-    (typeof window !== 'undefined' ? localStorage.setItem('notificationSettings', JSON.stringify(newSettings) : null));
+    (typeof window !== 'undefined' ? localStorage.setItem('notificationSettings', JSON.stringify(newSettings)) : null);
     showToast('تم حفظ الإعدادات بنجاح', 'success');
   };
 
