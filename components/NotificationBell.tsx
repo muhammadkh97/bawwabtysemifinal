@@ -268,7 +268,7 @@ export default function NotificationBell() {
                         onClick={() => {
                           markAsRead(notification.id);
                           if (notification.link) {
-                            (typeof window !== 'undefined' ? window.location.href : undefined) = notification.link;
+                            if (typeof window !== 'undefined') window.location.href = notification.link;
                           }
                         }}
                       >

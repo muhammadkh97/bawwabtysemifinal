@@ -543,7 +543,7 @@ export default function CheckoutPage() {
       alert(`✅ تم إتمام الطلب بنجاح! 🎉\nرقم الطلب: ${orderNumber}\n${discount > 0 ? `وفرت ${discount.toFixed(2)} ₪ 💰` : ''}`);
       
       setTimeout(() => {
-        (typeof window !== 'undefined' ? window.location.href : undefined) = '/orders';
+        if (typeof window !== 'undefined') window.location.href = '/orders';
       }, 1500);
 
     } catch (error) {

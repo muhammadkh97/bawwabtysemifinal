@@ -13,7 +13,7 @@ import {
   updateSingleRate
 } from '@/lib/exchange-rates';
 import toast from 'react-hot-toast';
-import { SUPPORTED_CURRENCIES, CurrencyCode } from '@/contexts/CurrencyContextDynamic';
+import { SUPPORTED_CURRENCIES, CurrencyCode } from '@/contexts/CurrencyContext';
 
 interface RateInfo {
   currency: string;

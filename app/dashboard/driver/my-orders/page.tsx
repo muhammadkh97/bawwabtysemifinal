@@ -213,7 +213,7 @@ export default function MyOrdersPage() {
                   {/* Pickup from Vendor Button */}
                   {order.status === 'accepted' && (
                     <button
-                      onClick={() => (typeof window !== 'undefined' ? window.location.href : undefined) = `/dashboard/driver/my-orders/${order.id}/pickup-scan`}
+                      onClick={() => { if (typeof window !== 'undefined') window.location.href = `/dashboard/driver/my-orders/${order.id}/pickup-scan`; }}
                       className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-lg mb-2"
                     >
                       📸 استلام الطلب من البائع
@@ -223,7 +223,7 @@ export default function MyOrdersPage() {
                   {/* Show Delivery QR for Customer */}
                   {order.status === 'picked_up' && (
                     <button
-                      onClick={() => (typeof window !== 'undefined' ? window.location.href : undefined) = `/dashboard/driver/my-orders/${order.id}/delivery-qr`}
+                      onClick={() => { if (typeof window !== 'undefined') window.location.href = `/dashboard/driver/my-orders/${order.id}/delivery-qr`; }}
                       className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-lg mb-2"
                     >
                       🎯 عرض كود التسليم للعميل
