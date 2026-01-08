@@ -17,7 +17,7 @@ export interface GeoPoint {
  */
 export interface GeoLineString {
   type: 'LineString';
-  coordinates: Array<[number, number]>;
+  coordinates: [number, number][];
 }
 
 /**
@@ -25,7 +25,7 @@ export interface GeoLineString {
  */
 export interface GeoPolygon {
   type: 'Polygon';
-  coordinates: Array<Array<[number, number]>>;
+  coordinates: [number, number][][];
 }
 
 /**
@@ -89,13 +89,16 @@ export function geoPointToCoordinates(point: GeoPoint): Coordinates {
  * التحقق من أن القيمة هي نقطة GeoJSON
  */
 export function isGeoPoint(value: unknown): value is GeoPoint {
+  const point = value as GeoPoint;
   return (
     typeof value === 'object' &&
     value !== null &&
     'type' in value &&
     'coordinates' in value &&
-    (value as GeoPoint).type === 'Point' &&
-    Array.isArray((value as GeoPoint).coordinates) &&
-    (value as GeoPoint).coordinates.length === 2
+    point.type === 'Point' &&
+    point.coordinates &&
+    point.coordinates.length === 2 &&
+    typeof point.coordinates[0] === 'number' &&
+    typeof point.coordinates[1] === 'number'
   );
 }

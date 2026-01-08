@@ -55,7 +55,7 @@ export interface MessageEditHistory {
 
 export interface MessageMetadata {
   mentions?: string[];
-  reactions?: Record<string, string[]>; // emoji -> user_ids
+  reactions?: { [emoji: string]: string[] }; // emoji -> user_ids
   [key: string]: unknown;
 }
 

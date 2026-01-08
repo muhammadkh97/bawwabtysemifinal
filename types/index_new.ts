@@ -91,8 +91,8 @@ export interface Product {
   is_active: boolean;
   has_variants: boolean;
   variants?: ProductVariant[];
-  attributes?: Record<string, any>;
-  metadata?: Record<string, any>; // For restaurant add-ons/modifiers
+  attributes?: { [key: string]: unknown };
+  metadata?: { [key: string]: unknown }; // For restaurant add-ons/modifiers
   rating: number;
   total_reviews: number;
   total_sales: number;
@@ -106,7 +106,7 @@ export interface ProductVariant {
   sku?: string;
   price: number;
   stock: number;
-  attributes?: Record<string, string>; // e.g., { "color": "red", "size": "XL" }
+  attributes?: { [key: string]: string }; // e.g., { "color": "red", "size": "XL" }
 }
 
 export interface Order {
@@ -203,7 +203,7 @@ export interface Notification {
   title: string;
   message: string;
   type?: string;
-  data?: Record<string, any>;
+  data?: { [key: string]: unknown };
   is_read: boolean;
   created_at: string;
 }
@@ -254,8 +254,8 @@ export interface ProductFormData {
   images: string[];
   has_variants: boolean;
   variants?: ProductVariant[];
-  attributes?: Record<string, any>;
-  metadata?: Record<string, any>;
+  attributes?: { [key: string]: unknown };
+  metadata?: { [key: string]: unknown };
 }
 
 export interface OrderFormData {
