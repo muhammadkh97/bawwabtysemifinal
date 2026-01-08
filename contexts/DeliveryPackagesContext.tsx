@@ -4,6 +4,15 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
 
+// دالة مساعدة لاستخراج رسائل الأخطاء
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as { message: unknown }).message);
+  }
+  return 'حدث خطأ غير متوقع';
+}
+
 // =====================================================
 // 📦 Types & Interfaces
 // =====================================================
@@ -252,7 +261,7 @@ export function DeliveryPackagesProvider({ children }: { children: React.ReactNo
         await fetchPackageOrders(pkg.id);
       }
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching packages:', error);
       toast.error('فشل في تحميل البكيجات');
     } finally {
@@ -448,9 +457,9 @@ export function DeliveryPackagesProvider({ children }: { children: React.ReactNo
       await fetchPackages();
       
       return await getPackageById(batchId);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating package:', error);
-      toast.error('فشل في إنشاء البكج: ' + (error.message || ''));
+      toast.error('فشل في إنشاء البكج: ' + getErrorMessage(error));
       return null;
     }
   };

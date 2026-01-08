@@ -6,6 +6,15 @@ import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 
+// دالة مساعدة لاستخراج رسائل الأخطاء
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as { message: unknown }).message);
+  }
+  return 'حدث خطأ غير متوقع';
+}
+
 interface BulkUploadProps {
   vendorId: string;
   onSuccess: () => void;
@@ -168,9 +177,9 @@ export default function BulkUploadModal({ vendorId, onSuccess, onClose }: BulkUp
           } else {
             successCount++;
           }
-        } catch (err: any) {
+        } catch (err: unknown) {
           failedCount++;
-          errors.push(`${product.name}: ${err.message}`);
+          errors.push(`${product.name}: ${getErrorMessage(err)}`);
         }
 
         setProgress(Math.round(((i + 1) / totalProducts) * 100));
@@ -187,8 +196,8 @@ export default function BulkUploadModal({ vendorId, onSuccess, onClose }: BulkUp
       if (failedCount > 0) {
         toast.error(`⚠️ فشل رفع ${failedCount} منتج`);
       }
-    } catch (error: any) {
-      toast.error(`خطأ: ${error.message}`);
+    } catch (error: unknown) {
+      toast.error(`خطأ: ${getErrorMessage(error)}`);
     } finally {
       setUploading(false);
     }

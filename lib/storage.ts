@@ -1,5 +1,14 @@
 import { supabase } from './supabase';
 
+// دالة مساعدة لاستخراج رسائل الأخطاء
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as { message: unknown }).message);
+  }
+  return 'An unexpected error occurred';
+}
+
 // ============================================
 // Storage Helper Functions
 // وظائف مساعدة للتخزين والصور
@@ -82,11 +91,11 @@ export async function uploadFile(file: File, options: UploadOptions) {
       url: publicUrl,
       fullPath: filePath,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Upload error:', error);
     return {
       success: false,
-      error: error.message,
+      error: getErrorMessage(error),
     };
   }
 }
@@ -140,10 +149,10 @@ export async function getSignedUrl(
       success: true,
       url: data.signedUrl,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message,
+      error: getErrorMessage(error),
     };
   }
 }
@@ -161,10 +170,10 @@ export async function downloadFile(bucket: string, path: string) {
       success: true,
       data,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message,
+      error: getErrorMessage(error),
     };
   }
 }
@@ -183,10 +192,10 @@ export async function deleteFile(bucket: string, path: string) {
     if (error) throw error;
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message,
+      error: getErrorMessage(error),
     };
   }
 }
@@ -201,10 +210,10 @@ export async function deleteMultipleFiles(bucket: string, paths: string[]) {
     if (error) throw error;
 
     return { success: true, deletedCount: paths.length };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message,
+      error: getErrorMessage(error),
     };
   }
 }
@@ -232,10 +241,10 @@ export async function listFiles(bucket: string, folder?: string) {
       success: true,
       files: data,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message,
+      error: getErrorMessage(error),
     };
   }
 }

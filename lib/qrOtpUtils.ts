@@ -5,6 +5,15 @@
 
 import { supabase } from './supabase'
 
+// دالة مساعدة لاستخراج رسائل الأخطاء
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as { message: unknown }).message);
+  }
+  return 'حدث خطأ غير متوقع';
+}
+
 export interface QRCodeData {
   type: 'pickup' | 'delivery'
   order_id: string
@@ -88,9 +97,9 @@ export async function verifyPickupWithOTP(
     
     // SQL function returns JSONB with {success, message}
     return data || { success: false, message: 'فشل التحقق' }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error verifying pickup OTP:', error)
-    return { success: false, message: error.message || 'حدث خطأ' }
+    return { success: false, message: getErrorMessage(error) }
   }
 }
 
@@ -117,9 +126,9 @@ export async function verifyDeliveryWithOTP(
     
     // SQL function returns JSONB with {success, message}
     return data || { success: false, message: 'فشل التحقق' }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error verifying delivery OTP:', error)
-    return { success: false, message: error.message || 'حدث خطأ' }
+    return { success: false, message: getErrorMessage(error) }
   }
 }
 
@@ -138,9 +147,9 @@ export async function verifyPickupWithQR(
     }
 
     return await verifyPickupWithOTP(parsed.order_id, parsed.otp, driverId)
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error verifying pickup QR:', error)
-    return { success: false, message: error.message || 'رمز QR غير صالح' }
+    return { success: false, message: 'رمز QR غير صالح' }
   }
 }
 
@@ -167,9 +176,9 @@ export async function verifyDeliveryWithQR(
       signature,
       photo
     )
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error verifying delivery QR:', error)
-    return { success: false, message: error.message || 'رمز QR غير صالح' }
+    return { success: false, message: 'رمز QR غير صالح' }
   }
 }
 

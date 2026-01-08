@@ -7,6 +7,37 @@
 
 import { supabase } from './supabase';
 
+// واجهة بيانات تحديث الطلب
+interface OrderUpdateData {
+  status: OrderStatus;
+  updated_at: string;
+  confirmed_at?: string;
+  processing_at?: string;
+  ready_at?: string;
+  picked_up_at?: string;
+  shipped_at?: string;
+  out_for_delivery_at?: string;
+  delivered_at?: string;
+  cancelled_at?: string;
+  refunded_at?: string;
+  pickup_qr_code?: string;
+  pickup_otp?: string;
+  pickup_otp_expires_at?: string;
+  delivery_qr_code?: string;
+  delivery_otp?: string;
+  delivery_otp_expires_at?: string;
+  [key: string]: string | undefined;
+}
+
+// دالة مساعدة لاستخراج رسائل الأخطاء
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as { message: unknown }).message);
+  }
+  return 'حدث خطأ غير متوقع';
+}
+
 // أنواع الحالات المسموح بها
 export type OrderStatus = 
   | 'pending'
@@ -137,7 +168,7 @@ export async function updateOrderStatus(
     }
 
     // 3. تحضير البيانات للتحديث
-    const updateData: any = {
+    const updateData: OrderUpdateData = {
       status: newStatus,
       updated_at: new Date().toISOString(),
     };
@@ -187,9 +218,9 @@ export async function updateOrderStatus(
     }
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in updateOrderStatus:', error);
-    return { success: false, error: error.message || 'حدث خطأ غير متوقع' };
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
@@ -261,9 +292,9 @@ export async function acceptOrderByDriver(
     await sendDriverAcceptanceNotifications(orderId, order);
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in acceptOrderByDriver:', error);
-    return { success: false, error: error.message || 'حدث خطأ غير متوقع' };
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
@@ -330,9 +361,9 @@ export async function verifyPickupCode(
       .eq('driver_id', driverId);
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in verifyPickupCode:', error);
-    return { success: false, error: error.message || 'حدث خطأ غير متوقع' };
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
@@ -402,9 +433,9 @@ export async function verifyDeliveryCode(
     await processDeliveryCompletion(orderId, order);
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in verifyDeliveryCode:', error);
-    return { success: false, error: error.message || 'حدث خطأ غير متوقع' };
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
