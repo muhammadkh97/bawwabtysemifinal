@@ -15,7 +15,7 @@ import { useWishlist } from '@/contexts/WishlistContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
 
-interface Category {
+interface CategoryWithSubs {
   id: string;
   name: string;
   name_ar: string;
@@ -34,7 +34,7 @@ export default function Header() {
   const { user, userRole, loading: isLoading, isVendorStaff, isRestaurantStaff } = useAuth(); // استخدام AuthContext
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [unreadChatsCount, setUnreadChatsCount] = useState(0);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<CategoryWithSubs[]>([]);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const router = useRouter();
@@ -83,8 +83,8 @@ export default function Header() {
         icon?: string;
       }
 
-      const categoriesWithSubs: Category[] = await Promise.all(
-        (mainCategories || []).map(async (category: any): Promise<Category> => {
+      const categoriesWithSubs: CategoryWithSubs[] = await Promise.all(
+        (mainCategories || []).map(async (category: any): Promise<CategoryWithSubs> => {
           const { data: subs } = await supabase
             .from('categories')
             .select('id, name, name_ar, slug, icon')
