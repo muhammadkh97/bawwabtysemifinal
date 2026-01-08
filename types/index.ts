@@ -444,3 +444,7 @@ export interface DriverLocation {
   lat: number;
   lng: number;
 }
+
+// ============ Re-export new type modules ============
+export * from './geo';
+export * from './chat';
