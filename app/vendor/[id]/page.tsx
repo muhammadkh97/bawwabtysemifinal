@@ -18,13 +18,13 @@ import { useRestaurantCart } from '@/contexts/RestaurantCartContext';
 
 interface Vendor {
   id: string;
-  shop_name: string;
-  shop_name_ar: string;
+  name: string;
+  name_ar: string;
   shop_logo: string;
   shop_banner: string;
   shop_description: string;
   shop_description_ar: string;
-  vendor_type: 'shop' | 'restaurant';
+  business_type: 'shop' | 'restaurant';
   rating: number;
   reviews_count: number;
   latitude: number;
@@ -85,7 +85,7 @@ export default function VendorDetailsPage() {
 
       if (error) throw error;
       setVendor(data);
-      setIsRestaurant(data?.vendor_type === 'restaurant');
+      setIsRestaurant(data?.business_type === 'restaurant');
     } catch (error) {
       console.error('Error fetching vendor:', error);
       router.push('/404');
@@ -133,7 +133,7 @@ export default function VendorDetailsPage() {
   // ✅ دالة لزر المشاركة
   const handleShare = async () => {
     const url = window.location.href;
-    const title = vendor?.shop_name_ar || vendor?.shop_name;
+    const title = vendor?.name_ar || vendor?.name;
     
     if (navigator.share) {
       try {
@@ -195,7 +195,7 @@ export default function VendorDetailsPage() {
         {vendor.shop_banner ? (
           <img 
             src={vendor.shop_banner} 
-            alt={vendor.shop_name_ar}
+            alt={vendor.name_ar}
             className="w-full h-full object-cover"
           />
         ) : (
@@ -217,7 +217,7 @@ export default function VendorDetailsPage() {
                   {vendor.shop_logo ? (
                     <img 
                       src={vendor.shop_logo} 
-                      alt={vendor.shop_name_ar}
+                      alt={vendor.name_ar}
                       className="w-full h-full object-cover rounded-2xl"
                     />
                   ) : (
@@ -236,7 +236,7 @@ export default function VendorDetailsPage() {
                   transition={{ delay: 0.2 }}
                 >
                   <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-4">
-                    <h1 className="text-3xl md:text-5xl font-black tracking-tight">{vendor.shop_name_ar || vendor.shop_name}</h1>
+                    <h1 className="text-3xl md:text-5xl font-black tracking-tight">{vendor.name_ar || vendor.name}</h1>
                     {vendor.is_featured && (
                       <span className="bg-yellow-400 text-yellow-950 px-4 py-1 rounded-full text-xs font-black flex items-center gap-1 shadow-lg">
                         <Star className="w-3 h-3 fill-current" /> مميز
@@ -276,15 +276,17 @@ export default function VendorDetailsPage() {
               <div className="flex gap-3">
                 <button 
                   onClick={handleToggleWishlist}
-                  className="w-14 h-14 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl flex items-center justify-center hover:bg-white/20 transition-all group"
+                  className={`w-14 h-14 rounded-2xl flex items-center justify-center backdrop-blur-md transition-all ${
+                    isInWishlist ? 'bg-red-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'
+                  }`}
                 >
-                  <Heart className={`w-6 h-6 transition-colors ${isInWishlist ? 'fill-red-500 text-red-500' : 'text-white group-hover:fill-red-500 group-hover:text-red-500'}`} />
+                  <Heart className={`w-6 h-6 ${isInWishlist ? 'fill-current' : ''}`} />
                 </button>
                 <button 
                   onClick={handleShare}
-                  className="w-14 h-14 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl flex items-center justify-center hover:bg-white/20 transition-all"
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center bg-white/10 text-white backdrop-blur-md hover:bg-white/20 transition-all"
                 >
-                  <Share2 className="w-6 h-6 text-white" />
+                  <Share2 className="w-6 h-6" />
                 </button>
               </div>
             </div>
@@ -292,221 +294,203 @@ export default function VendorDetailsPage() {
         </div>
       </div>
 
-      {/* Main Content Area */}
+      {/* Main Content */}
       <div className="container mx-auto px-4 py-12">
         <div className="flex flex-col lg:flex-row gap-10">
-          {/* Sidebar - Info & Search */}
-          <aside className="w-full lg:w-80 space-y-8">
-            {/* Search in Store */}
-            <div className="bg-white rounded-[32px] p-6 shadow-xl shadow-gray-200/50 border border-gray-100">
-              <h3 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2">
+          {/* Sidebar - Info & Filters */}
+          <aside className="lg:w-80 space-y-8">
+            {/* Search in Vendor */}
+            <div className="bg-white p-6 rounded-[32px] shadow-xl shadow-gray-200/50 border border-gray-100">
+              <h3 className="text-lg font-black mb-4 flex items-center gap-2">
                 <Search className={`w-5 h-5 ${accentColor}`} />
                 بحث في {isRestaurant ? 'القائمة' : 'المتجر'}
               </h3>
               <div className="relative">
                 <input 
                   type="text"
-                  placeholder="ابحث عن وجبة أو منتج..."
+                  placeholder="ابحث عن منتج..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-gray-50 border-none rounded-2xl py-4 pr-12 pl-4 text-sm font-bold focus:ring-2 focus:ring-purple-500/20 transition-all"
+                  className="w-full bg-gray-50 border-none rounded-2xl py-4 pr-12 pl-4 focus:ring-2 focus:ring-purple-500/20 transition-all"
                 />
                 <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               </div>
             </div>
 
-            {/* Store Info Card */}
-            <div className="bg-white rounded-[32px] p-6 shadow-xl shadow-gray-200/50 border border-gray-100">
-              <h3 className="text-lg font-black text-gray-900 mb-6 flex items-center gap-2">
+            {/* Vendor Details Card */}
+            <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-gray-200/50 border border-gray-100">
+              <h3 className="text-lg font-black mb-6 flex items-center gap-2">
                 <Info className={`w-5 h-5 ${accentColor}`} />
                 معلومات التواصل
               </h3>
               <div className="space-y-6">
-                {vendor.store_phone && (
-                  <div className="flex items-center gap-4 group cursor-pointer">
-                    <div className={`w-12 h-12 rounded-2xl ${accentBg}/10 flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                      <Phone className={`w-5 h-5 ${accentColor}`} />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-gray-400 uppercase">رقم الهاتف</p>
-                      <p className="text-sm font-black text-gray-900">{vendor.store_phone}</p>
-                    </div>
+                <div className="flex items-start gap-4">
+                  <div className={`w-10 h-10 rounded-xl ${accentBg} bg-opacity-10 flex items-center justify-center flex-shrink-0`}>
+                    <Phone className={`w-5 h-5 ${accentColor}`} />
                   </div>
-                )}
-                <div className="flex items-center gap-4 group cursor-pointer">
-                  <div className={`w-12 h-12 rounded-2xl ${accentBg}/10 flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 mb-1">رقم الهاتف</p>
+                    <p className="font-black text-gray-700">{vendor.store_phone || 'غير متوفر'}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className={`w-10 h-10 rounded-xl ${accentBg} bg-opacity-10 flex items-center justify-center flex-shrink-0`}>
+                    <MapPin className={`w-5 h-5 ${accentColor}`} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 mb-1">العنوان</p>
+                    <p className="font-black text-gray-700">{vendor.store_address || 'غير متوفر'}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className={`w-10 h-10 rounded-xl ${accentBg} bg-opacity-10 flex items-center justify-center flex-shrink-0`}>
                     <Clock className={`w-5 h-5 ${accentColor}`} />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase">وقت التوصيل</p>
-                    <p className="text-sm font-black text-gray-900">30 - 45 دقيقة</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 group cursor-pointer">
-                  <div className={`w-12 h-12 rounded-2xl ${accentBg}/10 flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                    <Utensils className={`w-5 h-5 ${accentColor}`} />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase">نوع الخدمة</p>
-                    <p className="text-sm font-black text-gray-900">{isRestaurant ? 'مطعم / وجبات سريعة' : 'متجر / منتجات عامة'}</p>
+                    <p className="text-xs font-bold text-gray-400 mb-1">ساعات العمل</p>
+                    <p className="font-black text-gray-700">9:00 ص - 11:00 م</p>
                   </div>
                 </div>
               </div>
             </div>
           </aside>
 
-          {/* Products Grid - 2 Columns on Mobile, 3-4 on Desktop */}
+          {/* Products Grid */}
           <div className="flex-1">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl md:text-3xl font-black text-gray-900">
-                {isRestaurant ? '🍽️ قائمة الطعام' : '📦 المنتجات المتاحة'}
-                <span className="mr-3 text-sm font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full">
-                  {filteredProducts.length}
-                </span>
-              </h2>
-              <div className="flex items-center gap-2">
-                <button className="p-3 bg-white rounded-xl shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors">
-                  <Filter className="w-5 h-5 text-gray-600" />
-                </button>
-              </div>
+            {/* Tabs */}
+            <div className="flex gap-4 mb-10 bg-white p-2 rounded-3xl shadow-sm border border-gray-100 w-fit">
+              <button 
+                onClick={() => setActiveTab('products')}
+                className={`px-8 py-3 rounded-2xl font-black transition-all ${
+                  activeTab === 'products' 
+                    ? `${accentBg} text-white shadow-lg` 
+                    : 'text-gray-500 hover:bg-gray-50'
+                }`}
+              >
+                {isRestaurant ? 'قائمة الطعام' : 'المنتجات'}
+              </button>
+              <button 
+                onClick={() => setActiveTab('about')}
+                className={`px-8 py-3 rounded-2xl font-black transition-all ${
+                  activeTab === 'about' 
+                    ? `${accentBg} text-white shadow-lg` 
+                    : 'text-gray-500 hover:bg-gray-50'
+                }`}
+              >
+                عن {isRestaurant ? 'المطعم' : 'المتجر'}
+              </button>
             </div>
 
-            {filteredProducts.length === 0 ? (
-              <div className="bg-white rounded-[40px] p-20 text-center shadow-xl shadow-gray-200/50 border border-gray-100">
-                <div className={`w-24 h-24 rounded-full ${accentBg}/10 flex items-center justify-center mx-auto mb-6`}>
-                  <Search className={`w-12 h-12 ${accentColor} opacity-20`} />
-                </div>
-                <h3 className="text-2xl font-black text-gray-900 mb-2">لا توجد نتائج!</h3>
-                <p className="text-gray-500 font-medium">لم نجد أي {isRestaurant ? 'وجبات' : 'منتجات'} تطابق بحثك حالياً.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 md:gap-8">
-                {filteredProducts.map((product, index) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="group"
-                  >
-                    <div className="bg-white rounded-[32px] overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 flex flex-col h-full">
-                      {/* Product Image Container */}
-                      <div className="relative aspect-square overflow-hidden">
-                        <Link href={isRestaurant ? `/meals/${product.id}` : `/products/${product.id}`}>
-                          {product.images && product.images.length > 0 ? (
-                            <img
-                              src={product.images[0]}
-                              alt={product.name_ar || product.name}
+            <AnimatePresence mode="wait">
+              {activeTab === 'products' ? (
+                <motion.div 
+                  key="products"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+                >
+                  {filteredProducts.length > 0 ? (
+                    filteredProducts.map((product) => (
+                      <Link 
+                        key={product.id} 
+                        href={isRestaurant ? `/meals/${product.id}` : `/products/${product.id}`}
+                      >
+                        <div className="group bg-white rounded-[32px] overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500">
+                          <div className="relative aspect-square overflow-hidden">
+                            <img 
+                              src={product.images?.[0] || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500'} 
+                              alt={product.name_ar}
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                             />
-                          ) : (
-                            <div className={`w-full h-full bg-gradient-to-br ${themeGradient} opacity-20 flex items-center justify-center`}>
-                              <Package className={`w-16 h-16 ${accentColor}`} />
-                            </div>
-                          )}
-                        </Link>
-                        
-                        {/* Badges */}
-                        <div className="absolute top-3 right-3 flex flex-col gap-2">
-                          {product.sale_price && product.sale_price < product.price && (
-                            <div className="bg-red-500 text-white px-3 py-1 rounded-full text-[10px] font-black shadow-lg">
-                              خصم {Math.round((1 - product.sale_price / product.price) * 100)}%
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Quick Add Button - Floating */}
-                        <button 
-                          onClick={() => handleAddToCart(product.id)}
-                          disabled={product.stock === 0}
-                          className={`absolute bottom-4 left-4 w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-white shadow-xl flex items-center justify-center text-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-300 transform translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 disabled:opacity-50`}
-                        >
-                          <ShoppingCart className="w-5 h-5" />
-                        </button>
-                      </div>
-
-                      {/* Product Info */}
-                      <div className="p-4 md:p-6 flex flex-col flex-1">
-                        <Link href={isRestaurant ? `/meals/${product.id}` : `/products/${product.id}`}>
-                          <h3 className="text-sm md:text-lg font-black text-gray-900 mb-2 group-hover:text-purple-600 transition-colors line-clamp-1">
-                            {product.name_ar || product.name}
-                          </h3>
-                        </Link>
-                        <p className="text-[10px] md:text-xs text-gray-500 font-bold mb-4 line-clamp-2 leading-relaxed">
-                          {product.description_ar || product.description || 'لا يوجد وصف متاح لهذه الوجبة حالياً.'}
-                        </p>
-                        
-                        <div className="mt-auto flex items-center justify-between">
-                          <div className="flex flex-col">
-                            {product.sale_price && product.sale_price < product.price ? (
-                              <>
-                                <span className={`text-lg md:text-2xl font-black ${accentColor}`}>
-                                  {formatPrice(product.sale_price)}
-                                </span>
-                                <span className="text-[10px] md:text-xs text-gray-400 line-through font-bold">
-                                  {formatPrice(product.price)}
-                                </span>
-                              </>
-                            ) : (
-                              <span className={`text-lg md:text-2xl font-black ${accentColor}`}>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            
+                            <button 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleAddToCart(product.id);
+                              }}
+                              className={`absolute bottom-4 left-4 right-4 py-3 rounded-2xl text-white font-black flex items-center justify-center gap-2 translate-y-10 group-hover:translate-y-0 transition-all duration-500 ${accentBg}`}
+                            >
+                              <ShoppingCart className="w-5 h-5" />
+                              إضافة للسلة
+                            </button>
+                          </div>
+                          <div className="p-6">
+                            <h3 className="font-black text-gray-800 text-lg mb-2 line-clamp-1 group-hover:text-purple-600 transition-colors">
+                              {product.name_ar || product.name}
+                            </h3>
+                            <div className="flex items-center justify-between">
+                              <span className={`text-2xl font-black ${accentColor}`}>
                                 {formatPrice(product.price)}
                               </span>
-                            )}
+                              {product.sale_price && (
+                                <span className="text-sm text-gray-400 line-through">
+                                  {formatPrice(product.sale_price)}
+                                </span>
+                              )}
+                            </div>
                           </div>
-                          
-                          {/* Mobile Add Button */}
-                          <button 
-                            onClick={() => handleAddToCart(product.id)}
-                            disabled={product.stock === 0}
-                            className={`md:hidden w-10 h-10 rounded-xl ${accentBg} flex items-center justify-center text-white shadow-lg`}
-                          >
-                            <ShoppingCart className="w-5 h-5" />
-                          </button>
+                        </div>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="col-span-full py-20 text-center">
+                      <div className={`w-20 h-20 ${accentBg} bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-6`}>
+                        <Search className={`w-10 h-10 ${accentColor}`} />
+                      </div>
+                      <h3 className="text-2xl font-black text-gray-800 mb-2">لا توجد نتائج</h3>
+                      <p className="text-gray-500">لم نجد أي منتجات تطابق بحثك في هذا المتجر</p>
+                    </div>
+                  )}
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key="about"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="bg-white p-10 md:p-16 rounded-[40px] shadow-xl border border-gray-50"
+                >
+                  <div className="max-w-3xl">
+                    <h2 className="text-3xl font-black mb-8 flex items-center gap-3">
+                      <Info className={`w-8 h-8 ${accentColor}`} />
+                      قصتنا وتفاصيلنا
+                    </h2>
+                    <p className="text-xl text-gray-600 leading-relaxed mb-10 whitespace-pre-line">
+                      {vendor.shop_description_ar || vendor.shop_description || 'لا يوجد وصف متاح حالياً لهذا المتجر.'}
+                    </p>
+                    
+                    <div className="grid md:grid-cols-2 gap-8">
+                      <div className="space-y-4">
+                        <h4 className="font-black text-gray-900">المميزات</h4>
+                        <ul className="space-y-3">
+                          {['توصيل سريع', 'منتجات أصلية', 'دفع عند الاستلام', 'دعم فني 24/7'].map((item, i) => (
+                            <li key={i} className="flex items-center gap-3 text-gray-600">
+                              <div className={`w-2 h-2 rounded-full ${accentBg}`}></div>
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="space-y-4">
+                        <h4 className="font-black text-gray-900">طرق الدفع</h4>
+                        <div className="flex flex-wrap gap-3">
+                          {['نقداً', 'بطاقة ائتمان', 'محفظة إلكترونية'].map((item, i) => (
+                            <span key={i} className="bg-gray-100 px-4 py-2 rounded-xl text-sm font-bold text-gray-600">
+                              {item}
+                            </span>
+                          ))}
                         </div>
                       </div>
                     </div>
-                  </motion.div>
-                ))}
-              </div>
-            )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
-
-      {/* About Section - Detailed */}
-      <section className="bg-white py-20 border-t border-gray-100">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className={`w-20 h-20 rounded-[28px] ${accentBg}/10 flex items-center justify-center mx-auto mb-8`}>
-              <Info className={`w-10 h-10 ${accentColor}`} />
-            </div>
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-6">
-              عن {isRestaurant ? 'المطعم' : 'المتجر'}
-            </h2>
-            <p className="text-lg text-gray-600 leading-relaxed font-medium mb-10">
-              {vendor.shop_description_ar || vendor.shop_description || 'نحن نسعى دائماً لتقديم أفضل تجربة لعملائنا من خلال جودة المنتجات وسرعة التوصيل.'}
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="p-8 rounded-[32px] bg-gray-50 border border-gray-100">
-                <Star className="w-8 h-8 text-yellow-500 mx-auto mb-4" />
-                <h4 className="text-xl font-black text-gray-900 mb-2">تقييمات عالية</h4>
-                <p className="text-sm text-gray-500 font-bold">نفتخر بثقة عملائنا بنا دائماً</p>
-              </div>
-              <div className="p-8 rounded-[32px] bg-gray-50 border border-gray-100">
-                <Clock className="w-8 h-8 text-blue-500 mx-auto mb-4" />
-                <h4 className="text-xl font-black text-gray-900 mb-2">توصيل سريع</h4>
-                <p className="text-sm text-gray-500 font-bold">نصل إليك في أسرع وقت ممكن</p>
-              </div>
-              <div className="p-8 rounded-[32px] bg-gray-50 border border-gray-100">
-                <ChefHat className="w-8 h-8 text-orange-500 mx-auto mb-4" />
-                <h4 className="text-xl font-black text-gray-900 mb-2">جودة مضمونة</h4>
-                <p className="text-sm text-gray-500 font-bold">أفضل المكونات والمنتجات المختارة</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <Footer />
     </main>

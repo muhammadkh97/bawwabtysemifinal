@@ -18,7 +18,8 @@ interface Product {
   featured_image: string | null;
   vendor_id: string;
   vendors: {
-    shop_name: string;
+    name: string;
+    name_ar: string;
   } | null;
 }
 
@@ -46,10 +47,10 @@ export default function FeaturedProducts() {
           images,
           featured_image,
           vendor_id,
-          vendors!inner(vendor_type)
+          vendors!inner(business_type)
         `)
         .eq('status', 'approved')
-        .neq('vendors.vendor_type', 'restaurant')
+        .neq('vendors.business_type', 'restaurant')
         .order('created_at', { ascending: false })
         .limit(8);
 
@@ -60,7 +61,7 @@ export default function FeaturedProducts() {
         (data || []).map(async (product) => {
           const { data: vendorData } = await supabase
             .from('stores')
-            .select('shop_name')
+            .select('name, name_ar')
             .eq('id', product.vendor_id)
             .single();
 
@@ -113,7 +114,7 @@ export default function FeaturedProducts() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             {products.map((product, index) => {
               const productImage = product.images?.[0] || product.featured_image || '/placeholder.png';
-              const vendorName = product.vendors?.shop_name || 'بائع غير معروف';
+              const vendorName = product.vendors?.name_ar || product.vendors?.name || 'بائع غير معروف';
               const discount = product.old_price 
                 ? Math.round(((product.old_price - product.price) / product.old_price) * 100)
                 : 0;
@@ -261,4 +262,3 @@ export default function FeaturedProducts() {
     </section>
   );
 }
-

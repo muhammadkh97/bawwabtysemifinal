@@ -9,7 +9,8 @@ import { supabase } from '@/lib/supabase';
 
 interface Vendor {
   id: string;
-  store_name: string;
+  name: string;
+  name_ar: string;
   logo_url: string | null;
   description: string | null;
   city: string | null;
@@ -32,7 +33,7 @@ export default function VendorsPage() {
       const { data, error } = await supabase
         .from('stores')
         .select('*')
-        .eq('vendor_type', 'retail') // ✅ عرض المتاجر فقط (بدون مطاعم)
+        .eq('business_type', 'retail') // ✅ عرض المتاجر فقط (بدون مطاعم)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -106,12 +107,12 @@ export default function VendorsPage() {
                     <div className="bg-gradient-to-r from-purple-600 to-pink-500 p-6 text-center">
                       {logoUrl ? (
                         <div className="w-24 h-24 mx-auto mb-3 rounded-full overflow-hidden bg-white">
-                          <img src={logoUrl} alt={vendor.store_name} className="w-full h-full object-cover" />
+                          <img src={logoUrl} alt={vendor.name_ar || vendor.name} className="w-full h-full object-cover" />
                         </div>
                       ) : (
                         <div className="text-6xl mb-3">🏪</div>
                       )}
-                      <h3 className="text-2xl font-bold text-white">{vendor.store_name}</h3>
+                      <h3 className="text-2xl font-bold text-white">{vendor.name_ar || vendor.name}</h3>
                     </div>
 
                     {/* Content */}
@@ -154,4 +155,3 @@ export default function VendorsPage() {
     </>
   );
 }
-

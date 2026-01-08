@@ -10,8 +10,8 @@ import Footer from '@/components/Footer';
 
 interface Restaurant {
   id: string;
-  shop_name: string;
-  shop_name_ar: string;
+  name: string;
+  name_ar: string;
   shop_logo: string;
   rating: number;
   reviews_count: number;
@@ -51,9 +51,9 @@ export default function RestaurantsPage() {
     try {
       const { data, error } = await supabase
         .from('stores')
-        .select('id, shop_name, shop_name_ar, shop_logo, rating, reviews_count, latitude, longitude, min_order_amount, is_featured')
+        .select('id, name, name_ar, shop_logo, rating, reviews_count, latitude, longitude, min_order_amount, is_featured')
         .eq('approval_status', 'approved')
-        .eq('vendor_type', 'restaurant')
+        .eq('business_type', 'restaurant')
         .order('is_featured', { ascending: false })
         .order('rating', { ascending: false });
 
@@ -82,8 +82,8 @@ export default function RestaurantsPage() {
   };
 
   const filteredRestaurants = restaurants.filter(restaurant =>
-    restaurant.shop_name_ar?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    restaurant.shop_name?.toLowerCase().includes(searchQuery.toLowerCase())
+    restaurant.name_ar?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    restaurant.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -166,7 +166,7 @@ export default function RestaurantsPage() {
                         {restaurant.shop_logo ? (
                           <img
                             src={restaurant.shop_logo}
-                            alt={restaurant.shop_name_ar}
+                            alt={restaurant.name_ar}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                           />
                         ) : (
@@ -186,7 +186,7 @@ export default function RestaurantsPage() {
                       {/* Restaurant Info */}
                       <div className="p-4">
                         <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">
-                          {restaurant.shop_name_ar || restaurant.shop_name}
+                          {restaurant.name_ar || restaurant.name}
                         </h3>
                         
                         <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
