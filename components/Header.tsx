@@ -83,7 +83,7 @@ export default function Header() {
         icon?: string;
       }
 
-      const categoriesWithSubs = await Promise.all(
+      const categoriesWithSubs: Category[] = await Promise.all(
         (mainCategories || []).map(async (category: Category) => {
           const { data: subs } = await supabase
             .from('categories')
