@@ -280,7 +280,7 @@ export default function PagesManagementPage() {
                   Full Hero Sections (الرئيسي)
                 </h2>
                 <div className="grid gap-4">
-                  {heroes.filter(h => h.hero_type === 'full').map((hero) => (
+                  {heroes.map((hero) => (
                     <div
                       key={hero.id}
                       className="bg-white/10 backdrop-blur-lg rounded-lg border border-purple-500/20 p-6 flex items-center justify-between hover:bg-white/15 transition"
@@ -289,7 +289,7 @@ export default function PagesManagementPage() {
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-xl font-bold text-white">{hero.title_ar}</h3>
                           <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs">
-                            {hero.page_location}
+                            {hero.page || 'home'}
                           </span>
                           <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">
                             ترتيب: {hero.display_order}
@@ -301,7 +301,6 @@ export default function PagesManagementPage() {
                           )}
                         </div>
                         <p className="text-gray-300 text-sm">{hero.subtitle_ar}</p>
-                        <p className="text-gray-400 text-xs mt-1">{hero.description_ar}</p>
                       </div>
                       <div className="flex gap-2">
                         <button
@@ -331,49 +330,12 @@ export default function PagesManagementPage() {
               <div>
                 <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-white">
                   <span className="text-2xl">📄</span>
-                  Mini Hero Sections (رأس الصفحة)
+                  Hero Sections
                 </h2>
                 <div className="grid gap-4">
-                  {heroes.filter(h => h.hero_type === 'mini').map((hero) => (
-                    <div
-                      key={hero.id}
-                      className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 backdrop-blur-lg rounded-lg border border-indigo-500/20 p-6 flex items-center justify-between hover:from-indigo-500/15 hover:to-purple-500/15 transition"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-xl font-bold text-white">{hero.title_ar}</h3>
-                          <span className="px-2 py-1 bg-indigo-500/20 text-indigo-400 rounded text-xs">
-                            {hero.page_location}
-                          </span>
-                          {hero.is_active ? (
-                            <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">نشط</span>
-                          ) : (
-                            <span className="px-2 py-1 bg-gray-500/20 text-gray-400 rounded text-xs">غير نشط</span>
-                          )}
-                        </div>
-                        <p className="text-gray-300 text-sm">{hero.subtitle_ar}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => toggleHeroStatus(hero)}
-                          className="p-2 hover:bg-white/10 rounded-lg transition text-gray-300 hover:text-white"
-                          title={hero.is_active ? 'إخفاء' : 'إظهار'}
-                        >
-                          {hero.is_active ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
-                        </button>
-                        <button
-                          onClick={() => {
-                            setEditingHero(hero)
-                            setShowModal(true)
-                          }}
-                          className="p-2 hover:bg-white/10 text-purple-400 rounded-lg transition"
-                          title="تعديل"
-                        >
-                          <Edit className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                  {heroes.length === 0 ? (
+                    <p className="text-gray-400 text-center py-8">لا توجد أقسام هيرو</p>
+                  ) : null}
                 </div>
               </div>
             </div>
