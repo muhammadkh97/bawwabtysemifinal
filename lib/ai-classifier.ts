@@ -357,9 +357,5 @@ export async function classifyProduct(
     result.imageAnalysis = await analyzeProductImages(productData.images);
   }
 
-    confidence: result.confidence,
-    needsReview: result.needsReview,
-  });
-
   return result;
 }
