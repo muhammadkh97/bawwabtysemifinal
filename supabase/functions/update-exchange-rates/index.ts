@@ -134,11 +134,38 @@ async function fetchExchangeRates(): Promise<ExchangeRate[]> {
     console.warn('⚠️ Frankfurter API failed:', error.message)
   }
 
-  // محاولة 3: حساب أسعار تقديرية بناءً على USD
+  // محاولة 3: Currency API (fawazahmed0 - مجاني)
   try {
-    const usdToSar = 0.27 // ثابت تقريبي
-    
-    // أسعار تقريبية معروفة
+    const response = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/sar.json', {
+      headers: { 'User-Agent': 'Bawabty-Marketplace/1.0' }
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+
+    const data = await response.json()
+
+    if (data.sar) {
+      const rates: ExchangeRate[] = supportedCurrencies
+        .filter(currency => data.sar[currency.toLowerCase()])
+        .map(currency => ({
+          currency,
+          rate: parseFloat(data.sar[currency.toLowerCase()].toFixed(6)),
+        }))
+
+      if (rates.length > 0) {
+        return rates
+      }
+    }
+  } catch (error) {
+    console.warn('⚠️ Currency API failed:', error.message)
+  }
+
+  // محاولة 4: حساب أسعار تقديرية بناءً على USD (Fallback النهائي)
+  console.warn('⚠️ All APIs failed, using estimated rates as fallback')
+  try {
+    // أسعار تقريبية معروفة (يتم تحديثها يدوياً)
     const estimatedRates = {
       USD: 0.27,
       EUR: 0.24,

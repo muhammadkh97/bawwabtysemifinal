@@ -48,13 +48,13 @@ const frankfurterAPI: ExchangeRateSource = {
 };
 
 /**
- * 3. Currency API (مجاني - بديل)
+ * 3. Currency API (fawazahmed0 - مجاني)
  */
 const currencyAPI: ExchangeRateSource = {
   name: 'Currency API',
   fetch: async () => {
     try {
-      const response = await fetch('https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/sar.json');
+      const response = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/sar.json');
       if (!response.ok) return null;
       
       const data = await response.json();
