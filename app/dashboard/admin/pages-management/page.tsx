@@ -20,21 +20,24 @@ interface Page {
 
 interface HeroSection {
   id: string
-  hero_type: 'full' | 'mini'
   title: string
-  title_ar: string
-  subtitle: string
-  subtitle_ar: string
-  description: string
-  description_ar: string
-  background_image: string
-  background_color: string
-  button_text: string
-  button_text_ar: string
-  button_link: string
-  is_active: boolean
-  display_order: number
-  page_location: string
+  title_ar?: string
+  subtitle?: string
+  subtitle_ar?: string
+  image_url?: string
+  mobile_image_url?: string
+  button_text?: string
+  button_text_ar?: string
+  button_link?: string
+  background_color?: string
+  text_color?: string
+  is_active?: boolean
+  display_order?: number
+  page?: string
+  start_date?: string
+  end_date?: string
+  created_at?: string
+  updated_at?: string
 }
 
 export default function PagesManagementPage() {
@@ -112,21 +115,20 @@ export default function PagesManagementPage() {
       const { error } = await supabase
         .from('hero_sections')
         .update({
-          hero_type: editingHero.hero_type,
           title: editingHero.title,
           title_ar: editingHero.title_ar,
           subtitle: editingHero.subtitle,
           subtitle_ar: editingHero.subtitle_ar,
-          description: editingHero.description,
-          description_ar: editingHero.description_ar,
-          background_image: editingHero.background_image,
+          image_url: editingHero.image_url,
+          mobile_image_url: editingHero.mobile_image_url,
           background_color: editingHero.background_color,
+          text_color: editingHero.text_color,
           button_text: editingHero.button_text,
           button_text_ar: editingHero.button_text_ar,
           button_link: editingHero.button_link,
           is_active: editingHero.is_active,
           display_order: editingHero.display_order,
-          page_location: editingHero.page_location
+          page: editingHero.page
         })
         .eq('id', editingHero.id)
 
@@ -453,30 +455,18 @@ export default function PagesManagementPage() {
 
               {editingHero && (
                 <div className="space-y-4">
-                  <div>
-                    <label className="block font-semibold mb-2">نوع Hero</label>
-                    <select
-                      value={editingHero.hero_type}
-                      onChange={(e) => setEditingHero({ ...editingHero, hero_type: e.target.value as 'full' | 'mini' })}
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
-                    >
-                      <option value="full">Full Hero (الرئيسي)</option>
-                      <option value="mini">Mini Hero (رأس الصفحة)</option>
-                    </select>
-                  </div>
-
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block font-semibold mb-2">العنوان بالعربية</label>
+                      <label className="block font-semibold mb-2">العنوان بالعربية *</label>
                       <input
                         type="text"
-                        value={editingHero.title_ar}
+                        value={editingHero.title_ar || ''}
                         onChange={(e) => setEditingHero({ ...editingHero, title_ar: e.target.value })}
                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold mb-2">العنوان بالإنجليزية</label>
+                      <label className="block font-semibold mb-2">العنوان بالإنجليزية *</label>
                       <input
                         type="text"
                         value={editingHero.title}
@@ -488,109 +478,125 @@ export default function PagesManagementPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block font-semibold mb-2">العنوان الفرعي بالعربية</label>
-                      <input
-                        type="text"
-                        value={editingHero.subtitle_ar}
+                      <label className="block font-semibold mb-2">الوصف بالعربية</label>
+                      <textarea
+                        value={editingHero.subtitle_ar || ''}
                         onChange={(e) => setEditingHero({ ...editingHero, subtitle_ar: e.target.value })}
+                        rows={3}
                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold mb-2">العنوان الفرعي بالإنجليزية</label>
-                      <input
-                        type="text"
-                        value={editingHero.subtitle}
+                      <label className="block font-semibold mb-2">الوصف بالإنجليزية</label>
+                      <textarea
+                        value={editingHero.subtitle || ''}
                         onChange={(e) => setEditingHero({ ...editingHero, subtitle: e.target.value })}
+                        rows={3}
                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
-                      />
-                    </div>
-                  </div>
-
-                  {editingHero.hero_type === 'full' && (
-                    <>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block font-semibold mb-2">الوصف بالعربية</label>
-                          <textarea
-                            value={editingHero.description_ar}
-                            onChange={(e) => setEditingHero({ ...editingHero, description_ar: e.target.value })}
-                            rows={3}
-                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-semibold mb-2">الوصف بالإنجليزية</label>
-                          <textarea
-                            value={editingHero.description}
-                            onChange={(e) => setEditingHero({ ...editingHero, description: e.target.value })}
-                            rows={3}
-                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-4">
-                        <div>
-                          <label className="block font-semibold mb-2">نص الزر بالعربية</label>
-                          <input
-                            type="text"
-                            value={editingHero.button_text_ar}
-                            onChange={(e) => setEditingHero({ ...editingHero, button_text_ar: e.target.value })}
-                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-semibold mb-2">نص الزر بالإنجليزية</label>
-                          <input
-                            type="text"
-                            value={editingHero.button_text}
-                            onChange={(e) => setEditingHero({ ...editingHero, button_text: e.target.value })}
-                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-semibold mb-2">رابط الزر</label>
-                          <input
-                            type="text"
-                            value={editingHero.button_link}
-                            onChange={(e) => setEditingHero({ ...editingHero, button_link: e.target.value })}
-                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
-                            placeholder="/products"
-                          />
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block font-semibold mb-2">صورة الخلفية (URL)</label>
-                      <input
-                        type="text"
-                        value={editingHero.background_image}
-                        onChange={(e) => setEditingHero({ ...editingHero, background_image: e.target.value })}
-                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
-                        placeholder="https://example.com/image.jpg"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-semibold mb-2">لون الخلفية</label>
-                      <input
-                        type="color"
-                        value={editingHero.background_color}
-                        onChange={(e) => setEditingHero({ ...editingHero, background_color: e.target.value })}
-                        className="w-full h-10 px-2 py-1 border rounded-lg"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="block font-semibold mb-2">موقع الصفحة</label>
+                      <label className="block font-semibold mb-2">نص الزر بالعربية</label>
+                      <input
+                        type="text"
+                        value={editingHero.button_text_ar || ''}
+                        onChange={(e) => setEditingHero({ ...editingHero, button_text_ar: e.target.value })}
+                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold mb-2">نص الزر بالإنجليزية</label>
+                      <input
+                        type="text"
+                        value={editingHero.button_text || ''}
+                        onChange={(e) => setEditingHero({ ...editingHero, button_text: e.target.value })}
+                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold mb-2">رابط الزر</label>
+                      <input
+                        type="text"
+                        value={editingHero.button_link || ''}
+                        onChange={(e) => setEditingHero({ ...editingHero, button_link: e.target.value })}
+                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
+                        placeholder="/products"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-semibold mb-2">صورة الخلفية (URL)</label>
+                      <input
+                        type="url"
+                        value={editingHero.image_url || ''}
+                        onChange={(e) => setEditingHero({ ...editingHero, image_url: e.target.value })}
+                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
+                        placeholder="https://images.unsplash.com/photo-xxx?w=1200"
+                      />
+                      {editingHero.image_url && (
+                        <div className="mt-2 relative h-32 rounded-lg overflow-hidden">
+                          <img 
+                            src={editingHero.image_url} 
+                            alt="Preview" 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x150?text=Invalid+Image';
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block font-semibold mb-2">صورة الموبايل (URL)</label>
+                      <input
+                        type="url"
+                        value={editingHero.mobile_image_url || ''}
+                        onChange={(e) => setEditingHero({ ...editingHero, mobile_image_url: e.target.value })}
+                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
+                        placeholder="https://images.unsplash.com/photo-xxx?w=800"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-4">
+                    <div>
+                      <label className="block font-semibold mb-2">لون الخلفية</label>
+                      <input
+                        type="color"
+                        value={editingHero.background_color || '#FF6B35'}
+                        onChange={(e) => setEditingHero({ ...editingHero, background_color: e.target.value })}
+                        className="w-full h-10 px-2 py-1 border rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold mb-2">لون النص</label>
+                      <input
+                        type="color"
+                        value={editingHero.text_color || '#FFFFFF'}
+                        onChange={(e) => setEditingHero({ ...editingHero, text_color: e.target.value })}
+                        className="w-full h-10 px-2 py-1 border rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold mb-2">الترتيب</label>
+                      <input
+                        type="number"
+                        value={editingHero.display_order || 1}
+                        onChange={(e) => setEditingHero({ ...editingHero, display_order: parseInt(e.target.value) })}
+                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
+                        min="1"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold mb-2">الصفحة</label>
                       <select
-                        value={editingHero.page_location}
-                        onChange={(e) => setEditingHero({ ...editingHero, page_location: e.target.value })}
+                        value={editingHero.page || 'home'}
+                        onChange={(e) => setEditingHero({ ...editingHero, page: e.target.value })}
                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
                       >
                         <option value="home">الرئيسية</option>
@@ -598,6 +604,9 @@ export default function PagesManagementPage() {
                         <option value="vendors">البائعون</option>
                         <option value="deals">العروض</option>
                         <option value="about">من نحن</option>
+                      </select>
+                    </div>
+                  </div>
                         <option value="contact">اتصل بنا</option>
                       </select>
                     </div>
