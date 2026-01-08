@@ -172,7 +172,7 @@ export default function Header() {
   };
 
   return (
-    <header className="border-b sticky top-0 bg-white/80 backdrop-blur-md z-[10000] overflow-visible">
+    <header className="border-b sticky top-0 bg-white/80 backdrop-blur-md z-50">
       {/* Top Bar */}
       <div className="hidden md:block text-white py-1.5" style={{ background: 'linear-gradient(90deg, #6236FF 0%, #B621FE 50%, #FF219D 100%)' }}>
         <div className="container mx-auto px-3 sm:px-4 md:px-8 flex justify-between items-center text-[12px] font-medium max-w-full">
@@ -210,8 +210,8 @@ export default function Header() {
       </div>
 
       {/* Main Header */}
-      <div className="container mx-auto px-3 sm:px-4 md:px-8 py-2 sm:py-3 md:py-4 max-w-full overflow-visible">
-        <div className="flex items-center justify-between gap-2 md:gap-10 overflow-visible">
+      <div className="container mx-auto px-3 sm:px-4 md:px-8 py-2 sm:py-3 md:py-4 max-w-full">
+        <div className="flex items-center justify-between gap-2 md:gap-10">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group shrink-0">
             <div className="relative">
@@ -232,7 +232,7 @@ export default function Header() {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-1 sm:gap-2 md:gap-5 overflow-visible">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
             {/* Dashboard Button - Desktop only */}
             {(userRole && userRole !== 'customer') || isVendorStaff || isRestaurantStaff ? (
               <Link
@@ -244,28 +244,24 @@ export default function Header() {
                 <span className="hidden sm:inline">لوحة التحكم</span>
               </Link>
             ) : null}
-            
-            <div className="flex items-center gap-0.5 sm:gap-1 overflow-visible">
-              {isLoggedIn && <NotificationDropdown />}
-              
-              {isLoggedIn && (
-                <Link href="/chats" className="relative group hidden md:flex">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:scale-105">
-                    <MessageCircle className="w-4.5 h-4.5 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 text-purple-600 group-hover:text-purple-700 transition-colors" />
-                  </div>
-                  {unreadChatsCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[18px] sm:min-w-[20px] h-[18px] sm:h-5 px-1 sm:px-1.5 flex items-center justify-center text-[9px] sm:text-[10px] font-black text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-lg border-2 border-white">
-                      {unreadChatsCount > 99 ? '99+' : unreadChatsCount}
-                    </span>
-                  )}
-                </Link>
-              )}
-              
-              {/* Currency Selector */}
-              <div className="hidden lg:block">
-                <CurrencySelector />
-              </div>
 
+            {/* Group 1: Notifications & Currency */}
+            {isLoggedIn && (
+              <div className="flex items-center gap-2">
+                <NotificationDropdown />
+                
+                {/* Currency Selector */}
+                <div className="hidden lg:block">
+                  <CurrencySelector />
+                </div>
+              </div>
+            )}
+
+            {/* Separator */}
+            {isLoggedIn && <div className="h-6 sm:h-8 w-[1px] bg-gray-200 hidden md:block"></div>}
+
+            {/* Group 2: Shopping Icons */}
+            <div className="flex items-center gap-2">
               <Link href="/wishlist" className="relative group">
                 <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl bg-gradient-to-br from-red-50 to-pink-50 hover:from-red-100 hover:to-pink-100 flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:scale-105">
                   <Heart className="w-4.5 h-4.5 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 text-red-500 group-hover:text-red-600 transition-colors" />
@@ -300,18 +296,10 @@ export default function Header() {
                   </span>
                 )}
               </Link>
-
-              {/* طلباتي - Desktop only */}
-              {isLoggedIn && (
-                <Link href="/orders" className="hidden md:flex relative group" title="طلباتي">
-                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:scale-105">
-                    <Package className="w-5.5 h-5.5 text-green-600 group-hover:text-green-700 transition-colors" />
-                  </div>
-                </Link>
-              )}
             </div>
 
-            <div className="h-6 sm:h-8 w-[1px] bg-gray-100 hidden md:block"></div>
+            {/* Separator */}
+            <div className="h-6 sm:h-8 w-[1px] bg-gray-200 hidden md:block"></div>
             
             {!isLoggedIn ? (
               <Link
@@ -323,32 +311,9 @@ export default function Header() {
                 <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 fill-current" />
               </Link>
             ) : (
-              <div className="relative overflow-visible">
-                {/* Desktop Version - الأزرار المنفصلة */}
-                <div className="hidden md:flex items-center gap-2">
-                  <Link
-                    href="/profile"
-                    className="flex items-center gap-1 sm:gap-2 p-1 pr-2 sm:pr-3 md:pr-4 bg-gray-50 hover:bg-gray-100 rounded-xl md:rounded-2xl transition-all duration-300 border border-gray-100"
-                  >
-                    <span className="text-xs sm:text-sm font-bold text-gray-700">حسابي</span>
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white">
-                      <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    </div>
-                  </Link>
-                  
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 text-white rounded-xl md:rounded-2xl hover:shadow-xl hover:shadow-red-500/20 transition-all duration-300 whitespace-nowrap font-bold text-xs sm:text-sm"
-                    style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}
-                    title="تسجيل الخروج"
-                  >
-                    <LogOut className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-                    <span>خروج</span>
-                  </button>
-                </div>
-
-                {/* Mobile Version - قائمة منسدلة محسّنة */}
-                <div className="md:hidden relative overflow-visible">
+              <div className="relative">
+                {/* User Menu - Unified for Mobile and Desktop */}
+                <div className="relative">
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                     className="flex items-center gap-1 p-0.5 pr-1.5 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all duration-300 border border-gray-100"
@@ -365,7 +330,7 @@ export default function Header() {
                       <>  
                         {/* Backdrop */}
                         <div
-                          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[10001]"
+                          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
                           onClick={() => setIsUserMenuOpen(false)}
                         />
                         
@@ -375,7 +340,7 @@ export default function Header() {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: -10, scale: 0.95 }}
                           transition={{ duration: 0.2 }}
-                          className="absolute left-auto right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-y-auto max-h-[calc(100vh-100px)] z-[10002]"
+                          className="fixed left-2 top-[70px] w-[calc(100vw-16px)] max-w-[320px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50"
                         >
                           {/* لوحة التحكم - للـ admin/vendor/driver أو المساعدين */}
                           {((userRole && userRole !== 'customer') || isVendorStaff || isRestaurantStaff) && (
@@ -409,11 +374,11 @@ export default function Header() {
                             </div>
                           </Link>
 
-                          {/* الدردشات - Mobile only */}
+                          {/* الدردشات */}
                           <Link
                             href="/chats"
                             onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 md:hidden"
+                            className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100"
                           >
                             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center relative">
                               <MessageCircle className="w-5 h-5 text-white" />
@@ -493,7 +458,7 @@ export default function Header() {
               </button>
               
               {/* Mega Menu */}
-              <div className="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[10003]">
+              <div className="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
                 <div className="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-[32px] border border-gray-100 overflow-hidden flex" style={{ width: '900px' }}>
                   {/* Sidebar Categories */}
                   <div className="w-1/3 bg-gray-50/50 p-6 border-l border-gray-100">
