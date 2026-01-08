@@ -123,6 +123,16 @@ interface DatabaseChatRow {
   metadata: ChatMetadata | null;
   created_at: string;
   updated_at: string;
+  vendor?: {
+    shop_name?: string;
+    name?: string;
+    logo_url?: string;
+  } | null;
+  customer?: {
+    full_name?: string;
+    name?: string;
+    avatar_url?: string;
+  } | null;
 }
 
 const ChatsContext = createContext<ChatsContextType | undefined>(undefined);
@@ -642,7 +652,7 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
           // تحديث محلي فقط بدون re-fetch كامل
           setChats(prev => prev.map(chat => 
             chat.id === payload.new.id 
-              ? formatChatForUser(payload.new, userRole as string, userId as string)
+              ? formatChatForUser(payload.new as DatabaseChatRow, userRole as string, userId as string)
               : chat
           ));
         }

@@ -445,7 +445,7 @@ export async function verifyDeliveryCode(
 async function sendOrderStatusNotifications(
   orderId: string,
   newStatus: OrderStatus,
-  order: any
+  order: OrderData
 ): Promise<void> {
   try {
     const statusMessages: Partial<Record<OrderStatus, string>> = {
@@ -515,7 +515,7 @@ async function notifyAvailableDrivers(orderId: string): Promise<void> {
 /**
  * إرسال إشعارات قبول المندوب للطلب
  */
-async function sendDriverAcceptanceNotifications(orderId: string, order: any): Promise<void> {
+async function sendDriverAcceptanceNotifications(orderId: string, order: OrderData): Promise<void> {
   try {
     // إشعار العميل
     await supabase.from('notifications').insert({
@@ -566,7 +566,7 @@ async function sendDriverAcceptanceNotifications(orderId: string, order: any): P
 /**
  * معالجة اكتمال التسليم (تحديث المحافظ ومنح النقاط)
  */
-async function processDeliveryCompletion(orderId: string, order: any): Promise<void> {
+async function processDeliveryCompletion(orderId: string, order: OrderData): Promise<void> {
   try {
     // 1. تحديث محفظة البائع
     const { data: orderItems } = await supabase

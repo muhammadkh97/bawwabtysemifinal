@@ -98,10 +98,16 @@ export async function getLatestExchangeRates() {
     }
 
     // تحويل النتائج لصيغة object
-    const rates: Record<string, { rate: number; lastUpdated: string }> = {};
+    const rates: { [key: string]: { rate: number; lastUpdated: string } } = {};
     
     if (data) {
-      data.forEach((item: any) => {
+      interface ExchangeRateRow {
+        to_currency: string;
+        rate: string;
+        last_updated: string;
+      }
+      
+      (data as ExchangeRateRow[]).forEach((item) => {
         rates[item.to_currency] = {
           rate: parseFloat(item.rate),
           lastUpdated: item.last_updated,

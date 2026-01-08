@@ -41,7 +41,14 @@ export async function approveVendor(
   status: ApprovalStatus,
   rejectionReason?: string
 ) {
-  const updates: any = {
+  interface StoreUpdate {
+    approval_status: ApprovalStatus;
+    updated_at: string;
+    approved_at?: string;
+    rejection_reason?: string;
+  }
+
+  const updates: StoreUpdate = {
     approval_status: status,
     updated_at: new Date().toISOString(),
   }
@@ -88,7 +95,14 @@ export async function approveDriver(
   status: ApprovalStatus,
   rejectionReason?: string
 ) {
-  const updates: any = {
+  interface DriverUpdate {
+    approval_status: ApprovalStatus;
+    updated_at: string;
+    approved_at?: string;
+    rejection_reason?: string;
+  }
+
+  const updates: DriverUpdate = {
     approval_status: status,
     updated_at: new Date().toISOString(),
   }
@@ -143,7 +157,14 @@ export async function approveProduct(
   status: ProductStatus,
   rejectionReason?: string
 ) {
-  const updates: any = {
+  interface ProductUpdate {
+    status: ProductStatus;
+    updated_at: string;
+    published_at?: string;
+    rejection_reason?: string;
+  }
+
+  const updates: ProductUpdate = {
     status,
     updated_at: new Date().toISOString(),
   }
@@ -265,7 +286,13 @@ export async function processPayout(
   status: 'completed' | 'rejected',
   rejectionReason?: string
 ) {
-  const updates: any = {
+  interface PayoutUpdate {
+    status: 'completed' | 'rejected';
+    processed_at: string;
+    rejection_reason?: string;
+  }
+
+  const updates: PayoutUpdate = {
     status,
     processed_at: new Date().toISOString(),
   }

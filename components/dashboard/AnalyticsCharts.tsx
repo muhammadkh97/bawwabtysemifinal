@@ -66,12 +66,12 @@ export function SalesChart() {
     }
   };
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: { day: string }; name: string; value: number; color: string }> }) => {
     if (active && payload && payload.length) {
       return (
         <div className="p-4 rounded-xl" style={{ background: 'rgba(15, 10, 30, 0.95)', border: '1px solid rgba(98, 54, 255, 0.5)' }}>
           <p className="text-white font-bold mb-2">{payload[0].payload.day}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry, index: number) => (
             <p key={index} style={{ color: entry.color }} className="text-sm">
               {entry.name}: {entry.value.toLocaleString()}
             </p>
@@ -230,7 +230,7 @@ export function OrdersStatusChart() {
     );
   }
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number; payload: { color: string } }> }) => {
     if (active && payload && payload.length) {
       return (
         <div className="p-3 rounded-xl" style={{ background: 'rgba(15, 10, 30, 0.95)', border: '1px solid rgba(98, 54, 255, 0.5)' }}>
@@ -263,7 +263,7 @@ export function OrdersStatusChart() {
             cx="50%"
             cy="50%"
             labelLine={false}
-            label={(entry: any) => `${entry.name} ${entry.percent ? (entry.percent * 100).toFixed(0) : 0}%`}
+            label={(entry: { name: string; percent?: number }) => `${entry.name} ${entry.percent ? (entry.percent * 100).toFixed(0) : 0}%`}
             outerRadius={100}
             fill="#8884d8"
             dataKey="value"
@@ -350,7 +350,7 @@ export function TopProductsChart() {
     );
   }
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ value: number; payload: { name: string } }> }) => {
     if (active && payload && payload.length) {
       return (
         <div className="p-3 rounded-xl" style={{ background: 'rgba(15, 10, 30, 0.95)', border: '1px solid rgba(98, 54, 255, 0.5)' }}>

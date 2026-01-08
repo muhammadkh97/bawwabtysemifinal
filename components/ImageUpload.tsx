@@ -74,7 +74,7 @@ export default function ImageUpload({
       } else {
         setError(result.error || 'فشل الرفع إلى الخادم');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('حدث خطأ غير متوقع أثناء الرفع');
       console.error(err);
     } finally {

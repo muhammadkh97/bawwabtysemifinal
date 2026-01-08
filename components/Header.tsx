@@ -75,8 +75,16 @@ export default function Header() {
       }
 
       // جلب التصنيفات الفرعية لكل تصنيف رئيسي
+      interface Category {
+        id: string;
+        name: string;
+        name_ar?: string;
+        slug: string;
+        icon?: string;
+      }
+
       const categoriesWithSubs = await Promise.all(
-        (mainCategories || []).map(async (category: any) => {
+        (mainCategories || []).map(async (category: Category) => {
           const { data: subs } = await supabase
             .from('categories')
             .select('id, name, name_ar, slug, icon')

@@ -19,7 +19,7 @@ import {
   LayoutGrid
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import type { LucideIcon } from 'lucide-react'
+import type { Icon } from 'lucide-react'
 
 interface BadgeCounts {
   approvals?: number;
@@ -30,7 +30,7 @@ interface BadgeCounts {
 interface NavItem {
   title: string
   href: string
-  icon: LucideIcon
+  icon: Icon
   badge?: number
   badgeKey?: string
 }

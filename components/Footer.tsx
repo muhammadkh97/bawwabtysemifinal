@@ -53,7 +53,7 @@ export default function Footer() {
       
       // إخفاء رسالة النجاح بعد 5 ثواني
       setTimeout(() => setSuccess(false), 5000)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('خطأ في الاشتراك:', err)
       setError('حدث خطأ. حاول مرة أخرى')
     } finally {

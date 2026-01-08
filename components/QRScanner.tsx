@@ -36,23 +36,28 @@ export default function QRScanner({
 
   // Get available cameras
   useEffect(() => {
+    interface CameraDevice {
+      id: string;
+      label: string;
+    }
+
     Html5Qrcode.getCameras()
-      .then((devices: any[]) => {
+      .then((devices: CameraDevice[]) => {
         if (devices && devices.length > 0) {
           setCameras(
-            devices.map((device: any) => ({
+            devices.map((device) => ({
               id: device.id,
               label: device.label || `كاميرا ${device.id}`,
             }))
           )
           // Select back camera by default
-          const backCamera = devices.find((d: any) =>
+          const backCamera = devices.find((d) =>
             d.label.toLowerCase().includes('back')
           )
           setSelectedCamera(backCamera?.id || devices[0].id)
         }
       })
-      .catch((err: any) => {
+      .catch((err: unknown) => {
         console.error('Error getting cameras:', err)
         setError('لم يتم العثور على كاميرا')
       })
@@ -90,9 +95,10 @@ export default function QRScanner({
       )
 
       setIsScanning(true)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error starting scanner:', err)
-      setError('فشل تشغيل الكاميرا: ' + err.message)
+      const errorMessage = err instanceof Error ? err.message : 'خطأ غير معروف'
+      setError('فشل تشغيل الكاميرا: ' + errorMessage)
     }
   }
 
