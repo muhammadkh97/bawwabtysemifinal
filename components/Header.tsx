@@ -95,11 +95,11 @@ export default function Header() {
           return {
             ...category,
             subcategories: subs || []
-          };
+          } as Category;
         })
       );
 
-      setCategories(categoriesWithSubs as Category[]);
+      setCategories(categoriesWithSubs);
     } catch (error) {
       console.error('❌ خطأ في جلب التصنيفات:', error);
       setCategories([]);
