@@ -56,7 +56,7 @@ export default function ExchangeRatesPage() {
           rate: info.rate,
           lastUpdated: info.lastUpdated,
           flag: SUPPORTED_CURRENCIES[currency as CurrencyCode]?.flag || '🌐',
-          name: SUPPORTED_CURRENCIES[currency as CurrencyCode]?.name || currency,
+          name: SUPPORTED_CURRENCIES[currency as CurrencyCode]?.name_ar || currency,
         }));
         
         setRates(ratesList);
