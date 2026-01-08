@@ -27,7 +27,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    console.log('🔄 Starting exchange rates update...')
 
     // جلب الأسعار من multiple APIs للموثوقية
     const rates = await fetchExchangeRates()
@@ -47,7 +46,6 @@ serve(async (req) => {
       throw error
     }
 
-    console.log(`✅ Successfully updated ${data} exchange rates`)
 
     return new Response(
       JSON.stringify({
@@ -86,7 +84,6 @@ async function fetchExchangeRates(): Promise<ExchangeRate[]> {
   
   // محاولة 1: ExchangeRate-API (مجاني، بدون API key)
   try {
-    console.log('📡 Trying ExchangeRate-API...')
     const response = await fetch('https://api.exchangerate-api.com/v4/latest/SAR', {
       headers: { 'User-Agent': 'Bawabty-Marketplace/1.0' }
     })
@@ -105,7 +102,6 @@ async function fetchExchangeRates(): Promise<ExchangeRate[]> {
           rate: parseFloat(data.rates[currency].toFixed(6)),
         }))
 
-      console.log(`✅ Got ${rates.length} rates from ExchangeRate-API`)
       return rates
     }
   } catch (error) {
@@ -114,7 +110,6 @@ async function fetchExchangeRates(): Promise<ExchangeRate[]> {
 
   // محاولة 2: Frankfurter (مجاني، البنك المركزي الأوروبي)
   try {
-    console.log('📡 Trying Frankfurter API...')
     const response = await fetch('https://api.frankfurter.app/latest?from=SAR', {
       headers: { 'User-Agent': 'Bawabty-Marketplace/1.0' }
     })
@@ -133,7 +128,6 @@ async function fetchExchangeRates(): Promise<ExchangeRate[]> {
           rate: parseFloat(data.rates[currency].toFixed(6)),
         }))
 
-      console.log(`✅ Got ${rates.length} rates from Frankfurter`)
       return rates
     }
   } catch (error) {
@@ -142,7 +136,6 @@ async function fetchExchangeRates(): Promise<ExchangeRate[]> {
 
   // محاولة 3: حساب أسعار تقديرية بناءً على USD
   try {
-    console.log('📡 Calculating estimated rates...')
     const usdToSar = 0.27 // ثابت تقريبي
     
     // أسعار تقريبية معروفة
@@ -165,7 +158,6 @@ async function fetchExchangeRates(): Promise<ExchangeRate[]> {
       rate: parseFloat(rate.toFixed(6)),
     }))
 
-    console.log('⚠️ Using estimated rates as fallback')
     return rates
   } catch (error) {
     console.error('❌ All methods failed:', error)

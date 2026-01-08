@@ -40,13 +40,11 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   // Fetch wishlist items
   const fetchWishlist = async () => {
     if (!user) {
-      console.log('ℹ️ [WishlistContext] No user, clearing wishlist');
       setWishlistItems([]);
       return;
     }
 
     try {
-      console.log('🔄 [WishlistContext] Fetching wishlist for user:', user.id);
       setLoading(true);
       const { data, error } = await supabase
         .from('wishlists')
@@ -70,7 +68,6 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         throw error;
       }
 
-      console.log('✅ [WishlistContext] Wishlist fetched successfully:', data?.length || 0, 'items');
 
       const mappedItems = (data || []).map(item => ({
         ...item,
@@ -94,25 +91,20 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
 
   // Add to wishlist
   const addToWishlist = async (productId: string) => {
-    console.log('❤️ [WishlistContext] addToWishlist called', { productId, user: user?.id });
     
     if (!user) {
-      console.log('❌ [WishlistContext] User not logged in');
       toast.error('يرجى تسجيل الدخول أولاً');
       return;
     }
 
     try {
-      console.log('🔍 [WishlistContext] Checking if item exists in wishlist...');
       // Check if already in wishlist
       const exists = wishlistItems.some(item => item.product_id === productId);
       if (exists) {
-        console.log('⚠️ [WishlistContext] Item already in wishlist');
         toast('المنتج موجود بالفعل في المفضلة', { icon: 'ℹ️' });
         return;
       }
 
-      console.log('➕ [WishlistContext] Adding item to wishlist...');
       const { error } = await supabase
         .from('wishlists')
         .insert({
@@ -125,7 +117,6 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         throw error;
       }
       
-      console.log('✅ [WishlistContext] Item added successfully');
       await fetchWishlist();
       toast.success('تمت إضافة المنتج للمفضلة');
     } catch (error) {
@@ -136,7 +127,6 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
 
   // Remove from wishlist
   const removeFromWishlist = async (productId: string) => {
-    console.log('🗑️ [WishlistContext] removeFromWishlist called', { productId });
     
     try {
       const { error } = await supabase
@@ -150,7 +140,6 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         throw error;
       }
       
-      console.log('✅ [WishlistContext] Item removed successfully');
       setWishlistItems(prev => prev.filter(item => item.product_id !== productId));
       toast.success('تم حذف المنتج من المفضلة');
     } catch (error) {

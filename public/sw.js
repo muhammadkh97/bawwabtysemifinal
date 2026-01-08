@@ -50,7 +50,6 @@ self.addEventListener('fetch', (event) => {
 
 // Push event (receive notifications)
 self.addEventListener('push', (event) => {
-  console.log('Push notification received:', event);
 
   let notificationData = {
     title: 'بوابتي',
@@ -86,7 +85,6 @@ self.addEventListener('push', (event) => {
 
 // Notification click event
 self.addEventListener('notificationclick', (event) => {
-  console.log('Notification clicked:', event);
 
   event.notification.close();
 
@@ -167,7 +165,6 @@ self.addEventListener('notificationclick', (event) => {
 
 // Background sync (for offline actions)
 self.addEventListener('sync', (event) => {
-  console.log('Background sync triggered:', event.tag);
 
   if (event.tag === 'sync-orders') {
     event.waitUntil(syncOrders());
@@ -176,7 +173,6 @@ self.addEventListener('sync', (event) => {
 
 async function syncOrders() {
   // Sync logic here
-  console.log('Syncing orders...');
   // You can implement offline order submission here
 }
 
@@ -213,7 +209,6 @@ async function checkForNewNotifications() {
 
 // Handle messages from the app
 self.addEventListener('message', (event) => {
-  console.log('Message received in service worker:', event.data);
 
   if (event.data.type === 'SHOW_NOTIFICATION') {
     const { title, options } = event.data;

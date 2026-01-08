@@ -73,11 +73,9 @@ export async function fetchGlobalExchangeRates(): Promise<Record<string, number>
   const sources = [exchangeRateAPI, frankfurterAPI, currencyAPI];
 
   for (const source of sources) {
-    console.log(`📡 Trying ${source.name}...`);
     const rates = await source.fetch();
     
     if (rates && Object.keys(rates).length > 0) {
-      console.log(`✅ Success with ${source.name}`);
       return rates;
     }
   }
@@ -157,7 +155,6 @@ export async function updateExchangeRatesFromAPI() {
       return { success: false, error: updateError };
     }
 
-    console.log(`✅ تم تحديث ${updateResult} سعر صرف بنجاح من APIs عالمية`);
     return { success: true, count: updateResult, rates };
   } catch (error) {
     console.error('Error updating exchange rates:', error);
@@ -180,7 +177,6 @@ export async function triggerExchangeRatesUpdate() {
       return { success: false, error };
     }
 
-    console.log('✅ Exchange rates updated via Edge Function:', data);
     return { success: true, data };
   } catch (error) {
     console.error('Error invoking Edge Function:', error);
@@ -252,13 +248,11 @@ export function scheduleExchangeRatesUpdate(intervalHours: number = 24) {
   
   // جدولة تحديث دوري
   const intervalId = setInterval(() => {
-    console.log('🕐 Scheduled exchange rates update triggered...');
     updateExchangeRatesFromAPI();
   }, intervalMs);
 
   // إرجاع دالة لإلغاء الجدولة
   return () => {
-    console.log('🛑 Stopping scheduled exchange rates updates');
     clearInterval(intervalId);
   };
 }

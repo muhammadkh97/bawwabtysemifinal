@@ -21,7 +21,6 @@ export default function LoyaltyCard() {
 
     // الاستماع لتحديثات النقاط من صناديق الحظ أو أي مصدر آخر
     const handlePointsUpdate = () => {
-      console.log('🔄 [LoyaltyCard] إعادة تحميل النقاط بعد التحديث...');
       fetchLoyaltyData();
     };
 
@@ -34,16 +33,13 @@ export default function LoyaltyCard() {
 
   const fetchLoyaltyData = async () => {
     try {
-      console.log('🎁 [LoyaltyCard] جلب نقاط الولاء...');
       
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.log('❌ [LoyaltyCard] لا يوجد مستخدم مسجل دخول');
         setIsLoading(false);
         return;
       }
 
-      console.log('✅ [LoyaltyCard] User ID:', user.id);
 
       const { data, error } = await supabase
         .from('users')
@@ -64,8 +60,6 @@ export default function LoyaltyCard() {
         return;
       }
 
-      console.log('📊 [LoyaltyCard] نقاط الولاء:', data?.loyalty_points);
-      console.log('👤 [LoyaltyCard] اسم المستخدم:', data?.name);
       
       // تحديد المستوى بناءً على النقاط
       let tier: LoyaltyData['tier'] = 'bronze';
@@ -74,7 +68,6 @@ export default function LoyaltyCard() {
       else if (points >= 5000) tier = 'gold';
       else if (points >= 1000) tier = 'silver';
 
-      console.log('🏆 [LoyaltyCard] المستوى:', tier);
 
       // تحديد الاسم بالأولوية: name > email > عضو مميز
       let userName = 'عضو مميز';
@@ -84,7 +77,6 @@ export default function LoyaltyCard() {
         userName = user.email.split('@')[0];
       }
 
-      console.log('✅ [LoyaltyCard] الاسم المعروض:', userName);
 
       setLoyaltyData({
         points: points,

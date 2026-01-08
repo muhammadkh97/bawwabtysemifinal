@@ -40,7 +40,6 @@ export default function ProtectedRoute({
   useEffect(() => {
     // ✅ إذا كان AuthContext لا يزال يحمل، انتظر
     if (contextLoading) {
-      console.log('⏳ [ProtectedRoute] انتظار AuthContext...');
       return;
     }
 
@@ -51,7 +50,6 @@ export default function ProtectedRoute({
     // 1. لم يتم التحقق من قبل
     // 2. AuthContext انتهى من التحميل
     if (!hasCheckedRef.current) {
-      console.log('🔐 [ProtectedRoute] إجراء التحقق الأول...');
       checkAuth();
       hasCheckedRef.current = true;
       lastCheckTimeRef.current = now;
@@ -59,7 +57,6 @@ export default function ProtectedRoute({
       // إعادة التحقق فقط إذا تغير الدور
       const prevRole = sessionStorage.getItem('lastCheckedRole');
       if (prevRole !== contextUserRole) {
-        console.log('🔄 [ProtectedRoute] الدور تغير - إعادة التحقق');
         checkAuth();
         lastCheckTimeRef.current = now;
       }
@@ -68,14 +65,11 @@ export default function ProtectedRoute({
 
   const checkAuth = async () => {
     try {
-      console.log('🔐 [ProtectedRoute] بدء التحقق من الصلاحيات...');
 
       // التحقق من Session أولاً
       const { data: { session } } = await supabase.auth.getSession();
-      console.log('📋 [ProtectedRoute] Session:', session ? 'موجودة ✅' : 'غير موجودة ❌');
       
       if (!session) {
-        console.log('❌ [ProtectedRoute] لا توجد Session - التوجيه لتسجيل الدخول');
         setIsLoading(false);
         router.push(`${redirectTo}?redirect=${window.location.pathname}`);
         return;
@@ -86,10 +80,6 @@ export default function ProtectedRoute({
       // حفظ الدور في sessionStorage للمقارنة لاحقاً
       sessionStorage.setItem('lastCheckedRole', userRole);
 
-      console.log('🎭 [ProtectedRoute] دور المستخدم النهائي:', userRole);
-      console.log('🔒 [ProtectedRoute] الأدوار المسموحة:', allowedRoles);
-      console.log('👥 [ProtectedRoute] هل هو مساعد بائع؟', isVendorStaff);
-      console.log('🍽️ [ProtectedRoute] هل هو مساعد مطعم؟', isRestaurantStaff);
 
       // التحقق من الصلاحيات
       const isRoleAllowed = allowedRoles.includes(userRole);
@@ -99,9 +89,6 @@ export default function ProtectedRoute({
       const hasAccess = isRoleAllowed || isStaffAccessingVendorDashboard || isStaffAccessingRestaurantDashboard;
 
       if (!hasAccess) {
-        console.log('❌ [ProtectedRoute] الدور غير مسموح - التوجيه للوحة التحكم الصحيحة');
-        console.log(`   المطلوب: ${allowedRoles.join(', ')}`);
-        console.log(`   الموجود: ${userRole}`);
         
         // إعادة التوجيه إلى لوحة التحكم الصحيحة حسب دور المستخدم
         const roleRedirects: { [key: string]: string } = {
@@ -113,13 +100,11 @@ export default function ProtectedRoute({
         };
         
         const redirectPath = roleRedirects[userRole] || '/';
-        console.log(`🔄 [ProtectedRoute] إعادة التوجيه إلى: ${redirectPath}`);
         setIsLoading(false);
         router.push(redirectPath);
         return;
       }
 
-      console.log('✅ [ProtectedRoute] مصرح بالدخول!');
       setIsAuthorized(true);
       setIsLoading(false);
     } catch (err) {

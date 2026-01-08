@@ -88,16 +88,13 @@ export default function ProfilePage() {
 
   const fetchUserData = async () => {
     try {
-      console.log('🔍 [Profile] جلب بيانات المستخدم...');
       
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.log('❌ [Profile] لا يوجد مستخدم مسجل دخول');
         router.push('/auth/login');
         return;
       }
 
-      console.log('✅ [Profile] Auth User ID:', user.id);
 
       // جلب البيانات مباشرة من public.users لضمان الحصول على آخر التحديثات
       const { data: userData, error: directError } = await supabase
@@ -106,8 +103,6 @@ export default function ProfilePage() {
         .eq('id', user.id)
         .single();
 
-      console.log('📊 [Profile] بيانات من الجدول مباشرة:', userData);
-      console.log('🎭 [Profile] دور المستخدم:', userData?.role);
 
       if (directError || !userData) {
         console.error('❌ [Profile] فشل جلب البيانات:', directError);
@@ -148,7 +143,6 @@ export default function ProfilePage() {
         setAddresses(addressesData);
       }
 
-      console.log('✅ [Profile] تم تحميل البيانات بنجاح');
       setLoading(false);
     } catch (error) {
       console.error('❌ [Profile] خطأ غير متوقع:', error);
@@ -206,7 +200,6 @@ export default function ProfilePage() {
           const fileExt = avatarFile.name.split('.').pop();
           const fileName = `avatar-${profile.id}-${Date.now()}.${fileExt}`;
           
-          console.log('📤 [Profile] رفع الصورة:', fileName);
           
           const { data: uploadData, error: uploadError } = await supabase.storage
             .from('profiles')
@@ -224,7 +217,6 @@ export default function ProfilePage() {
               .getPublicUrl(fileName);
 
             avatarUrl = publicUrl;
-            console.log('✅ [Profile] تم رفع الصورة بنجاح:', avatarUrl);
           }
         } catch (storageError) {
           console.error('❌ [Profile] خطأ غير متوقع في رفع الصورة:', storageError);
@@ -233,7 +225,6 @@ export default function ProfilePage() {
       }
 
       // Update profile in database
-      console.log('🔄 [Profile] تحديث البيانات...');
       const { error: updateError } = await supabase
         .from('users')
         .update({
@@ -252,7 +243,6 @@ export default function ProfilePage() {
         throw updateError;
       }
       
-      console.log('✅ [Profile] تم التحديث بنجاح');
 
       // Update local state
       setProfile({
@@ -298,7 +288,6 @@ export default function ProfilePage() {
         return;
       }
 
-      console.log('🔐 [Profile] تغيير كلمة المرور...');
 
       // تغيير كلمة المرور
       const { error } = await supabase.auth.updateUser({
@@ -310,7 +299,6 @@ export default function ProfilePage() {
         throw error;
       }
 
-      console.log('✅ [Profile] تم تغيير كلمة المرور بنجاح');
       alert('✅ تم تغيير كلمة المرور بنجاح!');
       
       // إعادة تعيين الحقول

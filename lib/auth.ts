@@ -83,7 +83,6 @@ export async function signUp(
  */
 export async function signIn(email: string, password: string) {
   try {
-    console.log('📝 محاولة تسجيل الدخول للبريد:', email);
     
     // تسجيل الدخول في Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -101,13 +100,11 @@ export async function signIn(email: string, password: string) {
       return { user: null, error: 'فشل تسجيل الدخول' }
     }
 
-    console.log('✅ تم تسجيل الدخول في Auth:', authData.user.id);
 
     // التحقق من Session
     if (!authData.session) {
       console.warn('⚠️ تحذير: لم يتم إنشاء Session');
     } else {
-      console.log('✅ Session تم إنشاؤها بنجاح');
     }
 
     // جلب بيانات المستخدم من public.users باستخدام دالة آمنة
@@ -131,14 +128,12 @@ export async function signIn(email: string, password: string) {
         role: directData?.user_role || authData.user.user_metadata?.role || 'customer',
         name: directData?.full_name || authData.user.user_metadata?.name || authData.user.email?.split('@')[0],
       };
-      console.log('✅ استخدام بيانات بديلة:', user);
       return { 
         user, 
         error: null 
       }
     }
 
-    console.log('✅ تم جلب بيانات المستخدم من public.users:', userData);
 
     // دمج بيانات auth مع بيانات public.users
     const safeUserData = ensureUserObject(userData)

@@ -96,7 +96,6 @@ export default function NewProductPage() {
         }
 
         setVendorId(storeData.id);
-        console.log('✅ Store ID (vendor_id) loaded:', storeData.id);
       } catch (error) {
         console.error('❌ Error loading store data:', error);
         toast.error('❌ خطأ في تحميل البيانات. يرجى المحاولة لاحقاً');

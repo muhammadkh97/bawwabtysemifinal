@@ -111,7 +111,6 @@ export default function ApprovalsPage() {
 
       // Send approval notification (simple implementation)
       if (userData) {
-        console.log(`✅ Approved: ${userData.email} (${userData.role})`);
         // TODO: Integrate with email service (SendGrid, Resend, etc.)
         // Example: await sendEmail({
         //   to: userData.email,
@@ -159,7 +158,6 @@ export default function ApprovalsPage() {
 
       // Send rejection notification (simple implementation)
       if (userData) {
-        console.log(`❌ Rejected: ${userData.email} - Reason: ${rejectionReason}`);
         // TODO: Integrate with email service (SendGrid, Resend, etc.)
         // Example: await sendEmail({
         //   to: userData.email,

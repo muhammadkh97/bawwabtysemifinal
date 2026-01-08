@@ -60,7 +60,6 @@ function LoginForm() {
     setError('');
 
     try {
-      console.log('🔄 بدء تسجيل الدخول...');
       
       // تسجيل الدخول
       const { user, error: signInError } = await signIn(email, password);
@@ -79,11 +78,9 @@ function LoginForm() {
         return;
       }
 
-      console.log('✅ تم تسجيل الدخول بنجاح:', user);
       
       // توجيه المستخدم حسب دوره
       const userRole = (user as any).role || 'customer';
-      console.log('📍 توجيه المستخدم إلى:', userRole);
       
       redirectUserByRole(userRole);
 

@@ -43,11 +43,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔔 [AuthContext] Auth state changed:', event);
       
       // تجاهل أحداث معينة لتجنب الحلقات اللانهائية
       if (event === 'TOKEN_REFRESHED') {
-        console.log('🔄 [AuthContext] Token refreshed - تحديث User فقط بدون إعادة جلب');
         if (session?.user) {
           setUser(session.user);
           setUserId(session.user.id);
@@ -68,13 +66,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // 2. مر أكثر من 60 ثانية على آخر جلب
         // 3. الحدث هو SIGNED_IN
         if (!isInitializedRef.current || timeSinceLastFetch > 60000 || event === 'SIGNED_IN') {
-          console.log('✅ [AuthContext] جلب بيانات المستخدم...');
           setLoading(true);
           await fetchUserData(session.user.id);
           lastFetchTimeRef.current = now;
           isInitializedRef.current = true;
         } else {
-          console.log('⏭️ [AuthContext] تخطي الجلب - تم الجلب مؤخراً (', Math.floor(timeSinceLastFetch / 1000), 'ثانية)');
         }
       } else {
         resetAuthState();
@@ -107,7 +103,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserData = async (uid: string, retryCount = 0): Promise<void> => {
     try {
-      console.log(`🔍 [AuthContext] جلب بيانات المستخدم لـ: ${uid} (محاولة ${retryCount + 1}/3)`);
       
       // استخدام دالة get_current_user الآمنة بدلاً من الاستعلام المباشر
       const { data, error } = await supabase
@@ -118,7 +113,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error('❌ [AuthContext] خطأ في جلب البيانات من get_current_user:', error);
         
         // محاولة بديلة: جلب مباشر من الجدول
-        console.log('🔄 [AuthContext] محاولة جلب مباشر من جدول users...');
 
         const { data: directData, error: directError } = await supabase
           .from('users')
@@ -132,7 +126,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // إعادة المحاولة حتى 3 مرات مع Exponential Backoff
           if (retryCount < 2) {
             const backoffDelay = Math.pow(2, retryCount) * 1000; // 1s, 2s
-            console.log(`🔄 [AuthContext] إعادة المحاولة بعد ${backoffDelay}ms...`);
             await new Promise(resolve => setTimeout(resolve, backoffDelay));
             return await fetchUserData(uid, retryCount + 1);
           }
@@ -144,9 +137,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userRoleValue = directData?.role || directData?.user_role || 'customer';
         const fullName = directData?.full_name || directData?.name || null;
         
-        console.log('✅ [AuthContext] تم الجلب المباشر بنجاح');
-        console.log('🎭 [AuthContext] الدور:', userRoleValue);
-        console.log('👤 [AuthContext] الاسم:', fullName);
         
         setUserRole(userRoleValue);
         setUserFullName(fullName);
@@ -154,7 +144,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      console.log('✅ [AuthContext] البيانات المسترجعة من get_current_user:', data);
       // نوع بيانات الدالة rpc غير معرف افتراضيًا، نستخدم assertion
       const userData = data as { 
         role?: string; 
@@ -174,14 +163,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsVendorStaff(true);
         setStaffVendorId(userData?.staff_vendor_id || null);
         setStaffPermissions(userData?.staff_permissions || []);
-        console.log('🎭 [AuthContext] المستخدم هو مساعد بائع');
-        console.log('🏪 [AuthContext] معرف المتجر:', userData?.staff_vendor_id);
-        console.log('🔑 [AuthContext] الصلاحيات:', userData?.staff_permissions);
       } else if (userData?.is_restaurant_staff) {
         setIsRestaurantStaff(true);
         setStaffRestaurantId(userData?.staff_restaurant_id || null);
         setStaffPermissions(userData?.staff_permissions || []);
-        console.log('🎭 [AuthContext] المستخدم هو مساعد مطعم');
       } else {
         // ليس مساعد، إعادة تعيين متغيرات المساعد
         setIsVendorStaff(false);
@@ -192,8 +177,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       const fullName = userData?.full_name || null;
-      console.log('🎭 [AuthContext] الدور النهائي:', userRoleValue);
-      console.log('👤 [AuthContext] الاسم:', fullName);
       setUserRole(userRoleValue);
       setUserFullName(fullName);
     } catch (error) {

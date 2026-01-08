@@ -340,7 +340,6 @@ export async function classifyProduct(
   availableCategories: { id: string; name_ar: string; name_en: string }[],
   provider: 'openai' | 'claude' | 'fallback' = 'openai'
 ): Promise<ClassificationResult> {
-  console.log('🤖 Starting AI classification...');
 
   let result: ClassificationResult;
 
@@ -358,7 +357,6 @@ export async function classifyProduct(
     result.imageAnalysis = await analyzeProductImages(productData.images);
   }
 
-  console.log('✅ AI classification completed:', {
     confidence: result.confidence,
     needsReview: result.needsReview,
   });

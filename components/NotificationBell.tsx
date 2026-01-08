@@ -82,7 +82,6 @@ export default function NotificationBell() {
   // إظهار Toast notification
   const showToast = (notification: Notification) => {
     // يمكن استخدام مكتبة toast مثل react-hot-toast
-    console.log('New notification:', notification);
   };
 
   // تحديد الأيقونة حسب النوع

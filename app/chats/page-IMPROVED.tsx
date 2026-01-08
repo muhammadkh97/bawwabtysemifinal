@@ -179,7 +179,6 @@ export default function ChatsPage() {
           filter: `chat_id=eq.${chatId}`,
         },
         (payload) => {
-          console.log('✅ رسالة جديدة:', payload.new);
           
           // إضافة الرسالة للقائمة
           setMessages((prev) => [...prev, payload.new as Message]);
@@ -203,7 +202,6 @@ export default function ChatsPage() {
           filter: `chat_id=eq.${chatId}`,
         },
         (payload) => {
-          console.log('🔄 تحديث رسالة:', payload.new);
           
           // تحديث الرسالة في القائمة
           setMessages((prev) =>
@@ -214,7 +212,6 @@ export default function ChatsPage() {
         }
       )
       .subscribe((status) => {
-        console.log('📡 حالة الاتصال:', status);
         setIsOnline(status === 'SUBSCRIBED');
       });
 

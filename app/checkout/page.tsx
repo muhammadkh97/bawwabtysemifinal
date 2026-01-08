@@ -504,7 +504,6 @@ export default function CheckoutPage() {
         return;
       }
 
-      console.log('📦 Order items to insert:', orderItems);
 
       const { error: itemsError } = await supabase
         .from('order_items')

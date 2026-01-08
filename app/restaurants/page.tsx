@@ -42,7 +42,6 @@ export default function RestaurantsPage() {
           });
         },
         (error) => {
-          console.log('Location access denied:', error);
         }
       );
     }

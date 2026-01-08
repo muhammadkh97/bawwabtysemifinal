@@ -345,7 +345,6 @@ export async function setupNotificationServiceWorker(): Promise<boolean> {
 
   try {
     const registration = await navigator.serviceWorker.register('/sw.js');
-    console.log('Service Worker registered:', registration);
     return true;
   } catch (error) {
     console.error('Service Worker registration failed:', error);

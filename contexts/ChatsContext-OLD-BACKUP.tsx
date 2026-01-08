@@ -358,7 +358,6 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
           .maybeSingle();
         
         if (vendorError || !vendorData) {
-          console.log('لم يتم العثور على بيانات البائع');
           return;
         }
         
@@ -376,7 +375,6 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
             filter: filter
           },
           () => {
-            console.log('تم تحديث المحادثات');
             fetchChats();
           }
         )

@@ -41,13 +41,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Fetch cart items
   const fetchCart = async () => {
     if (!user) {
-      console.log('ℹ️ [CartContext] No user, clearing cart');
       setCartItems([]);
       return;
     }
 
     try {
-      console.log('🔄 [CartContext] Fetching cart for user:', user.id);
       setLoading(true);
       const { data, error } = await supabase
         .from('cart_items')
@@ -69,7 +67,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         throw error;
       }
 
-      console.log('✅ [CartContext] Cart fetched successfully:', data?.length || 0, 'items');
 
       const mappedItems = (data || []).map(item => ({
         ...item,
@@ -93,26 +90,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Add to cart
   const addToCart = async (productId: string, quantity: number = 1) => {
-    console.log('🛒 [CartContext] addToCart called', { productId, quantity, user: user?.id });
     
     if (!user) {
-      console.log('❌ [CartContext] User not logged in');
       toast.error('يرجى تسجيل الدخول أولاً');
       return;
     }
 
     try {
-      console.log('🔍 [CartContext] Checking if item exists in cart...');
       // Check if item already in cart
       const existingItem = cartItems.find(item => item.product_id === productId);
 
       if (existingItem) {
-        console.log('✏️ [CartContext] Item exists, updating quantity', existingItem);
         // Update quantity
         await updateQuantity(existingItem.id, existingItem.quantity + quantity);
         toast.success('تم تحديث الكمية في السلة');
       } else {
-        console.log('➕ [CartContext] Adding new item to cart...');
         // Add new item
         const { error } = await supabase
           .from('cart_items')
@@ -127,7 +119,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
           throw error;
         }
         
-        console.log('✅ [CartContext] Item added successfully');
         await fetchCart();
         toast.success('تمت إضافة المنتج للسلة بنجاح');
       }
@@ -139,7 +130,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Remove from cart
   const removeFromCart = async (itemId: string) => {
-    console.log('🗑️ [CartContext] removeFromCart called', { itemId });
     
     try {
       const { error } = await supabase
@@ -152,7 +142,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         throw error;
       }
       
-      console.log('✅ [CartContext] Item removed successfully');
       setCartItems(prev => prev.filter(item => item.id !== itemId));
       toast.success('تم حذف المنتج من السلة');
     } catch (error) {

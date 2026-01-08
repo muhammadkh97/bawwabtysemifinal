@@ -73,7 +73,6 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
           SUPPORTED_CURRENCIES[currency.code] = currency;
         });
         
-        console.log(`✅ تم تحميل ${currenciesData.length} عملة من قاعدة البيانات`);
       }
     } catch (error) {
       console.error('❌ خطأ في تحميل العملات:', error);
@@ -121,7 +120,6 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         const hardcodedRates = getHardcodedRates(selectedCurrency);
         setExchangeRates(hardcodedRates);
         setExchangeRatesLoaded(true);
-        console.log(`✅ استخدام أسعار صرف ثابتة (${Object.keys(hardcodedRates).length} عملة)`);
         return;
       }
 
@@ -158,20 +156,17 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         const hardcodedRates = getHardcodedRates(selectedCurrency);
         setExchangeRates(hardcodedRates);
         setExchangeRatesLoaded(true);
-        console.log(`✅ استخدام أسعار صرف ثابتة (${Object.keys(hardcodedRates).length} عملة)`);
         return;
       }
       
       setExchangeRates(rates);
       setExchangeRatesLoaded(true);
-      console.log(`✅ تم تحميل ${Object.keys(rates).length} سعر صرف للعملة ${selectedCurrency}`);
     } catch (error) {
       console.error('❌ خطأ في تحميل أسعار الصرف:', error);
       // Use hardcoded rates as final fallback
       const hardcodedRates = getHardcodedRates(selectedCurrency);
       setExchangeRates(hardcodedRates);
       setExchangeRatesLoaded(true);
-      console.log(`✅ استخدام أسعار صرف ثابتة كـ fallback (${Object.keys(hardcodedRates).length} عملة)`);
     }
   };
 
@@ -192,7 +187,6 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
 
   // دالة لتحديث العملات يدوياً
   const refreshCurrencies = async () => {
-    console.log('🔄 تحديث العملات يدوياً...');
     await loadCurrencies();
   };
 
@@ -207,7 +201,6 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     if (user?.id) {
       try {
         await updateUserPreferredCurrency(user.id, currency);
-        console.log(`✅ تم حفظ العملة المفضلة: ${currency}`);
       } catch (error) {
         console.error('Error updating preferred currency in database:', error);
       }

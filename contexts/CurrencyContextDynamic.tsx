@@ -70,7 +70,6 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       
       // إذا مر أكثر من 24 ساعة، حدّث من API
       if (!age || age.needsUpdate) {
-        console.log('⏰ أسعار الصرف قديمة، جاري التحديث من API...');
         await updateExchangeRatesFromAPI();
       }
       
@@ -89,11 +88,9 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         });
         
         setLastUpdated(new Date(rates[Object.keys(rates)[0]]?.lastUpdated || Date.now()));
-        console.log('✅ تم تحديث أسعار الصرف بنجاح');
       }
     } catch (error) {
       console.error('❌ خطأ في تحميل أسعار الصرف:', error);
-      console.log('⚠️ سيتم استخدام الأسعار الافتراضية');
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +98,6 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
 
   // دالة لتحديث الأسعار يدوياً
   const refreshRates = async () => {
-    console.log('🔄 تحديث أسعار الصرف يدوياً...');
     await loadExchangeRates();
   };
 

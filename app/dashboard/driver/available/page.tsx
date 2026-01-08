@@ -47,15 +47,12 @@ export default function AvailableOrdersPage() {
         .eq('user_id', user.id)
         .single();
 
-      console.log('🔍 [Load Orders] Driver data:', driverData);
-      console.log('🔍 [Load Orders] Driver error:', driverError);
 
       if (!driverData) {
         toast.error('⚠️ يجب أن تكون مندوب توصيل');
         return;
       }
 
-      console.log('🔍 [Load Orders] Setting driver ID:', driverData.id);
       setDriverId(driverData.id);
 
       const { data: ordersData, error } = await supabase
@@ -77,8 +74,6 @@ export default function AvailableOrdersPage() {
         .order('delivery_type', { ascending: true })
         .order('created_at', { ascending: false });
 
-      console.log('🔍 [Available Orders] Query result:', { ordersData, error });
-      console.log('📊 [Available Orders] Number of orders:', ordersData?.length || 0);
 
       if (!error && ordersData) {
         setOrders(ordersData.map((o: any) => ({
@@ -104,9 +99,6 @@ export default function AvailableOrdersPage() {
       return;
     }
 
-    console.log('🔍 [Accept Order] Driver ID:', driverId);
-    console.log('🔍 [Accept Order] Order ID:', orderId);
-    console.log('🔍 [Accept Order] Driver ID type:', typeof driverId);
 
     try {
       const { data, error } = await supabase
@@ -118,7 +110,6 @@ export default function AvailableOrdersPage() {
         .eq('id', orderId)
         .select();
 
-      console.log('🔍 [Accept Order] Update result:', { data, error });
 
       if (error) {
         console.error('❌ [Accept Order] Error:', error);

@@ -597,7 +597,6 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
           filter: filter || undefined
         },
         (payload) => {
-          console.log('📨 تم تحديث محادثة:', payload.new);
           // تحديث محلي فقط بدون re-fetch كامل
           setChats(prev => prev.map(chat => 
             chat.id === payload.new.id 
@@ -625,7 +624,6 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
           filter: `chat_id=eq.${chatId}`
         },
         (payload) => {
-          console.log('📨 رسالة جديدة:', payload.new);
           const newMessage = payload.new as Message;
           
           // لا نضيف الرسالة إذا كانت محذوفة أو مرسلة من نفس المستخدم (تمت إضافتها بالفعل)
@@ -634,10 +632,8 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
               // تحقق من عدم وجود الرسالة بالفعل
               const exists = prev.some(msg => msg.id === newMessage.id);
               if (exists) {
-                console.log('⏭️ الرسالة موجودة بالفعل - تخطي');
                 return prev;
               }
-              console.log('✅ إضافة رسالة جديدة');
               return [...prev, newMessage];
             });
             

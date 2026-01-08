@@ -49,7 +49,6 @@ function ProductsContent() {
   // Fetch categories with subcategories from Supabase
   const fetchCategories = useCallback(async () => {
     try {
-      console.log('🔍 [Products Page] بدء جلب التصنيفات...');
       
       // جلب التصنيفات الرئيسية
       const { data: mainCats, error: fetchError } = await supabase
@@ -58,7 +57,6 @@ function ProductsContent() {
         .is('parent_id', null)
         .order('display_order', { ascending: true });
 
-      console.log('📊 [Products Page] نتيجة الاستعلام:', { mainCats, fetchError });
 
       if (fetchError) {
         console.error('❌ [Products Page] خطأ في جلب التصنيفات:', fetchError);
@@ -67,7 +65,6 @@ function ProductsContent() {
 
       // فلترة التصنيفات النشطة فقط
       const activeCats = (mainCats || []).filter((cat: any) => cat.is_active === true);
-      console.log('✅ [Products Page] التصنيفات النشطة:', activeCats);
 
       const formattedCategories = [
         { id: 'all', name: 'الكل' },
@@ -77,7 +74,6 @@ function ProductsContent() {
         }))
       ];
 
-      console.log('✅ [Products Page] التصنيفات المنسقة:', formattedCategories);
       setCategories(formattedCategories);
     } catch (err) {
       console.error('Error fetching categories:', err);

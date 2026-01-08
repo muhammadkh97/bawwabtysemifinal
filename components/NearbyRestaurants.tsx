@@ -41,7 +41,6 @@ export default function NearbyRestaurants() {
           fetchNearbyRestaurants(position.coords.latitude, position.coords.longitude);
         },
         (error) => {
-          console.log('Location access denied:', error);
           setLocationPermission('denied');
           fetchFeaturedRestaurants();
         }

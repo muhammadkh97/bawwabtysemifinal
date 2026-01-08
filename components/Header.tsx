@@ -55,7 +55,6 @@ export default function Header() {
   // جلب التصنيفات مع الفروع
   const fetchCategories = async () => {
     try {
-      console.log('🔍 [Header] بدء جلب التصنيفات...');
       
       // جلب التصنيفات الرئيسية
       const { data: mainCategories, error: mainError } = await supabase
@@ -64,8 +63,6 @@ export default function Header() {
         .is('parent_id', null)
         .order('display_order', { ascending: true });
 
-      console.log('📊 [Header] التصنيفات الرئيسية:', mainCategories);
-      console.log('📊 [Header] عدد التصنيفات:', mainCategories?.length);
 
       if (mainError) {
         console.error('❌ [Header] خطأ في جلب التصنيفات:', mainError);
@@ -73,7 +70,6 @@ export default function Header() {
       }
 
       if (!mainCategories || mainCategories.length === 0) {
-        console.log('⚠️ [Header] لا توجد تصنيفات في قاعدة البيانات');
         setCategories([]);
         return;
       }
@@ -87,7 +83,6 @@ export default function Header() {
             .eq('parent_id', category.id)
             .order('display_order', { ascending: true });
 
-          console.log(`✅ [Header] الفروع لـ ${category.name_ar}:`, subs?.length || 0);
 
           return {
             ...category,
@@ -96,7 +91,6 @@ export default function Header() {
         })
       );
 
-      console.log('✅ [Header] جميع التصنيفات مع الفروع:', categoriesWithSubs);
       setCategories(categoriesWithSubs);
     } catch (error) {
       console.error('❌ خطأ في جلب التصنيفات:', error);
@@ -125,12 +119,10 @@ export default function Header() {
           .maybeSingle();
 
         if (vendorError) {
-          console.log('لم يتم العثور على بيانات البائع');
           return;
         }
 
         if (!vendorData) {
-          console.log('لم يتم العثور على بيانات البائع');
           return;
         }
 

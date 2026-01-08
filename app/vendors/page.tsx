@@ -28,7 +28,6 @@ export default function VendorsPage() {
   async function fetchVendors() {
     try {
       setLoading(true);
-      console.log('🔍 Fetching vendors...');
       
       const { data, error } = await supabase
         .from('stores')
@@ -41,7 +40,6 @@ export default function VendorsPage() {
         throw error;
       }
 
-      console.log('✅ Vendors fetched:', data?.length || 0);
 
       // Fetch product counts for each vendor
       const vendorsWithCounts = await Promise.all(
@@ -59,7 +57,6 @@ export default function VendorsPage() {
         })
       );
 
-      console.log('✅ Vendors with counts:', vendorsWithCounts);
       setVendors(vendorsWithCounts);
     } catch (error) {
       console.error('Error fetching vendors:', error);

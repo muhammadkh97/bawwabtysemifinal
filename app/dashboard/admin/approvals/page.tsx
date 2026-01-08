@@ -60,8 +60,6 @@ export default function ApprovalsPage() {
         .eq('approval_status', 'pending')
         .order('created_at', { ascending: false });
 
-      console.log('📦 المنتجات المعلقة:', products);
-      console.log('❌ خطأ في جلب المنتجات:', productsError);
 
       if (products) {
         setPendingProducts(products.map((p: any) => ({
@@ -103,8 +101,6 @@ export default function ApprovalsPage() {
         .eq('approval_status', 'pending')
         .order('created_at', { ascending: false });
 
-      console.log('🏪 البائعين المعلقين:', vendors);
-      console.log('❌ خطأ في جلب البائعين:', vendorsError);
 
       if (vendors) {
         setPendingVendors(vendors.map((v: any) => ({
@@ -141,8 +137,6 @@ export default function ApprovalsPage() {
         .eq('approval_status', 'pending')
         .order('created_at', { ascending: false });
 
-      console.log('🚗 السائقين المعلقين:', drivers);
-      console.log('❌ خطأ في جلب السائقين:', driversError);
 
       if (drivers) {
         setPendingDrivers(drivers.map((d: any) => ({

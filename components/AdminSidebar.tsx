@@ -136,7 +136,6 @@ export default function AdminSidebar() {
           .eq('status', 'pending');
         approvals += pendingDrivers || 0;
       } catch (error) {
-        console.log('Drivers table not found');
       }
 
       // جلب النزاعات المفتوحة
@@ -148,7 +147,6 @@ export default function AdminSidebar() {
           .eq('status', 'open');
         disputes = openDisputes || 0;
       } catch (error) {
-        console.log('Disputes table not found');
       }
 
       // جلب التذاكر المفتوحة

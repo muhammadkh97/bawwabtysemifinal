@@ -42,7 +42,6 @@ export default function VendorProductsPage() {
   }, [searchParams]);
 
   useEffect(() => {
-    console.log('🔍 [VendorProducts] Current userId:', userId);
     if (userId) {
       fetchVendorProducts();
     }
@@ -50,13 +49,11 @@ export default function VendorProductsPage() {
 
   const fetchVendorProducts = async () => {
     if (!userId) {
-      console.log('⚠️ [VendorProducts] No userId found');
       return;
     }
     
     try {
       setLoading(true);
-      console.log('📡 [VendorProducts] Fetching vendor for userId:', userId);
 
       // Get store ID (vendor_id)
       const { data: storeData, error: storeError } = await supabase
@@ -76,11 +73,9 @@ export default function VendorProductsPage() {
         return;
       }
 
-      console.log('✅ [VendorProducts] Found store:', storeData);
       setVendorId(storeData.id);
 
       // Fetch store's products
-      console.log('📡 [VendorProducts] Fetching products for vendor_id:', storeData.id);
       const { data: productsData, error: productsError } = await supabase
         .from('products')
         .select('id, name, price, stock, status, total_sales, images, featured_image')
@@ -92,7 +87,6 @@ export default function VendorProductsPage() {
         throw productsError;
       }
 
-      console.log('✅ [VendorProducts] Products fetched:', productsData?.length || 0);
       setProducts(productsData || []);
     } catch (error) {
       console.error('❌ [VendorProducts] Unexpected error:', error);
