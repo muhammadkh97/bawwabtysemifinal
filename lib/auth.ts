@@ -32,9 +32,17 @@ interface UserProfileUpdate {
   language?: string
 }
 
+// Extended User type with custom properties
+interface ExtendedUser extends User {
+  role?: string
+  full_name?: string
+  user_role?: string
+  [key: string]: unknown
+}
+
 // Auth response interfaces
-interface AuthResponse<T = User> {
-  user: T | null
+interface AuthResponse {
+  user: ExtendedUser | null
   error: string | null
 }
 
@@ -157,7 +165,8 @@ export async function signIn(email: string, password: string) {
         .eq('id', authData.user.id)
         .single();
 
-      const user = {
+      const user: ExtendedUser = {
+        ...authData.user,
         id: authData.user.id,
         email: authData.user.email,
         role: directData?.user_role || authData.user.user_metadata?.role || 'customer',
@@ -173,7 +182,8 @@ export async function signIn(email: string, password: string) {
     // دمج بيانات auth مع بيانات public.users
     const safeUserData = ensureUserObject(userData)
 
-    const user = {
+    const user: ExtendedUser = {
+      ...authData.user,
       id: authData.user.id,
       email: authData.user.email,
       ...safeUserData,
@@ -245,7 +255,7 @@ export async function getCurrentUser(): Promise<AuthResponse> {
               ...user,
               role: directData?.user_role || 'customer',
               full_name: directData?.full_name
-            }, 
+            } as ExtendedUser, 
             error: null 
           });
           return;
@@ -256,7 +266,7 @@ export async function getCurrentUser(): Promise<AuthResponse> {
             ...user,
             ...ensureUserObject(userData),
             role: resolveRole(userData)
-          }, 
+          } as ExtendedUser, 
           error: null 
         });
       });
