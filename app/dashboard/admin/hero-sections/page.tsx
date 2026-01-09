@@ -26,6 +26,8 @@ interface HeroSection {
 export default function HeroSectionsManager() {
   const [sections, setSections] = useState<HeroSection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [editingSection, setEditingSection] = useState<HeroSection | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<HeroSection>>({
@@ -51,15 +53,22 @@ export default function HeroSectionsManager() {
 
   const fetchSections = async () => {
     try {
+      setLoading(true);
+      setError(null);
+      
       const { data, error } = await supabase
         .from('hero_sections')
         .select('*')
         .order('display_order', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(`فشل تحميل الشرائح: ${error.message}`);
+      }
+      
       setSections(data || []);
     } catch (error) {
-      console.error('Error fetching hero sections:', error);
+      const errorMessage = error instanceof Error ? error.message : 'حدث خطأ أثناء تحميل البيانات';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -69,6 +78,8 @@ export default function HeroSectionsManager() {
     e.preventDefault();
     
     try {
+      setSubmitting(true);
+      
       if (editingSection) {
         // تحديث
         const { error } = await supabase
@@ -76,7 +87,9 @@ export default function HeroSectionsManager() {
           .update(formData)
           .eq('id', editingSection.id);
 
-        if (error) throw error;
+        if (error) {
+          throw new Error(`فشل تحديث الشريحة: ${error.message}`);
+        }
         alert('✅ تم تحديث الشريحة بنجاح!');
       } else {
         // إضافة جديد
@@ -84,15 +97,19 @@ export default function HeroSectionsManager() {
           .from('hero_sections')
           .insert([formData]);
 
-        if (error) throw error;
+        if (error) {
+          throw new Error(`فشل إضافة الشريحة: ${error.message}`);
+        }
         alert('✅ تم إضافة الشريحة بنجاح!');
       }
 
-      fetchSections();
+      await fetchSections();
       closeModal();
     } catch (error) {
-      console.error('Error saving hero section:', error);
-      alert('❌ حدث خطأ أثناء الحفظ');
+      const errorMessage = error instanceof Error ? error.message : 'حدث خطأ أثناء الحفظ';
+      alert(`❌ ${errorMessage}`);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -105,12 +122,15 @@ export default function HeroSectionsManager() {
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(`فشل حذف الشريحة: ${error.message}`);
+      }
+      
       alert('✅ تم حذف الشريحة بنجاح!');
-      fetchSections();
+      await fetchSections();
     } catch (error) {
-      console.error('Error deleting hero section:', error);
-      alert('❌ حدث خطأ أثناء الحذف');
+      const errorMessage = error instanceof Error ? error.message : 'حدث خطأ أثناء الحذف';
+      alert(`❌ ${errorMessage}`);
     }
   };
 
@@ -121,10 +141,14 @@ export default function HeroSectionsManager() {
         .update({ is_active: !currentStatus })
         .eq('id', id);
 
-      if (error) throw error;
-      fetchSections();
+      if (error) {
+        throw new Error(`فشل تغيير حالة التفعيل: ${error.message}`);
+      }
+      
+      await fetchSections();
     } catch (error) {
-      console.error('Error toggling active status:', error);
+      const errorMessage = error instanceof Error ? error.message : 'حدث خطأ أثناء تغيير الحالة';
+      alert(`❌ ${errorMessage}`);
     }
   };
 
@@ -162,8 +186,64 @@ export default function HeroSectionsManager() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="p-6 max-w-7xl mx-auto" dir="rtl">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <div className="h-9 bg-gray-200 rounded w-48 mb-2 animate-pulse"></div>
+            <div className="h-5 bg-gray-200 rounded w-64 animate-pulse"></div>
+          </div>
+          <div className="h-12 bg-gray-200 rounded-lg w-40 animate-pulse"></div>
+        </div>
+        <div className="grid gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white rounded-xl shadow-md p-6 animate-pulse">
+              <div className="flex gap-4">
+                <div className="w-48 h-32 bg-gray-200 rounded-lg"></div>
+                <div className="flex-1">
+                  <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-full mb-4"></div>
+                  <div className="flex gap-2">
+                    <div className="h-10 bg-gray-200 rounded w-20"></div>
+                    <div className="h-10 bg-gray-200 rounded w-20"></div>
+                    <div className="h-10 bg-gray-200 rounded w-20"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="fixed inset-0 bg-black/5 flex items-center justify-center pointer-events-none">
+          <div className="bg-white p-6 rounded-xl shadow-xl">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-3"></div>
+            <p className="text-gray-600 text-sm">جارٍ تحميل البيانات...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto" dir="rtl">
+        <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg">
+          <div className="flex items-center mb-4">
+            <div className="flex-shrink-0">
+              <svg className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="mr-3">
+              <h3 className="text-lg font-semibold text-red-800">فشل تحميل البيانات</h3>
+              <p className="text-red-700 mt-1">{error}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => fetchSections()}
+            className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition"
+          >
+            إعادة المحاولة
+          </button>
+        </div>
       </div>
     );
   }
@@ -504,10 +584,20 @@ export default function HeroSectionsManager() {
               <div className="flex gap-3 pt-4 border-t border-gray-200">
                 <button
                   type="submit"
-                  className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-semibold"
+                  disabled={submitting}
+                  className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Save className="w-5 h-5" />
-                  <span>{editingSection ? 'حفظ التعديلات' : 'إضافة الشريحة'}</span>
+                  {submitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <span>جارٍ الحفظ...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-5 h-5" />
+                      <span>{editingSection ? 'حفظ التعديلات' : 'إضافة الشريحة'}</span>
+                    </>
+                  )}
                 </button>
                 <button
                   type="button"

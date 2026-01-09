@@ -29,6 +29,7 @@ export default function DynamicHero() {
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [autoPlay, setAutoPlay] = useState(true);
 
   useEffect(() => {
@@ -47,6 +48,9 @@ export default function DynamicHero() {
 
   const fetchHeroSlides = async () => {
     try {
+      setLoading(true);
+      setError(null);
+      
       const { data, error } = await supabase
         .from('hero_sections')
         .select('*')
@@ -54,7 +58,9 @@ export default function DynamicHero() {
         .eq('page', 'home')
         .order('display_order', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(`فشل تحميل الشرائح: ${error.message}`);
+      }
 
       if (data && data.length > 0) {
         setSlides(data);
@@ -63,8 +69,9 @@ export default function DynamicHero() {
         setSlides(getDefaultSlides());
       }
     } catch (error) {
-      console.error('خطأ في جلب شرائح Hero:', error);
-      // استخدام شرائح افتراضية في حالة الخطأ
+      const errorMessage = error instanceof Error ? error.message : 'حدث خطأ غير متوقع';
+      setError(errorMessage);
+      // استخدام شرائح افتراضية في حالة الخطأ لضمان عدم ظهور شاشة فارغة
       setSlides(getDefaultSlides());
     } finally {
       setLoading(false);
@@ -141,10 +148,19 @@ export default function DynamicHero() {
         <div className="container mx-auto px-3 sm:px-4">
           <div className="flex items-center justify-between gap-4 sm:gap-6 md:gap-12">
             <div className="flex-1 max-w-2xl">
-              <div className="h-12 bg-white/20 rounded-lg mb-4"></div>
-              <div className="h-6 bg-white/20 rounded-lg mb-4 w-3/4"></div>
-              <div className="h-10 bg-white/20 rounded-lg w-40"></div>
+              <div className="h-12 bg-white/20 rounded-lg mb-4 animate-pulse"></div>
+              <div className="h-6 bg-white/20 rounded-lg mb-4 w-3/4 animate-pulse"></div>
+              <div className="h-10 bg-white/20 rounded-lg w-40 animate-pulse"></div>
             </div>
+            <div className="hidden lg:block flex-1">
+              <div className="h-64 bg-white/20 rounded-2xl animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+          <div className="text-white text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-2"></div>
+            <p className="text-sm">جارٍ التحميل...</p>
           </div>
         </div>
       </section>
