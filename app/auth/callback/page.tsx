@@ -33,8 +33,11 @@ export default function AuthCallbackPage() {
               .insert({
                 id: session.user.id,
                 email: session.user.email,
-                name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'مستخدم',
+                full_name: session.user.user_metadata?.full_name || 
+                          session.user.user_metadata?.name || 
+                          session.user.email?.split('@')[0] || 'مستخدم',
                 role: 'customer',
+                avatar_url: session.user.user_metadata?.avatar_url || null,
                 created_at: new Date().toISOString(),
               });
 
