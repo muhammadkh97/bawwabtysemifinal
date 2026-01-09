@@ -132,7 +132,7 @@ export default function VendorDetailsPage() {
 
   // ✅ دالة لزر المشاركة
   const handleShare = async () => {
-    const url = (typeof window !== 'undefined' ? window.location.href : undefined);
+    const url = (typeof window !== 'undefined' ? window.location.href : '');
     const title = vendor?.name_ar || vendor?.name;
     
     if (navigator.share) {
@@ -146,8 +146,10 @@ export default function VendorDetailsPage() {
       }
     } else {
       // Fallback: نسخ الرابط
-      navigator.clipboard.writeText(url);
-      alert('تم نسخ الرابط!');
+      if (url) {
+        navigator.clipboard.writeText(url);
+        alert('تم نسخ الرابط!');
+      }
     }
   };
 
