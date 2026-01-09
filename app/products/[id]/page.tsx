@@ -561,7 +561,7 @@ export default function ProductDetailPage() {
       {product.vendor && (
         <ChatComponent 
           vendorId={product.vendor_id}
-          vendorName={product.vendor.store_name}
+          vendorName={product.vendor.name}
           vendorAvatar=""
         />
       )}
