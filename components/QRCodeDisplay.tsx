@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import QRCode from 'qrcode.react'
+import { QRCodeSVG as QRCode } from 'qrcode.react'
 import { formatOTP, getOTPTimeRemaining, isOTPExpired } from '@/lib/qrOtpUtils'
 import { Download, Copy, Clock, CheckCircle, AlertCircle } from 'lucide-react'
 
@@ -66,14 +66,24 @@ export default function QRCodeDisplay({
   const handleDownloadQR = () => {
     if (!qrRef.current) return
 
-    const canvas = qrRef.current.querySelector('canvas')
-    if (!canvas) return
+    const svg = qrRef.current.querySelector('svg')
+    if (!svg) return
 
-    const url = canvas.toDataURL('image/png')
-    const link = document.createElement('a')
-    link.download = `qr-code-${orderId}.png`
-    link.href = url
-    link.click()
+    const svgData = new XMLSerializer().serializeToString(svg)
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    const img = new Image()
+    img.onload = () => {
+      canvas.width = img.width
+      canvas.height = img.height
+      ctx?.drawImage(img, 0, 0)
+      const url = canvas.toDataURL('image/png')
+      const link = document.createElement('a')
+      link.download = `qr-code-${orderId}.png`
+      link.href = url
+      link.click()
+    }
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)))
   }
 
   const isPickup = type === 'pickup'
@@ -142,7 +152,6 @@ export default function QRCodeDisplay({
                 size={256}
                 level="H"
                 includeMargin={true}
-                renderAs="canvas"
               />
             </div>
 
