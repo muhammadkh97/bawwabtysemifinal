@@ -41,13 +41,14 @@ export default function BestDeals() {
     try {
       setLoading(true);
 
-      // جلب المنتجات التي لديها old_price (خصومات)
+      // جلب المنتجات التي لديها old_price (خصومات) - استثناء الوجبات من المطاعم
       const { data, error } = await supabase
         .from('products')
-        .select('*, vendor:stores(store_name)')
+        .select('*, vendor:stores(store_name, business_type)')
         .not('old_price', 'is', null)
         .gt('stock', 0)
         .eq('is_active', true)
+        .neq('vendor.business_type', 'restaurant')
         .order('rating', { ascending: false })
         .limit(8);
 
@@ -155,7 +156,7 @@ export default function BestDeals() {
         </div>
 
         {/* شبكة المنتجات */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-10">
           {deals.map((product) => (
             <div key={product.id} className="group relative">
               {/* شعاع خلفي */}

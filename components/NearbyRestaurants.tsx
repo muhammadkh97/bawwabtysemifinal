@@ -114,7 +114,7 @@ export default function NearbyRestaurants() {
   if (loading) {
     return (
       <section className="py-12 px-4 max-w-7xl mx-auto" dir="rtl">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="bg-white rounded-3xl p-4 animate-pulse">
               <div className="w-full h-48 bg-gray-200 rounded-2xl mb-4"></div>
@@ -155,7 +155,7 @@ export default function NearbyRestaurants() {
 
       {/* Restaurants Grid */}
       {restaurants.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         {restaurants.map((restaurant, index) => (
           <motion.div
             key={restaurant.id}
