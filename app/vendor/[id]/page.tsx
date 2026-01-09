@@ -157,7 +157,7 @@ export default function VendorDetailsPage() {
     if (vendor?.latitude && vendor?.longitude) {
       const url = `https://www.google.com/maps?q=${vendor.latitude},${vendor.longitude}`;
       window.open(url, '_blank');
-    } else if (vendor?.store_address) {
+    } else if (vendor?.store_address && typeof vendor.store_address === 'string') {
       const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(vendor.store_address)}`;
       window.open(url, '_blank');
     }

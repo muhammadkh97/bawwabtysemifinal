@@ -213,10 +213,10 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
 
     const user: ExtendedUser = {
       ...authData.user,
-      ...safeUserData,
-      id: authData.user.id,
-      email: authData.user.email || undefined,
-      role: resolveRole(userData)
+      role: resolveRole(userData),
+      full_name: safeUserData.full_name,
+      user_role: safeUserData.user_role || null,
+      name: safeUserData.name || null
     };
     
     return { 
