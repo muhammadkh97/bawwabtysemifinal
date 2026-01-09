@@ -56,6 +56,13 @@ interface PayoutRequest {
   rejection_reason?: string;
 }
 
+interface OrderFromDB {
+  order_number: string;
+  delivery_fee: number;
+  created_at: string;
+  status: string;
+}
+
 export default function DriverWalletPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -73,12 +80,7 @@ export default function DriverWalletPage() {
     notes: ''
   });
 
-interface OrderFromDB {
-  order_number: string;
-  delivery_fee: number;
-  created_at: string;
-  status: string;
-}
+  const checkAuth = useCallback(async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
