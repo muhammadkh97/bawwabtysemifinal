@@ -557,30 +557,6 @@ function RegisterForm() {
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                {/* Quick Action Buttons */}
-                <div className="flex flex-wrap gap-3 justify-center mb-6">
-                  <motion.button
-                    type="button"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowComparison(!showComparison)}
-                    className="px-4 py-2 rounded-lg bg-white/10 backdrop-blur-sm border border-purple-500/30 text-purple-200 hover:bg-white/20 transition-all flex items-center gap-2"
-                  >
-                    <Package className="w-4 h-4" />
-                    مقارنة الحسابات
-                  </motion.button>
-                  <motion.button
-                    type="button"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowFAQ(!showFAQ)}
-                    className="px-4 py-2 rounded-lg bg-white/10 backdrop-blur-sm border border-purple-500/30 text-purple-200 hover:bg-white/20 transition-all flex items-center gap-2"
-                  >
-                    <HelpCircle className="w-4 h-4" />
-                    أسئلة شائعة
-                  </motion.button>
-                </div>
-
                 <h2 className="text-xl font-bold text-white mb-6 text-center">اختر نوع حسابك</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {userTypeOptions.map((option) => (
@@ -592,135 +568,20 @@ function RegisterForm() {
                         setUserType(option.type);
                         setStep(2);
                       }}
-                      className="relative p-6 rounded-2xl text-center transition-all"
+                      className="p-6 rounded-2xl text-center transition-all"
                       style={{
                         background: 'rgba(98, 54, 255, 0.1)',
                         border: '2px solid rgba(98, 54, 255, 0.3)',
                       }}
                     >
-                      {option.badge && (
-                        <span className={`absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-medium ${
-                          option.badge === 'الأكثر شيوعاً' 
-                            ? 'bg-green-500/20 text-green-300 border border-green-500/30'
-                            : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                        }`}>
-                          {option.badge}
-                        </span>
-                      )}
                       <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${option.color} flex items-center justify-center mx-auto mb-4`}>
                         <option.icon className="w-8 h-8 text-white" />
                       </div>
                       <h3 className="text-lg font-bold text-white mb-2">{option.title}</h3>
-                      <p className="text-sm text-purple-300 mb-2">{option.description}</p>
-                      {option.subtitle && (
-                        <p className="text-purple-300 text-xs mt-2">{option.subtitle}</p>
-                      )}
-                      {option.stats && (
-                        <p className="text-purple-400 text-xs mt-1">{option.stats}</p>
-                      )}
+                      <p className="text-sm text-purple-300">{option.description}</p>
                     </motion.button>
                   ))}
                 </div>
-
-                {/* Comparison Table */}
-                <AnimatePresence>
-                  {showComparison && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mt-6 overflow-hidden"
-                    >
-                      <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-purple-500/30 p-6">
-                        <h3 className="text-white font-semibold text-lg mb-6 text-center flex items-center justify-center gap-2">
-                          <TrendingUp className="w-5 h-5" />
-                          مقارنة شاملة بين أنواع الحسابات
-                        </h3>
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-right">
-                            <thead>
-                              <tr className="border-b border-purple-500/30">
-                                <th className="p-3 text-purple-300 font-medium min-w-[150px]">الميزة</th>
-                                {Object.entries(accountComparison).map(([type, _]) => (
-                                  <th key={type} className="p-3 text-white font-medium min-w-[100px]">
-                                    {userTypeOptions.find(o => o.value === type)?.label}
-                                  </th>
-                                ))}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {Object.keys(accountComparison.customer.features).map((feature) => (
-                                <tr key={feature} className="border-b border-purple-500/10 hover:bg-white/5">
-                                  <td className="p-3 text-purple-200 text-sm">{feature}</td>
-                                  {Object.entries(accountComparison).map(([type, data]) => (
-                                    <td key={type} className="p-3 text-center">
-                                      {data.features[feature] ? (
-                                        <Check className="w-5 h-5 text-green-400 mx-auto" />
-                                      ) : (
-                                        <X className="w-5 h-5 text-red-400 mx-auto" />
-                                      )}
-                                    </td>
-                                  ))}
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* FAQ Section */}
-                <AnimatePresence>
-                  {showFAQ && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mt-6 space-y-3"
-                    >
-                      <h3 className="text-white font-semibold text-lg mb-4 text-center flex items-center justify-center gap-2">
-                        <HelpCircle className="w-5 h-5" />
-                        أسئلة شائعة حول أنواع الحسابات
-                      </h3>
-                      {faqData.map((faq, idx) => (
-                        <motion.div
-                          key={idx}
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: idx * 0.1 }}
-                          className="bg-white/5 backdrop-blur-sm rounded-xl border border-purple-500/30 overflow-hidden"
-                        >
-                          <button
-                            type="button"
-                            onClick={() => setOpenFAQ(openFAQ === idx ? null : idx)}
-                            className="w-full p-4 flex items-center justify-between text-right hover:bg-white/10 transition-all"
-                          >
-                            <span className="text-white font-medium flex-1">{faq.question}</span>
-                            {openFAQ === idx ? (
-                              <ChevronUp className="w-5 h-5 text-purple-300" />
-                            ) : (
-                              <ChevronDown className="w-5 h-5 text-purple-300" />
-                            )}
-                          </button>
-                          <AnimatePresence>
-                            {openFAQ === idx && (
-                              <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                className="px-4 pb-4"
-                              >
-                                <p className="text-purple-200 text-sm leading-relaxed">{faq.answer}</p>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
 
                 {/* Divider */}
                 <div className="relative my-8">

@@ -189,9 +189,9 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
       // Silent fallback to direct fetch
       
       // محاولة جلب مباشرة من الجدول كخطة بديلة
-      const { data: directData } = await supabase
+      const directData = await supabase
         .from('users')
-        .select('id, email, full_name, role::text as role')
+        .select('id, email, full_name, role')
         .eq('id', authData.user.id)
         .single();
 
@@ -199,8 +199,8 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
         ...authData.user,
         id: authData.user.id,
         email: authData.user.email,
-        role: (directData?.role as UserRole) || (authData.user.user_metadata?.role as UserRole) || 'customer',
-        full_name: directData?.full_name || authData.user.user_metadata?.name || authData.user.email?.split('@')[0],
+        role: (directData?.data?.role as UserRole) || (authData.user.user_metadata?.role as UserRole) || 'customer',
+        full_name: directData?.data?.full_name || authData.user.user_metadata?.name || authData.user.email?.split('@')[0],
       };
       return { 
         user, 
@@ -273,15 +273,15 @@ export async function getCurrentUser(): Promise<AuthResponse> {
           // محاولة جلب مباشرة
           const { data: directData } = await supabase
             .from('users')
-            .select('id, email, full_name, role::text as role')
+            .select('id, email, full_name, role')
             .eq('id', user.id)
             .single();
 
           resolve({ 
             user: {
               ...user,
-              role: (directData?.role as UserRole) || 'customer',
-              full_name: directData?.full_name
+              role: (directData?.data?.role as UserRole) || 'customer',
+              full_name: directData?.data?.full_name
             } as ExtendedUser, 
             error: null 
           });

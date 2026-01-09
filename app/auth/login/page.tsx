@@ -145,16 +145,18 @@ function LoginForm() {
         console.error('❌ خطأ في تسجيل الدخول:', signInError);
         
         // رسائل خطأ واضحة ومحددة
-        if (signInError.message?.includes('Invalid login credentials')) {
+        const errorMessage = typeof signInError === 'string' ? signInError : signInError?.message || 'حدث خطأ أثناء تسجيل الدخول';
+        
+        if (errorMessage.includes('Invalid login credentials')) {
           setError('❌ البريد الإلكتروني أو كلمة المرور غير صحيحة. يرجى التحقق والمحاولة مرة أخرى.');
-        } else if (signInError.message?.includes('Email not confirmed')) {
+        } else if (errorMessage.includes('Email not confirmed')) {
           setError('⚠️ يرجى تأكيد بريدك الإلكتروني أولاً. تحقق من صندوق الوارد.');
-        } else if (signInError.message?.includes('User not found')) {
+        } else if (errorMessage.includes('User not found')) {
           setError('❌ لا يوجد حساب بهذا البريد الإلكتروني. يرجى التسجيل أولاً.');
-        } else if (signInError.message?.includes('Too many requests')) {
+        } else if (errorMessage.includes('Too many requests')) {
           setError('⏰ عدد كبير من المحاولات. يرجى الانتظار قليلاً والمحاولة مرة أخرى.');
         } else {
-          setError(`❌ ${signInError.message || 'حدث خطأ أثناء تسجيل الدخول'}`);
+          setError(`❌ ${errorMessage}`);
         }
         
         setLoading(false);
