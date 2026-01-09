@@ -280,8 +280,8 @@ export async function getCurrentUser(): Promise<AuthResponse> {
           resolve({ 
             user: {
               ...user,
-              role: (directData?.data?.role as UserRole) || 'customer',
-              full_name: directData?.data?.full_name
+              role: (directData?.role as UserRole) || 'customer',
+              full_name: directData?.full_name
             } as ExtendedUser, 
             error: null 
           });

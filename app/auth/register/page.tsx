@@ -378,43 +378,51 @@ function RegisterForm() {
   const userTypeOptions = [
     {
       type: 'customer' as const,
+      value: 'customer' as const,
+      label: 'عميل',
       icon: User,
       title: 'مشتري',
       subtitle: 'للتسوق اليومي',
       description: 'تسوق من آلاف المنتجات والمطاعم',
       color: 'from-blue-500 to-cyan-500',
       badge: 'الأكثر شيوعاً',
-      stats: { users: '50K+', rating: '4.8' }
+      stats: '50K+ عميل نشط'
     },
     {
       type: 'vendor' as const,
+      value: 'vendor' as const,
+      label: 'بائع',
       icon: Store,
       title: 'بائع',
       subtitle: 'لأصحاب المتاجر',
       description: 'ابدأ متجرك وابنِ علامتك التجارية',
       color: 'from-purple-500 to-pink-500',
       badge: 'عمولة 10%',
-      stats: { vendors: '2K+', earnings: '5K دينار' }
+      stats: '2K+ بائع | 5K دينار متوسط'
     },
     {
       type: 'restaurant' as const,
+      value: 'restaurant' as const,
+      label: 'مطعم',
       icon: ChefHat,
       title: 'مطعم',
       subtitle: 'لأصحاب المطاعم',
       description: 'قدم وجباتك لآلاف العملاء',
       color: 'from-orange-500 to-red-500',
       badge: 'عمولة 12%',
-      stats: { restaurants: '500+', orders: '100K+' }
+      stats: '500+ مطعم | 100K+ طلب'
     },
     {
       type: 'driver' as const,
+      value: 'driver' as const,
+      label: 'سائق',
       icon: Truck,
       title: 'مندوب',
       subtitle: 'للتوصيل',
       description: 'اربح حتى 1500 دينار شهرياً',
       color: 'from-green-500 to-emerald-500',
       badge: 'دخل مرتفع',
-      stats: { drivers: '1K+', income: '1200 دينار' }
+      stats: '1K+ سائق | 1200 دينار متوسط'
     },
   ];
 
@@ -654,7 +662,7 @@ function RegisterForm() {
                                   <td className="p-3 text-purple-200 text-sm">{feature}</td>
                                   {Object.entries(accountComparison).map(([type, data]) => (
                                     <td key={type} className="p-3 text-center">
-                                      {data.features[feature] ? (
+                                      {(data.features as any)[feature] ? (
                                         <Check className="w-5 h-5 text-green-400 mx-auto" />
                                       ) : (
                                         <X className="w-5 h-5 text-red-400 mx-auto" />

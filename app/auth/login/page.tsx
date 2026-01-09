@@ -145,7 +145,7 @@ function LoginForm() {
         console.error('❌ خطأ في تسجيل الدخول:', signInError);
         
         // رسائل خطأ واضحة ومحددة
-        const errorMessage = typeof signInError === 'string' ? signInError : signInError?.message || 'حدث خطأ أثناء تسجيل الدخول';
+        const errorMessage = typeof signInError === 'string' ? signInError : (signInError as any)?.message || 'حدث خطأ أثناء تسجيل الدخول';
         
         if (errorMessage.includes('Invalid login credentials')) {
           setError('❌ البريد الإلكتروني أو كلمة المرور غير صحيحة. يرجى التحقق والمحاولة مرة أخرى.');
