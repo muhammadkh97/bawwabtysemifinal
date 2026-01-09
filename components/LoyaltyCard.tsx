@@ -24,11 +24,12 @@ export default function LoyaltyCard() {
       fetchLoyaltyData();
     };
 
-    (typeof window !== 'undefined' ? window.addEventListener : undefined)('loyaltyPointsUpdated', handlePointsUpdate);
-
-    return () => {
-      (typeof window !== 'undefined' ? window.removeEventListener : undefined)('loyaltyPointsUpdated', handlePointsUpdate);
-    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('loyaltyPointsUpdated', handlePointsUpdate);
+      return () => {
+        window.removeEventListener('loyaltyPointsUpdated', handlePointsUpdate);
+      };
+    }
   }, []);
 
   const fetchLoyaltyData = async () => {

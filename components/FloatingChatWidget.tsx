@@ -70,10 +70,12 @@ export default function FloatingChatWidget() {
       }
     };
 
-    (typeof window !== 'undefined' ? window.addEventListener : undefined)('openVendorChat' as any, handleOpenVendorChat as any);
-    return () => {
-      (typeof window !== 'undefined' ? window.removeEventListener : undefined)('openVendorChat' as any, handleOpenVendorChat as any);
-    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('openVendorChat' as any, handleOpenVendorChat as any);
+      return () => {
+        window.removeEventListener('openVendorChat' as any, handleOpenVendorChat as any);
+      };
+    }
   }, [chats, createOrGetChat, setCurrentChatId]);
 
   // Play notification sound for new messages
@@ -198,7 +200,7 @@ export default function FloatingChatWidget() {
           right: 0,
         }}
         onDragStart={() => setIsDragging(true)}
-        onDragEnd={(event, info) => {
+        onDragEnd={(event: any, info: any) => {
           setIsDragging(false);
           // Save position to localStorage
           const newPosition = { x: info.point.x, y: info.point.y };

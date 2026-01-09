@@ -153,12 +153,13 @@ export default function VendorDetailsPage() {
 
   // ✅ دالة لفتح الخريطة
   const handleOpenMap = () => {
+    if (typeof window === 'undefined') return;
     if (vendor?.latitude && vendor?.longitude) {
       const url = `https://www.google.com/maps?q=${vendor.latitude},${vendor.longitude}`;
-      (typeof window !== 'undefined' ? window.open : undefined)(url, '_blank');
+      window.open(url, '_blank');
     } else if (vendor?.store_address) {
       const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(vendor.store_address)}`;
-      (typeof window !== 'undefined' ? window.open : undefined)(url, '_blank');
+      window.open(url, '_blank');
     }
   };
 

@@ -355,8 +355,8 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
         sender_role: userRole,
         content: content.trim(),
         message_type: options.message_type || 'text',
-        attachments: options.attachments || null,
-        reply_to_id: options.reply_to_id || null,
+        attachments: options.attachments || undefined,
+        reply_to_id: options.reply_to_id || undefined,
       };
 
       const { data, error } = await supabase

@@ -82,6 +82,7 @@ export default function LocationMapComponent({
     historyMarkers.current = [];
 
     // Add accuracy circle
+    if (!L) return;
     accuracyCircle.current = L.circle(
       [currentLocation.lat, currentLocation.lng],
       {

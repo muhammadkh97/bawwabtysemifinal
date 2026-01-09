@@ -78,8 +78,10 @@ export default function ProductDetailPage() {
       }
     };
 
-    (typeof window !== 'undefined' ? window.addEventListener : undefined)('keydown', handleKeyPress);
-    return () => (typeof window !== 'undefined' ? window.removeEventListener : undefined)('keydown', handleKeyPress);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('keydown', handleKeyPress);
+      return () => window.removeEventListener('keydown', handleKeyPress);
+    }
   }, [product]);
 
   const onTouchStart = (e: React.TouchEvent) => {

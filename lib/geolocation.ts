@@ -265,18 +265,21 @@ export async function getCoordinatesFromAddress(
 // ============================================
 
 export function openInGoogleMaps(coordinates: Coordinates): void {
+  if (typeof window === 'undefined') return;
   const url = `https://www.google.com/maps?q=${coordinates.lat},${coordinates.lng}`;
-  (typeof window !== 'undefined' ? window.open : undefined)(url, '_blank');
+  window.open(url, '_blank');
 }
 
 export function openInAppleMaps(coordinates: Coordinates): void {
+  if (typeof window === 'undefined') return;
   const url = `http://maps.apple.com/?ll=${coordinates.lat},${coordinates.lng}`;
-  (typeof window !== 'undefined' ? window.open : undefined)(url, '_blank');
+  window.open(url, '_blank');
 }
 
 export function openDirections(origin: Coordinates, destination: Coordinates): void {
+  if (typeof window === 'undefined') return;
   const url = `https://www.google.com/maps/dir/?api=1&origin=${origin.lat},${origin.lng}&destination=${destination.lat},${destination.lng}&travelmode=driving`;
-  (typeof window !== 'undefined' ? window.open : undefined)(url, '_blank');
+  window.open(url, '_blank');
 }
 
 // ============================================

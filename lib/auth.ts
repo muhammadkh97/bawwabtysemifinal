@@ -213,9 +213,9 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
 
     const user: ExtendedUser = {
       ...authData.user,
-      id: authData.user.id,
-      email: authData.user.email,
       ...safeUserData,
+      id: authData.user.id,
+      email: authData.user.email || undefined,
       role: resolveRole(userData)
     };
     

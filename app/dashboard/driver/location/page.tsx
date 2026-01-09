@@ -329,7 +329,7 @@ export default function DriverLocationPage() {
   const openInGoogleMaps = () => {
     if (typeof window !== 'undefined' && location) {
       const mapsUrl = `https://maps.google.com/?q=${location.lat},${location.lng}`;
-      (typeof window !== 'undefined' ? window.open : undefined)(mapsUrl, '_blank');
+      window.open(mapsUrl, '_blank');
     }
   };
 

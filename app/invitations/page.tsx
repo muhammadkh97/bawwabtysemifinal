@@ -119,7 +119,9 @@ export default function InvitationsPage() {
         router.push('/auth/login');
         return;
       }
-      await fetchInvitations(user.email);
+      if (user.email) {
+        await fetchInvitations(user.email);
+      }
     } catch (error) {
       console.error('خطأ في التحقق من المصادقة:', error);
       router.push('/auth/login');
@@ -215,7 +217,7 @@ export default function InvitationsPage() {
       
       // إعادة تحميل الصفحة بعد ثانية لتحديث كل شيء
       setTimeout(() => {
-        (typeof window !== 'undefined' ? window.location.reload : undefined)();
+        if (typeof window !== 'undefined') window.location.reload();
       }, 1500);
 
     } catch (error: any) {
@@ -243,7 +245,7 @@ export default function InvitationsPage() {
       
       // إعادة جلب الدعوات
       const { user } = await getCurrentUser();
-      if (user) {
+      if (user && user.email) {
         await fetchInvitations(user.email);
       }
     } catch (error: any) {

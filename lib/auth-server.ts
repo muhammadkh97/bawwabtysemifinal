@@ -110,7 +110,8 @@ export async function requireAuth(): Promise<AuthUser> {
     redirect('/auth/login');
   }
   
-  return user;
+  // TypeScript لن يعلم أن redirect توقف التنفيذ، لذا نرجع user بشكل آمن
+  return user as AuthUser;
 }
 
 /**

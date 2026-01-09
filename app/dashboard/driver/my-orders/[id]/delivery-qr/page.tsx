@@ -184,10 +184,12 @@ export default function DriverDeliveryQRPage() {
 
     if (finalLat && finalLng) {
       // فتح خرائط جوجل
-      (typeof window !== 'undefined' ? window.open : undefined)(
-        `https://www.google.com/maps/dir/?api=1&destination=${finalLat},${finalLng}`,
-        '_blank'
-      )
+      if (typeof window !== 'undefined') {
+        window.open(
+          `https://www.google.com/maps/dir/?api=1&destination=${finalLat},${finalLng}`,
+          '_blank'
+        );
+      }
     } else {
       toast.error('لا يوجد موقع محدد للعنوان')
     }

@@ -28,7 +28,7 @@ export default function ShareButtons({ productName, productId, productPrice, pro
       color: 'from-blue-600 to-blue-700',
       hoverColor: 'hover:shadow-blue-500/30',
       action: () => {
-        (typeof window !== 'undefined' ? window.open : undefined)(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}`, '_blank', 'width=600,height=400');
+        if (typeof window !== 'undefined') window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}`, '_blank', 'width=600,height=400');
         setShowMenu(false);
       }
     },
@@ -38,7 +38,7 @@ export default function ShareButtons({ productName, productId, productPrice, pro
       color: 'from-green-600 to-green-700',
       hoverColor: 'hover:shadow-green-500/30',
       action: () => {
-        (typeof window !== 'undefined' ? window.open : undefined)(`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + productUrl)}`, '_blank');
+        if (typeof window !== 'undefined') window.open(`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + productUrl)}`, '_blank');
         setShowMenu(false);
       }
     },
@@ -52,7 +52,7 @@ export default function ShareButtons({ productName, productId, productPrice, pro
       color: 'from-gray-900 to-black',
       hoverColor: 'hover:shadow-gray-500/30',
       action: () => {
-        (typeof window !== 'undefined' ? window.open : undefined)(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(productUrl)}`, '_blank', 'width=600,height=400');
+        if (typeof window !== 'undefined') window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(productUrl)}`, '_blank', 'width=600,height=400');
         setShowMenu(false);
       }
     },
@@ -66,7 +66,7 @@ export default function ShareButtons({ productName, productId, productPrice, pro
       color: 'from-blue-500 to-blue-600',
       hoverColor: 'hover:shadow-blue-400/30',
       action: () => {
-        (typeof window !== 'undefined' ? window.open : undefined)(`https://t.me/share/url?url=${encodeURIComponent(productUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
+        if (typeof window !== 'undefined') window.open(`https://t.me/share/url?url=${encodeURIComponent(productUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
         setShowMenu(false);
       }
     },

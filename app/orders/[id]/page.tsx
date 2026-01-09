@@ -464,7 +464,7 @@ export default function OrderTrackingPage() {
 
                   {/* Open in Maps Button */}
                   <button 
-                    onClick={() => (typeof window !== 'undefined' ? window.open : undefined)(`https://www.google.com/maps/search/?api=1&query=${order.delivery_lat},${order.delivery_lng}`, '_blank')}
+                    onClick={() => { if (typeof window !== 'undefined') window.open(`https://www.google.com/maps/search/?api=1&query=${order.delivery_lat},${order.delivery_lng}`, '_blank'); }}
                     className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
                   >
                     🗺️ فتح في خرائط Google

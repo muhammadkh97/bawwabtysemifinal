@@ -139,9 +139,10 @@ export default function ReferralPage() {
   };
 
   const shareViaWhatsApp = () => {
-    const link = `${(typeof window !== 'undefined' ? window.location.origin : undefined)}/register?ref=${referralCode}`;
+    if (typeof window === 'undefined') return;
+    const link = `${window.location.origin}/register?ref=${referralCode}`;
     const message = `انضم إلى بوابتي واحصل على ${stats.referralBonus} نقطة مجاناً! استخدم كود الإحالة: ${referralCode}\n${link}`;
-    (typeof window !== 'undefined' ? window.open : undefined)(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   if (loading) {
