@@ -269,7 +269,9 @@ export default function DynamicHero() {
                 alt={currentSlideData.title_ar || currentSlideData.title}
                 fill
                 className="object-cover transition-transform duration-700 hover:scale-110"
-                priority
+                priority={currentSlide === 0}
+                loading={currentSlide === 0 ? 'eager' : 'lazy'}
+                sizes="(max-width: 1280px) 0px, 50vw"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
             </div>
