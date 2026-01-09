@@ -168,7 +168,7 @@ function AdminDashboardContent() {
           const product = Array.isArray(item.products) ? item.products[0] : item.products;
           if (product) {
             const existing = productSales.get(item.product_id) || {
-              ...item.products,
+              ...product,
               totalQuantity: 0,
               totalRevenue: 0
             };
