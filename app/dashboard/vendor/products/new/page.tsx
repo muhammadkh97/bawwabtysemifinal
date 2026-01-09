@@ -83,10 +83,12 @@ export default function NewProductPage() {
           .eq('is_active', true)
           .single();
 
-        const { data: storeData, error: storeError } = await Promise.race([
+        const result = await Promise.race([
           fetchPromise,
           timeoutPromise as Promise<never>
-        ]) as Awaited<ReturnType<typeof fetchPromise>>;
+        ]);
+        
+        const { data: storeData, error: storeError } = result as { data: { id: string } | null; error: Error | null };
 
         if (storeError || !storeData) {
           console.error('❌ Store error:', storeError);
