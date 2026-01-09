@@ -1,22 +1,19 @@
-'use client';
-
-import ProtectedRoute from '@/components/ProtectedRoute';
-import { DeliveryPackagesProvider } from '@/contexts/DeliveryPackagesContext';
+import { requireRole } from '@/lib/auth-server';
+import AdminLayoutClient from './AdminLayoutClient';
 
 /**
- * Layout لحماية جميع صفحات لوحة تحكم المدير
- * يضمن أن فقط المستخدمين بدور 'admin' يمكنهم الوصول
+ * Server-Side Protected Layout for Admin Dashboard
+ * ✅ Prevents FOUC (Flash of Unauthenticated Content)
+ * ✅ Server-side session validation before rendering
+ * ✅ Redirects unauthorized users immediately
  */
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <ProtectedRoute allowedRoles={['admin']}>
-      <DeliveryPackagesProvider>
-        {children}
-      </DeliveryPackagesProvider>
-    </ProtectedRoute>
-  );
+  // Server-side authentication check - runs before page renders
+  await requireRole('admin');
+
+  return <AdminLayoutClient>{children}</AdminLayoutClient>;
 }

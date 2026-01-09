@@ -1,29 +1,19 @@
-'use client';
-
-import ProtectedRoute from '@/components/ProtectedRoute';
-import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
-import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
+import { requireRole } from '@/lib/auth-server';
+import VendorLayoutClient from './VendorLayoutClient';
 
 /**
- * Layout لحماية جميع صفحات لوحة تحكم البائع
- * يضمن أن فقط المستخدمين بدور 'vendor' يمكنهم الوصول
+ * Server-Side Protected Layout for Vendor Dashboard
+ * ✅ Prevents FOUC (Flash of Unauthenticated Content)
+ * ✅ Server-side session validation before rendering
+ * ✅ Redirects unauthorized users immediately
  */
-export default function VendorLayout({
+export default async function VendorLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <ProtectedRoute allowedRoles={['vendor']}>
-      <div className="min-h-screen bg-[#0A0515]">
-        <FuturisticSidebar role="vendor" />
-        <div className="md:mr-[280px] transition-all duration-300">
-          <FuturisticNavbar userRole="بائع" />
-          <main className="pt-24 px-4 md:px-8 lg:px-10 pb-10">
-            {children}
-          </main>
-        </div>
-      </div>
-    </ProtectedRoute>
-  );
+  // Server-side authentication check - runs before page renders
+  await requireRole('vendor');
+
+  return <VendorLayoutClient>{children}</VendorLayoutClient>;
 }

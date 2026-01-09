@@ -1,29 +1,19 @@
-'use client';
-
-import ProtectedRoute from '@/components/ProtectedRoute';
-import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
-import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
+import { requireRole } from '@/lib/auth-server';
+import DriverLayoutClient from './DriverLayoutClient';
 
 /**
- * Layout لحماية جميع صفحات لوحة تحكم مندوب التوصيل
- * يضمن أن فقط المستخدمين بدور 'driver' يمكنهم الوصول
+ * Server-Side Protected Layout for Driver Dashboard
+ * ✅ Prevents FOUC (Flash of Unauthenticated Content)
+ * ✅ Server-side session validation before rendering
+ * ✅ Redirects unauthorized users immediately
  */
-export default function DriverLayout({
+export default async function DriverLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <ProtectedRoute allowedRoles={['driver']}>
-      <div className="min-h-screen bg-[#0A0515]">
-        <FuturisticSidebar role="driver" />
-        <div className="md:mr-[280px] transition-all duration-300">
-          <FuturisticNavbar userRole="مندوب توصيل" />
-          <main className="pt-24 px-4 md:px-8 lg:px-10 pb-10">
-            {children}
-          </main>
-        </div>
-      </div>
-    </ProtectedRoute>
-  );
+  // Server-side authentication check - runs before page renders
+  await requireRole('driver');
+
+  return <DriverLayoutClient>{children}</DriverLayoutClient>;
 }

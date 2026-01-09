@@ -1,19 +1,19 @@
-'use client';
-
-import ProtectedRoute from '@/components/ProtectedRoute';
+import { requireRole } from '@/lib/auth-server';
+import RestaurantLayoutClient from './RestaurantLayoutClient';
 
 /**
- * Layout لحماية جميع صفحات لوحة تحكم المطعم
- * يضمن أن فقط المستخدمين بدور 'restaurant' يمكنهم الوصول
+ * Server-Side Protected Layout for Restaurant Dashboard
+ * ✅ Prevents FOUC (Flash of Unauthenticated Content)
+ * ✅ Server-side session validation before rendering
+ * ✅ Redirects unauthorized users immediately
  */
-export default function RestaurantLayout({
+export default async function RestaurantLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <ProtectedRoute allowedRoles={['restaurant']}>
-      {children}
-    </ProtectedRoute>
-  );
+  // Server-side authentication check - runs before page renders
+  await requireRole('restaurant');
+
+  return <RestaurantLayoutClient>{children}</RestaurantLayoutClient>;
 }
