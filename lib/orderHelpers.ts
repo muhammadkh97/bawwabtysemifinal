@@ -201,7 +201,7 @@ export async function updateOrderStatus(
     // إضافة الحقل الزمني المناسب
     const timestampField = STATUS_TIMESTAMP_FIELDS[newStatus];
     if (timestampField) {
-      (updateData as any)[timestampField] = new Date().toISOString();
+      updateData[timestampField] = new Date().toISOString();
     }
 
     // 4. توليد أكواد التحقق إذا كانت الحالة ready_for_pickup

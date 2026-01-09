@@ -16,6 +16,16 @@ function getErrorMessage(error: unknown): string {
 
 export type BucketName = 'products' | 'profiles' | 'documents' | 'chat-attachments' | 'product-images' | 'avatars';
 
+// واجهة لبيانات ملف في التخزين
+export interface StorageFileMetadata {
+  name: string;
+  id: string;
+  updated_at: string;
+  created_at: string;
+  last_accessed_at: string;
+  metadata: Record<string, unknown>;
+}
+
 /**
  * Validate image file
  * التحقق من صحة ملف الصورة
@@ -261,7 +271,7 @@ export async function deleteMultipleFiles(bucket: string, paths: string[]): Prom
 /**
  * List files in a folder
  */
-export async function listFiles(bucket: string, folder?: string): Promise<{ success: boolean; files?: any[]; error?: string }> {
+export async function listFiles(bucket: string, folder?: string): Promise<{ success: boolean; files?: StorageFileMetadata[]; error?: string }> {
   try {
     const { data, error } = await supabase.storage
       .from(bucket)
@@ -275,7 +285,7 @@ export async function listFiles(bucket: string, folder?: string): Promise<{ succ
 
     return {
       success: true,
-      files: data,
+      files: data as StorageFileMetadata[],
     };
   } catch (error: unknown) {
     return {
