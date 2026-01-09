@@ -83,12 +83,7 @@ export default function FuturisticNavbarLuxury({
 
   return (
     <nav
-      className="fixed top-0 right-0 left-0 md:right-[280px] h-14 sm:h-16 md:h-20 z-40 transition-all duration-300 backdrop-blur-xl border-b"
-      style={{
-        background: `linear-gradient(135deg, rgba(15, 10, 30, 0.95), rgba(15, 10, 30, 0.85))`,
-        borderColor: dashboardTheme.colors.border,
-        boxShadow: `0 0 30px ${dashboardTheme.glow.secondary}`,
-      }}
+      className="fixed top-0 right-0 left-0 md:right-[280px] h-14 sm:h-16 md:h-20 z-40 transition-all duration-300 backdrop-blur-md border-b bg-white/80 dark:bg-[#161B2A]/80 border-slate-100 dark:border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)]"
     >
       <div className="h-full px-3 sm:px-4 md:px-6 flex items-center justify-between gap-2 sm:gap-3 md:gap-4">
         {/* Logo - Link to Home */}
@@ -125,15 +120,11 @@ export default function FuturisticNavbarLuxury({
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setSearchOpen(true)}
                 onBlur={() => setTimeout(() => setSearchOpen(false), 200)}
-                className="w-full px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 pr-9 sm:pr-10 md:pr-12 rounded-xl sm:rounded-2xl text-sm sm:text-base transition-all duration-300 outline-none bg-white/5 border text-white placeholder-white/40"
-                style={{
-                  borderColor: dashboardTheme.colors.border,
-                  boxShadow: searchOpen ? `0 0 20px ${dashboardTheme.glow.primary}` : 'none',
-                }}
+                className="w-full px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 pr-9 sm:pr-10 md:pr-12 rounded-xl sm:rounded-2xl text-sm sm:text-base transition-all duration-300 outline-none bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-white/40 focus:border-slate-300 dark:focus:border-white/20"
               />
               <button
                 type="submit"
-                className="absolute left-2 sm:left-3 md:left-4 top-1/2 -translate-y-1/2 hover:opacity-80 transition-opacity"
+                className="absolute left-2 sm:left-3 md:left-4 top-1/2 -translate-y-1/2 transition-opacity"
                 style={{ color: dashboardTheme.primary.main }}
               >
                 <Search className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -149,11 +140,7 @@ export default function FuturisticNavbarLuxury({
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={toggleTheme}
-            className="hidden sm:flex w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl items-center justify-center transition-all border"
-            style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              borderColor: dashboardTheme.colors.border,
-            }}
+            className="hidden sm:flex w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl items-center justify-center transition-all border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10"
             title={theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
           >
             {theme === 'dark' ? (
@@ -173,14 +160,10 @@ export default function FuturisticNavbarLuxury({
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={handleLogout}
-            className="hidden sm:flex w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl items-center justify-center transition-all group border"
-            style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              borderColor: 'rgba(239, 68, 68, 0.3)',
-            }}
+            className="hidden sm:flex w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl items-center justify-center transition-all group border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20"
             title="تسجيل الخروج"
           >
-            <LogOut className="w-4 h-4 md:w-5 md:h-5 text-red-400 group-hover:text-red-300" />
+            <LogOut className="w-4 h-4 md:w-5 md:h-5 text-red-600 dark:text-red-400 group-hover:text-red-700 dark:group-hover:text-red-300" />
           </motion.button>
 
           {/* User Profile */}

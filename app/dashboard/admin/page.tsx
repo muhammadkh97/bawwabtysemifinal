@@ -164,10 +164,10 @@ function AdminDashboardContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-pink-900">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#0B0F1A]">
         <div className="text-center">
-          <div className="w-20 h-20 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white text-xl font-bold">جاري التحميل...</p>
+          <div className="w-20 h-20 border-4 border-slate-300 dark:border-white/20 border-t-indigo-600 dark:border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-900 dark:text-white text-xl font-bold">جاري التحميل...</p>
         </div>
       </div>
     );
@@ -201,7 +201,7 @@ function AdminDashboardContent() {
           </div>
 
           {/* Quick Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8">
             {quickStats.map((item, index) => (
               <motion.div
                 key={item.label}
@@ -211,13 +211,13 @@ function AdminDashboardContent() {
                 whileHover={{ y: -5, scale: 1.05 }}
                 className="relative group"
               >
-                <div className={`absolute -inset-0.5 bg-gradient-to-r ${item.color} rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-500`}></div>
-                <div className="relative bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 text-center">
+                <div className={`absolute -inset-0.5 bg-gradient-to-r ${item.color} rounded-2xl blur opacity-20 dark:opacity-30 group-hover:opacity-40 dark:group-hover:opacity-50 transition duration-500`}></div>
+                <div className="relative bg-white/80 dark:bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-slate-100 dark:border-white/20 text-center">
                   <div className={`w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}>
                     <item.icon className="w-6 h-6 text-white" />
                   </div>
-                  <p className="text-white/70 text-sm mb-1">{item.label}</p>
-                  <p className="text-white text-2xl font-black">{item.value}</p>
+                  <p className="text-slate-600 dark:text-white/70 text-sm mb-1">{item.label}</p>
+                  <p className="text-slate-900 dark:text-white text-2xl font-black">{item.value}</p>
                 </div>
               </motion.div>
             ))}
@@ -232,30 +232,30 @@ function AdminDashboardContent() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.9 + index * 0.1 }}
-                  className="bg-white/5 rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all"
+                  className="bg-white/80 dark:bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-slate-100 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-all"
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg">
                       {user.full_name?.charAt(0) || 'م'}
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-white font-bold">{user.full_name || 'مستخدم'}</h4>
-                      <p className="text-white/50 text-xs">{user.email}</p>
+                      <h4 className="text-slate-900 dark:text-white font-bold">{user.full_name || 'مستخدم'}</h4>
+                      <p className="text-slate-600 dark:text-white/50 text-xs">{user.email}</p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className={`px-2 py-1 rounded-lg ${
-                      user.user_role === 'admin' ? 'bg-red-500/20 text-red-400' :
-                      user.user_role === 'vendor' ? 'bg-blue-500/20 text-blue-400' :
-                      user.user_role === 'driver' ? 'bg-green-500/20 text-green-400' :
-                      'bg-purple-500/20 text-purple-400'
+                      user.user_role === 'admin' ? 'bg-red-500/20 text-red-600 dark:text-red-400' :
+                      user.user_role === 'vendor' ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400' :
+                      user.user_role === 'driver' ? 'bg-green-500/20 text-green-600 dark:text-green-400' :
+                      'bg-purple-500/20 text-purple-600 dark:text-purple-400'
                     }`}>
                       {user.user_role === 'admin' ? '👑 مدير' :
                        user.user_role === 'vendor' ? '🏪 بائع' :
                        user.user_role === 'driver' ? '🚗 سائق' :
                        '👤 عميل'}
                     </span>
-                    <span className="text-white/40">
+                    <span className="text-slate-500 dark:text-white/40">
                       {new Date(user.created_at).toLocaleDateString('ar-SA')}
                     </span>
                   </div>
@@ -273,14 +273,14 @@ function AdminDashboardContent() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 1.3 + index * 0.1 }}
-                  className="bg-white/5 rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all group"
+                  className="bg-white/80 dark:bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-slate-100 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-all group"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <h4 className="text-white font-bold mb-1 group-hover:text-purple-300 transition-colors">
+                      <h4 className="text-slate-900 dark:text-white font-bold mb-1 group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">
                         {product.name}
                       </h4>
-                      <p className="text-emerald-400 text-sm font-bold">
+                      <p className="text-emerald-600 dark:text-emerald-400 text-sm font-bold">
                         {product.price} ر.س
                       </p>
                     </div>
@@ -288,12 +288,12 @@ function AdminDashboardContent() {
                       <Package className="w-5 h-5 text-white" />
                     </div>
                   </div>
-                  <div className="flex items-center justify-between text-xs pt-3 border-t border-white/5">
-                    <span className="text-white/50">
-                      📦 مبيعات: <span className="text-white font-bold">{product.totalQuantity}</span>
+                  <div className="flex items-center justify-between text-xs pt-3 border-t border-slate-200 dark:border-white/5">
+                    <span className="text-slate-600 dark:text-white/50">
+                      📦 مبيعات: <span className="text-slate-900 dark:text-white font-bold">{product.totalQuantity}</span>
                     </span>
-                    <span className="text-white/50">
-                      💰 <span className="text-emerald-400 font-bold">{product.totalRevenue.toFixed(2)} ر.س</span>
+                    <span className="text-slate-600 dark:text-white/50">
+                      💰 <span className="text-emerald-600 dark:text-emerald-400 font-bold">{product.totalRevenue.toFixed(2)} ر.س</span>
                     </span>
                   </div>
                 </motion.div>

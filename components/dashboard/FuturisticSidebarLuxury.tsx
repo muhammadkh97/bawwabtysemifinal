@@ -311,13 +311,10 @@ export default function FuturisticSidebarLuxury({ role }: FuturisticSidebarLuxur
           x: isMobileOpen ? 0 : 280,
         }}
         transition={{ duration: 0.3 }}
-        className={`fixed right-0 top-0 h-screen w-[280px] z-40 md:z-30 flex flex-col overflow-hidden ${theme.colors.background} border-l ${theme.colors.border}`}
-        style={{
-          boxShadow: `inset 0 0 40px ${theme.glow.secondary}`,
-        }}
+        className={`fixed right-0 top-0 h-screen w-[280px] z-40 md:z-30 flex flex-col overflow-hidden bg-white dark:bg-[#161B2A] border-l border-slate-100 dark:border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)]`}
       >
         {/* Header */}
-        <div className="p-6 border-b border-white/10">
+        <div className="p-6 border-b border-slate-200 dark:border-white/10">
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -333,8 +330,8 @@ export default function FuturisticSidebarLuxury({ role }: FuturisticSidebarLuxur
               {theme.emoji}
             </div>
             <div>
-              <h2 className={`text-lg font-bold ${theme.colors.text}`}>{theme.title}</h2>
-              <p className={`text-xs ${theme.colors.textSecondary}`}>بوابتي</p>
+              <h2 className={`text-lg font-bold text-slate-900 dark:text-white`}>{theme.title}</h2>
+              <p className={`text-xs text-slate-600 dark:text-white/60`}>بوابتي</p>
             </div>
           </motion.div>
         </div>
@@ -357,16 +354,9 @@ export default function FuturisticSidebarLuxury({ role }: FuturisticSidebarLuxur
                     whileHover={{ x: 4 }}
                     className={`relative p-3 rounded-xl transition-all duration-200 flex items-center gap-3 group cursor-pointer ${
                       active
-                        ? `bg-gradient-to-r ${theme.gradient.primary} text-white`
-                        : `${theme.colors.text} hover:bg-white/5`
+                        ? `bg-gradient-to-r ${theme.gradient.primary} text-white shadow-lg`
+                        : `text-slate-700 dark:text-white/80 hover:bg-slate-100 dark:hover:bg-white/5`
                     }`}
-                    style={
-                      active
-                        ? {
-                            boxShadow: `0 0 20px ${theme.glow.primary}`,
-                          }
-                        : {}
-                    }
                   >
                     <Icon className="w-5 h-5 flex-shrink-0" />
                     <span className="text-sm font-medium flex-1">{item.name}</span>
@@ -374,7 +364,7 @@ export default function FuturisticSidebarLuxury({ role }: FuturisticSidebarLuxur
                       <motion.span
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        className="px-2 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-400 group-hover:bg-red-500/30"
+                        className="px-2 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-600 dark:text-red-400 group-hover:bg-red-500/30"
                       >
                         {item.badge}
                       </motion.span>
@@ -387,12 +377,12 @@ export default function FuturisticSidebarLuxury({ role }: FuturisticSidebarLuxur
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-white/10 space-y-2">
+        <div className="p-4 border-t border-slate-200 dark:border-white/10 space-y-2">
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleLogout}
-            className={`w-full p-3 rounded-xl flex items-center gap-3 transition-all duration-200 ${theme.colors.text} hover:bg-red-500/10 border border-red-500/20`}
+            className={`w-full p-3 rounded-xl flex items-center gap-3 transition-all duration-200 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 border border-red-200 dark:border-red-500/20`}
           >
             <LogOut className="w-5 h-5" />
             <span className="text-sm font-medium">تسجيل الخروج</span>

@@ -27,7 +27,7 @@ export default function ModernDashboardLayoutLuxury({
   
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#0B0F1A]">
         <div className="text-center">
           <motion.div
             animate={{ rotate: 360 }}
@@ -38,18 +38,18 @@ export default function ModernDashboardLayoutLuxury({
               borderTopColor: theme.primary.main,
             }}
           />
-          <p className="text-white text-lg font-semibold">جاري التحميل...</p>
+          <p className="text-slate-900 dark:text-white text-lg font-semibold">جاري التحميل...</p>
         </div>
       </div>
     );
   }
   
   return (
-    <div className="min-h-screen relative overflow-hidden bg-slate-950">
+    <div className="min-h-screen relative overflow-hidden bg-slate-50 dark:bg-[#0B0F1A]">
       {/* Animated Background with Theme Colors */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"></div>
-        <div className="absolute inset-0 opacity-40">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-[#0B0F1A] dark:via-[#0D1220] dark:to-[#0B0F1A]"></div>
+        <div className="absolute inset-0 opacity-20 dark:opacity-40">
           {/* Primary Blob */}
           <motion.div
             className="absolute top-0 -left-4 w-72 h-72 rounded-full mix-blend-screen filter blur-3xl opacity-40"
@@ -123,10 +123,10 @@ export default function ModernDashboardLayoutLuxury({
                 </motion.div>
               )}
               <div>
-                <h1 className="text-4xl font-black text-white drop-shadow-lg">
+                <h1 className="text-4xl font-black text-slate-900 dark:text-white drop-shadow-lg">
                   {title}
                 </h1>
-                <p className="text-white/70 text-lg mt-1 font-medium">{subtitle}</p>
+                <p className="text-slate-600 dark:text-white/70 text-lg mt-1 font-medium">{subtitle}</p>
               </div>
             </div>
             {headerAction && (
@@ -177,7 +177,7 @@ export function ModernStatCardLuxury({
     >
       {/* Glow Effect */}
       <div 
-        className={`absolute -inset-0.5 rounded-3xl blur-lg opacity-40 group-hover:opacity-70 transition duration-1000 group-hover:duration-200`}
+        className={`absolute -inset-0.5 rounded-2xl blur-lg opacity-20 dark:opacity-40 group-hover:opacity-40 dark:group-hover:opacity-70 transition duration-1000 group-hover:duration-200`}
         style={{
           background: `linear-gradient(135deg, ${theme.primary.main}, ${theme.primary.dark})`,
         }}
@@ -185,16 +185,13 @@ export function ModernStatCardLuxury({
       
       {/* Card Content */}
       <div 
-        className={`relative bg-slate-800/90 backdrop-blur-xl rounded-3xl border shadow-2xl overflow-hidden ${
+        className={`relative bg-white/80 dark:bg-[#161B2A]/80 backdrop-blur-md rounded-2xl border border-slate-100 dark:border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-2xl overflow-hidden ${
           compact ? 'p-4' : large ? 'p-8' : 'p-6'
         }`}
-        style={{
-          borderColor: theme.colors.border,
-        }}
       >
         {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute -right-10 -top-10 w-40 h-40 bg-white rounded-full"></div>
+        <div className="absolute inset-0 opacity-5 dark:opacity-5">
+          <div className="absolute -right-10 -top-10 w-40 h-40 bg-slate-900 dark:bg-white rounded-full"></div>
         </div>
 
         <div className="relative">
@@ -209,8 +206,8 @@ export function ModernStatCardLuxury({
               >
                 <Icon className="w-6 h-6 text-white" />
               </div>
-              <p className={`${large ? 'text-4xl' : 'text-2xl'} font-black text-white mb-1 text-center`}>{value}</p>
-              <p className="text-xs text-white/50 text-center uppercase tracking-wide">{title}</p>
+              <p className={`${large ? 'text-4xl' : 'text-2xl'} font-black text-slate-900 dark:text-white mb-1 text-center`}>{value}</p>
+              <p className="text-xs text-slate-600 dark:text-white/50 text-center uppercase tracking-wide">{title}</p>
             </>
           ) : (
             <>
@@ -230,8 +227,8 @@ export function ModernStatCardLuxury({
                     animate={{ scale: 1 }}
                     className={`text-sm font-bold px-3 py-1 rounded-full border ${
                       trend.isPositive 
-                        ? 'bg-green-500/30 text-green-300 border-green-500/50' 
-                        : 'bg-red-500/30 text-red-300 border-red-500/50'
+                        ? 'bg-green-500/30 text-green-600 dark:text-green-300 border-green-500/50' 
+                        : 'bg-red-500/30 text-red-600 dark:text-red-300 border-red-500/50'
                     }`}
                   >
                     {trend.isPositive ? '+' : ''}{trend.value}%
@@ -239,8 +236,8 @@ export function ModernStatCardLuxury({
                 )}
               </div>
               
-              <h3 className="text-white/70 text-sm font-semibold mb-2 uppercase tracking-wide">{title}</h3>
-              <p className={`text-white ${large ? 'text-4xl' : 'text-3xl'} font-black`}>{value}</p>
+              <h3 className="text-slate-600 dark:text-white/70 text-sm font-semibold mb-2 uppercase tracking-wide">{title}</h3>
+              <p className={`text-slate-900 dark:text-white ${large ? 'text-4xl' : 'text-3xl'} font-black`}>{value}</p>
             </>
           )}
         </div>
@@ -281,16 +278,16 @@ export function ModernSectionLuxury({
     >
       {/* Glow */}
       <div 
-        className="absolute -inset-0.5 rounded-3xl blur-lg opacity-30 group-hover:opacity-50 transition duration-1000"
+        className="absolute -inset-0.5 rounded-2xl blur-lg opacity-20 dark:opacity-30 group-hover:opacity-30 dark:group-hover:opacity-50 transition duration-1000"
         style={{
           background: `linear-gradient(135deg, ${theme.primary.main}, ${theme.primary.dark})`,
         }}
       />
       
       {/* Content */}
-      <div className="relative bg-slate-800/90 backdrop-blur-xl rounded-3xl border shadow-2xl overflow-hidden" style={{ borderColor: theme.colors.border }}>
+      <div className="relative bg-white/80 dark:bg-[#161B2A]/80 backdrop-blur-md rounded-2xl border border-slate-100 dark:border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="px-8 py-6 border-b border-white/10 bg-slate-900/50">
+        <div className="px-8 py-6 border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {Icon && (
@@ -304,9 +301,9 @@ export function ModernSectionLuxury({
                 </div>
               )}
               <div>
-                <h2 className="text-2xl font-black text-white">{title}</h2>
+                <h2 className="text-2xl font-black text-slate-900 dark:text-white">{title}</h2>
                 {subtitle && (
-                  <p className="text-white/50 text-sm mt-1">{subtitle}</p>
+                  <p className="text-slate-600 dark:text-white/50 text-sm mt-1">{subtitle}</p>
                 )}
               </div>
             </div>
