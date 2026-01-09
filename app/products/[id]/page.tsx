@@ -45,6 +45,7 @@ export default function ProductDetailPage() {
   
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -127,7 +128,9 @@ export default function ProductDetailPage() {
   const fetchProduct = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      setError(null);
+      
+      const { data, error: fetchError } = await supabase
         .from('products')
         .select(`
           *,
@@ -136,10 +139,21 @@ export default function ProductDetailPage() {
         .eq('id', productId)
         .single();
 
-      if (error) throw error;
+      if (fetchError) {
+        console.error('Error fetching product:', fetchError);
+        setError('فشل تحميل المنتج. يرجى المحاولة مرة أخرى.');
+        return;
+      }
+      
+      if (!data) {
+        setError('المنتج غير موجود');
+        return;
+      }
+      
       setProduct(data);
     } catch (error) {
       console.error('Error fetching product:', error);
+      setError('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.');
     } finally {
       setLoading(false);
     }
@@ -176,14 +190,14 @@ export default function ProductDetailPage() {
     );
   }
 
-  if (!product) {
+  if (error || !product) {
     return (
       <main className="min-h-screen bg-gray-50">
         <Header />
         <div className="container mx-auto px-4 py-20">
           <EmptyState
             type="products"
-            title="المنتج غير موجود"
+            title={error || "المنتج غير موجود"}
             description="عذراً، لم نتمكن من العثور على المنتج المطلوب"
             actionLabel="العودة للمنتجات"
             actionHref="/products"

@@ -26,6 +26,8 @@ interface Deal {
 
 export default function DealsPage() {
   const [deals, setDeals] = useState<Deal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // جلب العروض من قاعدة البيانات
   useEffect(() => {
@@ -34,14 +36,21 @@ export default function DealsPage() {
 
   const fetchDeals = async () => {
     try {
-      const { data, error } = await supabase
+      setLoading(true);
+      setError(null);
+      
+      const { data, error: fetchError } = await supabase
         .from('deals')
         .select('*')
         .eq('is_active', true)
         .gte('end_date', new Date().toISOString())
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (fetchError) {
+        console.error('Error fetching deals:', fetchError);
+        setError('فشل تحميل العروض. يرجى المحاولة مرة أخرى.');
+        return;
+      }
 
       // تحويل البيانات إلى الشكل المطلوب
       const formattedDeals = (data || []).map(deal => {
@@ -65,6 +74,9 @@ export default function DealsPage() {
       setDeals(formattedDeals);
     } catch (error) {
       console.error('Error fetching deals:', error);
+      setError('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -142,6 +154,32 @@ export default function DealsPage() {
         {/* Lucky Boxes Section */}
         <LuckyBoxComponent />
 
+        {/* Loading State */}
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+              <p className="text-purple-300 text-lg">جاري تحميل العروض...</p>
+            </div>
+          </div>
+        ) : error ? (
+          <div className="text-center py-20">
+            <div className="text-6xl mb-4">😞</div>
+            <p className="text-purple-300 text-xl mb-4">{error}</p>
+            <button 
+              onClick={fetchDeals}
+              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full hover:shadow-lg transition"
+            >
+              حاول مرة أخرى
+            </button>
+          </div>
+        ) : deals.length === 0 ? (
+          <div className="text-center py-20">
+            <div className="text-6xl mb-4">🎁</div>
+            <p className="text-purple-300 text-xl">لا توجد عروض متاحة حالياً</p>
+          </div>
+        ) : (
+          <>
         {/* شبكة العروض */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           {deals.map((deal, index) => (
@@ -283,6 +321,8 @@ export default function DealsPage() {
             </Link>
           </div>
         </motion.div>
+        </>
+        )}
       </div>
 
       <Footer />
