@@ -105,7 +105,7 @@ async function fetchExchangeRates(): Promise<ExchangeRate[]> {
       return rates
     }
   } catch (error) {
-    console.warn('⚠️ ExchangeRate-API failed:', error.message)
+    // Silent fallback to next API
   }
 
   // محاولة 2: Frankfurter (مجاني، البنك المركزي الأوروبي)
@@ -131,7 +131,7 @@ async function fetchExchangeRates(): Promise<ExchangeRate[]> {
       return rates
     }
   } catch (error) {
-    console.warn('⚠️ Frankfurter API failed:', error.message)
+    // Silent fallback to next API
   }
 
   // محاولة 3: Currency API (fawazahmed0 - مجاني)
@@ -159,11 +159,10 @@ async function fetchExchangeRates(): Promise<ExchangeRate[]> {
       }
     }
   } catch (error) {
-    console.warn('⚠️ Currency API failed:', error.message)
+    // Silent fallback to estimated rates
   }
 
   // محاولة 4: حساب أسعار تقديرية بناءً على USD (Fallback النهائي)
-  console.warn('⚠️ All APIs failed, using estimated rates as fallback')
   try {
     // أسعار تقريبية معروفة (يتم تحديثها يدوياً)
     const estimatedRates = {

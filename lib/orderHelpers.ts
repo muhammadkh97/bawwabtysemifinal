@@ -230,9 +230,6 @@ export async function updateOrderStatus(
       created_at: new Date().toISOString(),
     });
 
-    // 7. إرسال الإشعارات المناسبة
-    // await sendOrderStatusNotifications(orderId, newStatus, order);
-
     return { success: true };
   } catch (error: unknown) {
     console.error('Error in updateOrderStatus:', error);

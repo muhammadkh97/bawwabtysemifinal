@@ -127,11 +127,6 @@ export default function NearbyRestaurants() {
     );
   }
 
-  // لا نخفي السيكشن، بل نعرض رسالة إذا لم توجد مطاعم
-  // if (restaurants.length === 0) {
-  //   return null;
-  // }
-
   return (
     <section className="py-12 px-4 max-w-7xl mx-auto" dir="rtl">
       {/* Header */}

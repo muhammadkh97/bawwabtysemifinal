@@ -173,7 +173,6 @@ export async function getDistanceFromGoogle(
   apiKey?: string
 ): Promise<{ distance: number; duration: string } | null> {
   if (!apiKey) {
-    console.warn('Google API key not provided');
     return null;
   }
 

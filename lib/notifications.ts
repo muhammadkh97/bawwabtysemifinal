@@ -64,7 +64,6 @@ export async function sendLocalNotification(payload: NotificationPayload): Promi
 
   const permission = await requestNotificationPermission();
   if (permission !== 'granted') {
-    console.warn('Notification permission not granted');
     return;
   }
 

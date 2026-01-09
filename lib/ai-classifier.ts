@@ -35,7 +35,6 @@ export async function classifyProductWithOpenAI(
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
     
     if (!OPENAI_API_KEY) {
-      console.warn('⚠️ OPENAI_API_KEY not found, using fallback');
       return fallbackClassification(productData, availableCategories);
     }
 
@@ -99,7 +98,6 @@ export async function classifyProductWithClaude(
     const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
     
     if (!ANTHROPIC_API_KEY) {
-      console.warn('⚠️ ANTHROPIC_API_KEY not found, using fallback');
       return fallbackClassification(productData, availableCategories);
     }
 

@@ -186,7 +186,7 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
       .single<DbUser>()
 
     if (userError) {
-      console.warn('⚠️ تحذير: لم يتم جلب بيانات المستخدم من public.users:', userError);
+      // Silent fallback to direct fetch
       
       // محاولة جلب مباشرة من الجدول كخطة بديلة
       const { data: directData } = await supabase
@@ -268,7 +268,7 @@ export async function getCurrentUser(): Promise<AuthResponse> {
           .single<DbUser>()
 
         if (userError) {
-          console.warn('Warning: Could not fetch user data:', userError)
+          // Silent fallback to direct fetch
           
           // محاولة جلب مباشرة
           const { data: directData } = await supabase

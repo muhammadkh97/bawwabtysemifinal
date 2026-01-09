@@ -466,10 +466,6 @@ export default function CheckoutPage() {
           // جلب vendor_id من قاعدة البيانات
           const vendorId = vendorIdMap.get(product.id) || product.vendor_id;
           
-          if (!vendorId) {
-            console.warn('⚠️ Product without vendor_id:', product.id, product.name);
-          }
-          
           const itemTotal = finalPrice * item.quantity;
           const commissionRate = 10.00; // نسبة عمولة المنصة 10%
           const commissionAmount = itemTotal * (commissionRate / 100);

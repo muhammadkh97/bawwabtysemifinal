@@ -115,7 +115,6 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       );
       
       if (error) {
-        console.warn('⚠️ Error loading exchange rates from database, using hardcoded rates:', error.message);
         // Use hardcoded rates as fallback
         const hardcodedRates = getHardcodedRates(selectedCurrency);
         setExchangeRates(hardcodedRates);
@@ -229,7 +228,6 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     // إذا كان السعر مساوياً للعملة المستهدفة، إرجاعه مباشرة
     const rate = exchangeRates[fromCurrency];
     if (!rate || rate === 0) {
-      console.warn(`⚠️ لا يوجد سعر صرف للعملة ${fromCurrency} إلى ${selectedCurrency}`);
       return price; // إرجاع السعر الأصلي
     }
 

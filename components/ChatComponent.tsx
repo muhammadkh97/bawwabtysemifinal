@@ -171,11 +171,6 @@ export default function ChatComponent({ vendorId, vendorName, vendorAvatar }: Ch
       setImagePreview(reader.result as string);
     };
     reader.readAsDataURL(file);
-
-    // رفع للـ Supabase Storage (اختياري)
-    // const { data } = await supabase.storage
-    //   .from('chat-images')
-    //   .upload(`${userId}/${Date.now()}.jpg`, file);
   };
 
   // تنسيق الوقت
