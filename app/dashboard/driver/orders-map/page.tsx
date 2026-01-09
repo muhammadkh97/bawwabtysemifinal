@@ -26,14 +26,14 @@ interface OrderFromDB {
     id: string;
     full_name: string | null;
     phone: string | null;
-  } | null;
+  } | null | any[];
   stores: {
     id: string;
     shop_name: string;
     latitude: number | null;
     longitude: number | null;
     store_address: string | null;
-  } | null;
+  } | null | any[];
 }
 
 export default function OrdersMapPage() {
@@ -109,7 +109,7 @@ export default function OrdersMapPage() {
       if (error) throw error;
 
       if (ordersData) {
-        const enrichedOrders = (ordersData as OrderFromDB[]).map((o): Order => ({
+        const enrichedOrders = (ordersData as unknown as OrderFromDB[]).map((o): Order => ({
           id: o.id,
           order_number: o.order_number,
           total: o.total_amount,
@@ -120,19 +120,20 @@ export default function OrdersMapPage() {
           delivery_longitude: undefined,
           delivery_address: o.delivery_address,
           customer: {
-            id: o.users?.id || '',
-            name: o.users?.full_name || 'غير متوفر',
-            phone: o.users?.phone || 'غير متوفر',
+            id: (Array.isArray(o.users) ? o.users[0]?.id : o.users?.id) || '',
+            name: (Array.isArray(o.users) ? o.users[0]?.full_name : o.users?.full_name) || 'غير متوفر',
+            phone: (Array.isArray(o.users) ? o.users[0]?.phone : o.users?.phone) || 'غير متوفر',
           },
           vendor: {
-            id: o.stores?.id || '',
-            store_name: o.stores?.shop_name || 'غير متوفر',
-            store_latitude: o.stores?.latitude,
-            store_longitude: o.stores?.longitude,
-            store_address: o.stores?.store_address,
+            id: (Array.isArray(o.stores) ? o.stores[0]?.id : o.stores?.id) || '',
+            store_name: (Array.isArray(o.stores) ? o.stores[0]?.shop_name : o.stores?.shop_name) || 'غير متوفر',
+            store_latitude: (Array.isArray(o.stores) ? o.stores[0]?.latitude : o.stores?.latitude),
+            store_longitude: (Array.isArray(o.stores) ? o.stores[0]?.longitude : o.stores?.longitude),
+            store_address: (Array.isArray(o.stores) ? o.stores[0]?.store_address : o.stores?.store_address),
           },
-          customer_name: o.users?.full_name || 'غير متوفر',
+          customer_name: (Array.isArray(o.users) ? o.users[0]?.full_name : o.users?.full_name) || 'غير متوفر',
         }));
+
 
         setOrders(enrichedOrders);
         calculateStats(enrichedOrders);

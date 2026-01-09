@@ -40,7 +40,7 @@ interface OrderItem {
   product_id: string;
   quantity: number;
   item_total: string;
-  products: Product | null;
+  products: Product | Product[] | null;
 }
 
 interface ProductSalesData extends Product {
@@ -164,8 +164,9 @@ function AdminDashboardContent() {
 
       if (orderItemsData) {
         const productSales = new Map<string, ProductSalesData>();
-        (orderItemsData as OrderItem[]).forEach((item) => {
-          if (item.products) {
+        (orderItemsData as unknown as OrderItem[]).forEach((item) => {
+          const product = Array.isArray(item.products) ? item.products[0] : item.products;
+          if (product) {
             const existing = productSales.get(item.product_id) || {
               ...item.products,
               totalQuantity: 0,

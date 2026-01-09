@@ -167,7 +167,7 @@ export default function NewProductPage() {
     setVariants(variants.filter(v => v.id !== id));
   };
 
-  const updateVariant = (id: string, field: keyof Variant, value: string | number) => {
+  const updateVariant = (id: string, field: keyof Variant, value: string | number | { color?: string; size?: string }) => {
     setVariants(variants.map(v => 
       v.id === id ? { ...v, [field]: value } : v
     ));

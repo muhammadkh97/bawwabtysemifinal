@@ -40,7 +40,7 @@ interface StaffDataFromDB {
   users: {
     full_name: string | null;
     email: string;
-  } | null;
+  } | null | any[];
 }
 
 export default function VendorStaffPage() {
@@ -124,16 +124,19 @@ export default function VendorStaffPage() {
 
       if (staffError) throw staffError;
 
-      const formattedStaff: StaffMember[] = (staffData as StaffDataFromDB[] || []).map((s) => ({
+      const formattedStaff: StaffMember[] = ((staffData as unknown as StaffDataFromDB[]) || []).map((s) => {
+        const user = Array.isArray(s.users) ? s.users[0] : s.users;
+        return {
         id: s.id,
         user_id: s.user_id,
-        name: s.users?.full_name || 'مستخدم',
-        email: s.users?.email || '',
+        name: user?.full_name || 'مستخدم',
+        email: user?.email || '',
         permissions: s.permissions || [],
         status: s.status,
         invited_at: new Date(s.invited_at).toLocaleDateString('ar-SA'),
         accepted_at: s.accepted_at ? new Date(s.accepted_at).toLocaleDateString('ar-SA') : undefined,
-      }));
+      };
+      });
 
       setStaff(formattedStaff);
 
