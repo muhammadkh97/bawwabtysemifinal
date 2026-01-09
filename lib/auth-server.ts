@@ -12,31 +12,39 @@ interface AuthUser {
 }
 
 /**
- * Create Supabase client for server-side operations
+ * Create Supabase client for server-side operations with enhanced security
  */
 function createServerSupabaseClient() {
   const cookieStore = cookies();
   
-  // Get auth token from cookies
-  const accessToken = cookieStore.get('sb-access-token')?.value;
-  const refreshToken = cookieStore.get('sb-refresh-token')?.value;
+  // Get all cookies and find auth token
+  const allCookies = cookieStore.getAll();
+  const authCookie = allCookies.find(cookie => 
+    cookie.name.includes('sb-') && cookie.name.includes('auth-token')
+  );
+  
+  if (!authCookie) {
+    throw new Error('No authentication cookie found');
+  }
   
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      global: {
-        headers: accessToken ? {
-          Authorization: `Bearer ${accessToken}`,
-        } : {},
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
       },
     }
   );
 }
 
 /**
- * Server-side authentication check
+ * Server-side authentication check with enhanced validation
  * Use this in Server Components and Server Actions
+ * ✅ Validates session existence
+ * ✅ Verifies user in database
+ * ✅ Returns null for any authentication failure
  */
 export async function getServerSession(): Promise<AuthUser | null> {
   try {
@@ -54,10 +62,10 @@ export async function getServerSession(): Promise<AuthUser | null> {
 
     const supabase = createServerSupabaseClient();
     
-    // Get current user
-    const { data: { user }, error } = await supabase.auth.getUser();
+    // Get current user from auth session
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (error || !user) {
+    if (authError || !user) {
       return null;
     }
 
@@ -72,6 +80,12 @@ export async function getServerSession(): Promise<AuthUser | null> {
       return null;
     }
 
+    // Validate user role
+    const validRoles: UserRole[] = ['admin', 'vendor', 'driver', 'customer', 'restaurant'];
+    if (!validRoles.includes(userData.user_role as UserRole)) {
+      return null;
+    }
+
     return {
       id: userData.id,
       email: userData.email,
@@ -79,12 +93,15 @@ export async function getServerSession(): Promise<AuthUser | null> {
       user_role: userData.user_role as UserRole,
     };
   } catch (error) {
+    // Silent fail for security - don't expose error details
     return null;
   }
 }
 
 /**
  * Require authentication - redirects to login if not authenticated
+ * ✅ Server-side only - runs before page render
+ * ✅ Prevents FOUC (Flash of Unauthenticated Content)
  */
 export async function requireAuth(): Promise<AuthUser> {
   const user = await getServerSession();
@@ -97,7 +114,10 @@ export async function requireAuth(): Promise<AuthUser> {
 }
 
 /**
- * Require specific role(s) - redirects to login or unauthorized page
+ * Require specific role(s) - redirects to appropriate page
+ * ✅ Role-based access control at server level
+ * ✅ Redirects unauthorized users to their correct dashboard
+ * ✅ Prevents privilege escalation
  */
 export async function requireRole(allowedRoles: UserRole | UserRole[]): Promise<AuthUser> {
   const user = await requireAuth();
@@ -105,6 +125,7 @@ export async function requireRole(allowedRoles: UserRole | UserRole[]): Promise<
   const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
   
   if (!roles.includes(user.user_role)) {
+    // User is authenticated but doesn't have required role
     // Redirect to appropriate dashboard based on actual role
     switch (user.user_role) {
       case 'admin':
@@ -115,8 +136,11 @@ export async function requireRole(allowedRoles: UserRole | UserRole[]): Promise<
         redirect('/dashboard/restaurant');
       case 'driver':
         redirect('/dashboard/driver');
-      default:
+      case 'customer':
         redirect('/');
+      default:
+        // Fallback - should never reach here
+        redirect('/auth/login');
     }
   }
   
@@ -125,6 +149,7 @@ export async function requireRole(allowedRoles: UserRole | UserRole[]): Promise<
 
 /**
  * Check if user is authenticated (doesn't redirect)
+ * Use this when you need to check auth status without forcing redirect
  */
 export async function isAuthenticated(): Promise<boolean> {
   const user = await getServerSession();
@@ -133,6 +158,7 @@ export async function isAuthenticated(): Promise<boolean> {
 
 /**
  * Check if user has specific role (doesn't redirect)
+ * Use this for conditional rendering based on role
  */
 export async function hasRole(role: UserRole | UserRole[]): Promise<boolean> {
   const user = await getServerSession();
@@ -141,4 +167,40 @@ export async function hasRole(role: UserRole | UserRole[]): Promise<boolean> {
   
   const roles = Array.isArray(role) ? role : [role];
   return roles.includes(user.user_role);
+}
+
+/**
+ * Get user role safely (returns null if not authenticated)
+ */
+export async function getUserRole(): Promise<UserRole | null> {
+  const user = await getServerSession();
+  return user?.user_role || null;
+}
+
+/**
+ * Verify admin access (throws if not admin)
+ */
+export async function requireAdmin(): Promise<AuthUser> {
+  return requireRole('admin');
+}
+
+/**
+ * Verify vendor access (throws if not vendor)
+ */
+export async function requireVendor(): Promise<AuthUser> {
+  return requireRole('vendor');
+}
+
+/**
+ * Verify driver access (throws if not driver)
+ */
+export async function requireDriver(): Promise<AuthUser> {
+  return requireRole('driver');
+}
+
+/**
+ * Verify restaurant access (throws if not restaurant)
+ */
+export async function requireRestaurant(): Promise<AuthUser> {
+  return requireRole('restaurant');
 }
