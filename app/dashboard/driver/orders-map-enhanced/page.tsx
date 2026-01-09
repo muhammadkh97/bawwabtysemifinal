@@ -206,7 +206,7 @@ export default function EnhancedOrdersMapPage() {
 
   const calculateRoute = (order: Order) => {
     // This would integrate with a routing API like Google Maps or Mapbox
-    console.log('Calculating route for order:', order.id);
+    
   };
 
   const centerOnDriver = () => {

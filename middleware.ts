@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 
 /**
  * Optimized Edge Middleware for Bawwabty
- * ✅ Efficient session validation
+ * ✅ Full session validation for all protected routes
  * ✅ Improved performance by avoiding redundant DB calls
  * ✅ Strict route protection
  */
@@ -30,17 +30,17 @@ export async function middleware(request: NextRequest) {
   );
 
   // 4. Protected routes logic
-  const protectedPrefixes = ['/dashboard', '/vendor', '/profile', '/orders', '/settings'];
+  const protectedPrefixes = ['/dashboard', '/vendor', '/profile', '/orders', '/settings', '/admin'];
   const isProtectedRoute = protectedPrefixes.some(prefix => pathname.startsWith(prefix));
 
-  if (isProtectedRoute && !authCookie) {
-    const redirectUrl = new URL('/auth/login', request.url);
-    redirectUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(redirectUrl);
-  }
+  if (isProtectedRoute) {
+    if (!authCookie) {
+      const redirectUrl = new URL('/auth/login', request.url);
+      redirectUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
 
-  // 5. Deep validation for sensitive routes only (Dashboard)
-  if (pathname.startsWith('/dashboard') && authCookie) {
+    // 5. Deep validation for ALL protected routes
     try {
       const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -59,6 +59,7 @@ export async function middleware(request: NextRequest) {
       
       if (error || !user) {
         const redirectUrl = new URL('/auth/login', request.url);
+        redirectUrl.searchParams.set('redirect', pathname);
         return NextResponse.redirect(redirectUrl);
       }
       

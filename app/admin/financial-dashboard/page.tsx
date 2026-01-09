@@ -151,7 +151,7 @@ export default function FinancialDashboardPage() {
       }
       
       // For Excel and PDF, you would use libraries like xlsx or jsPDF
-      console.log(`Exporting as ${format}:`, reportData);
+      
       
       alert(`تم تصدير التقرير بصيغة ${format}`);
     } catch (error) {

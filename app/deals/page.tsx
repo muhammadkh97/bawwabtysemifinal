@@ -239,7 +239,7 @@ export default function DealsPage() {
           url: window.location.href
         });
       } catch (err) {
-        console.log('Share cancelled');
+        
       }
     } else {
       // Fallback: copy to clipboard
