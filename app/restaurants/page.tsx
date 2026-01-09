@@ -78,7 +78,7 @@ export default function RestaurantsPage() {
     if (showMap && mapRef.current && userLocation) {
       initializeMap();
     }
-  }, [showMap, userLocation, filteredRestaurants]);
+  }, [showMap, userLocation, restaurants, searchQuery, selectedCuisine, selectedRating, selectedDeliveryTime, selectedPriceRange, sortBy]);
 
   const getUserLocation = () => {
     if (navigator.geolocation) {
@@ -222,6 +222,17 @@ export default function RestaurantsPage() {
   const initializeMap = () => {
     if (!mapRef.current || !userLocation) return;
 
+    // Calculate filtered restaurants inside the function
+    const filtered = restaurants
+      .filter(restaurant => {
+        const matchesSearch = restaurant.name_ar?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          restaurant.name?.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCuisine = selectedCuisine === 'all' || 
+          restaurant.cuisine_type?.toLowerCase() === selectedCuisine.toLowerCase();
+        const matchesRating = selectedRating === 0 || (restaurant.rating || 0) >= selectedRating;
+        return matchesSearch && matchesCuisine && matchesRating;
+      });
+
     // Simple map placeholder - يمكن استبداله بـ Google Maps أو Leaflet
     mapRef.current.innerHTML = `
       <div class="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center relative overflow-hidden">
@@ -235,9 +246,9 @@ export default function RestaurantsPage() {
             </svg>
           </div>
           <h3 class="text-xl font-bold text-gray-800 mb-2">موقعك الحالي</h3>
-          <p class="text-gray-600 mb-4">${filteredRestaurants.length} مطعم قريب منك</p>
+          <p class="text-gray-600 mb-4">${filtered.length} مطعم قريب منك</p>
           <div class="flex flex-wrap gap-2 justify-center">
-            ${filteredRestaurants.slice(0, 5).map(r => `
+            ${filtered.slice(0, 5).map(r => `
               <div class="px-3 py-1 bg-white rounded-full text-sm font-bold text-gray-700 shadow">
                 📍 ${r.name_ar}
               </div>
@@ -581,7 +592,7 @@ export default function RestaurantsPage() {
                           {restaurant.cuisine_type && (
                             <div className="inline-block px-2 py-0.5 sm:px-3 sm:py-1 bg-orange-50 border border-orange-200 rounded-full mb-1 sm:mb-2">
                               <span className="text-[9px] sm:text-xs text-orange-600 font-bold">
-                                {cuisineTypes.find(c => c.value === restaurant.cuisine_type.toLowerCase())?.label || restaurant.cuisine_type}
+                                {cuisineTypes.find(c => c.value === restaurant.cuisine_type?.toLowerCase())?.label || restaurant.cuisine_type}
                               </span>
                             </div>
                           )}
