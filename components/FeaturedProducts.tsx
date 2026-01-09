@@ -47,30 +47,20 @@ export default function FeaturedProducts() {
           images,
           featured_image,
           vendor_id,
-          vendors!inner(business_type)
+          stores!inner(business_type)
         `)
         .eq('status', 'approved')
-        .neq('vendors.business_type', 'restaurant')
+        .neq('stores.business_type', 'restaurant')
         .order('created_at', { ascending: false })
         .limit(8);
 
       if (error) throw error;
 
-      // Fetch vendor names separately
-      const productsWithVendors = await Promise.all(
-        (data || []).map(async (product) => {
-          const { data: vendorData } = await supabase
-            .from('stores')
-            .select('name, name_ar')
-            .eq('id', product.vendor_id)
-            .single();
-
-          return {
-            ...product,
-            vendors: vendorData
-          };
-        })
-      );
+      // Use the joined store data
+      const productsWithVendors = (data || []).map((product: any) => ({
+        ...product,
+        vendors: product.stores
+      }));
 
       setProducts(productsWithVendors);
     } catch (error) {

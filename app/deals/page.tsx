@@ -61,12 +61,12 @@ export default function DealsPage() {
           title_ar: deal.title_ar,
           discount: deal.discount_percentage,
           discount_percentage: deal.discount_percentage,
-          icon: deal.icon,
-          products: 0, // سيتم تحديثه لاحقاً من علاقة deal_products
+          icon: '🎁',
+          products: 0,
           hours: timeRemaining.hours,
           minutes: timeRemaining.minutes,
           seconds: timeRemaining.seconds,
-          gradient: deal.gradient,
+          gradient: 'from-purple-600 to-pink-600',
           end_date: deal.end_date,
         };
       });

@@ -58,7 +58,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
             images,
             stock,
             rating,
-            vendor:vendors(store_name)
+            vendor:stores(name)
           )
         `)
         .eq('user_id', user.id);
@@ -73,7 +73,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         ...item,
         product: item.product ? {
           ...item.product,
-          vendor_name: item.product.vendor?.store_name
+          vendor_name: item.product.vendor?.name
         } : undefined
       }));
 

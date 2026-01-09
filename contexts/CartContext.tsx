@@ -57,7 +57,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             price,
             images,
             stock,
-            vendor:vendors(store_name)
+            vendor:stores(name)
           )
         `)
         .eq('user_id', user.id);
@@ -72,7 +72,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         ...item,
         product: item.product ? {
           ...item.product,
-          vendor_name: item.product.vendor?.store_name
+          vendor_name: item.product.vendor?.name
         } : undefined
       }));
 

@@ -137,7 +137,7 @@ export async function getPendingProducts() {
     .from('products')
     .select(`
       *,
-      vendor:vendors(
+      vendor:stores(
         *,
         user:users(*)
       ),
@@ -664,9 +664,9 @@ export async function getProductsByCategory(categoryId: string) {
     .from('products')
     .select(`
       *,
-      vendor:vendors(
+      vendor:stores(
         id,
-        shop_name,
+        name,
         rating
       ),
       categories!products_category_id_fkey(

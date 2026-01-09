@@ -33,7 +33,7 @@ interface Product {
   reviews_count: number;
   vendor_id: string;
   vendor?: {
-    store_name: string;
+    name: string;
     user_id: string;
   };
 }
@@ -134,7 +134,7 @@ export default function ProductDetailPage() {
         .from('products')
         .select(`
           *,
-          vendor:vendors(store_name, user_id)
+          vendor:stores(name, user_id)
         `)
         .eq('id', productId)
         .single();
@@ -336,9 +336,7 @@ export default function ProductDetailPage() {
 
           {/* Details */}
           <div className="bg-white rounded-2xl p-8">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-sm text-primary-600 font-medium">{product.vendor?.store_name || 'متجر'}</span>
-              <span className="text-sm text-gray-400">•</span>
+            <div className="flex items-center gap-2 mb-3                      <span className="text-gray-600 font-medium">{product.vendor?.name || 'بائع غير معروف'}</span>           <span className="text-sm text-gray-400">•</span>
               <span className={`text-sm font-medium ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {product.stock > 0 ? 'متوفر في المخزون' : 'نفذت الكمية'}
               </span>
