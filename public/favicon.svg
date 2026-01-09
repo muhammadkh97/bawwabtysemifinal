@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- خلفية متدرجة -->
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6236FF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#9D59EF;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- الخلفية -->
+  <rect width="32" height="32" rx="6" fill="url(#gradient)"/>
+  
+  <!-- رمز البوابة/الباب -->
+  <g fill="#FFFFFF">
+    <!-- الإطار الخارجي -->
+    <rect x="6" y="6" width="20" height="20" rx="2" fill="none" stroke="#FFFFFF" stroke-width="2"/>
+    
+    <!-- حرف B مبسط -->
+    <path d="M 11 11 L 11 21 M 11 11 L 16 11 Q 18 11 18 13 Q 18 15 16 15 L 11 15 M 11 15 L 17 15 Q 19 15 19 17.5 Q 19 21 17 21 L 11 21" 
+          fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  
+  <!-- نقطة مميزة -->
+  <circle cx="23" cy="9" r="2" fill="#FFD700"/>
+</svg>

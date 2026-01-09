@@ -15,7 +15,11 @@ export const metadata: Metadata = {
   title: 'بوابتي - متجرك الإلكتروني المميز',
   description: 'تسوق من آلاف المنتجات عالية الجودة بأفضل الأسعار',
   icons: {
-    icon: '/favicon.ico',
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' }
+    ],
+    apple: '/apple-touch-icon.png',
   },
 }
 
