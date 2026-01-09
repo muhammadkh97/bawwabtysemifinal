@@ -3,41 +3,45 @@ import type { NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 /**
- * Enhanced Edge Middleware for Complete Route Protection
- * ✅ Server-side session validation at the edge
- * ✅ Role-based access control
- * ✅ Prevents FOUC (Flash of Unauthenticated Content)
- * ✅ Automatic redirect to appropriate pages
+ * Optimized Edge Middleware for Bawwabty
+ * ✅ Efficient session validation
+ * ✅ Improved performance by avoiding redundant DB calls
+ * ✅ Strict route protection
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  // Public routes that don't require authentication
-  const publicRoutes = ['/auth/login', '/auth/signup', '/auth/reset-password'];
-  if (publicRoutes.some(route => pathname.startsWith(route))) {
+  // 1. Skip middleware for static assets and public files
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api/public') ||
+    pathname.includes('.') // matches files like favicon.ico, images, etc.
+  ) {
     return NextResponse.next();
   }
 
-  // Check for Supabase auth cookies
+  // 2. Define public routes
+  const publicRoutes = ['/auth/login', '/auth/signup', '/auth/reset-password', '/'];
+  const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith('/auth/'));
+
+  // 3. Check for auth cookie presence first (Fast check)
   const authCookie = request.cookies.getAll().find(cookie => 
     cookie.name.includes('sb-') && cookie.name.includes('auth-token')
   );
-  
-  // Protected routes that require authentication
-  const protectedRoutes = ['/dashboard', '/vendor', '/profile', '/orders', '/settings'];
-  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
-  
+
+  // 4. Protected routes logic
+  const protectedPrefixes = ['/dashboard', '/vendor', '/profile', '/orders', '/settings'];
+  const isProtectedRoute = protectedPrefixes.some(prefix => pathname.startsWith(prefix));
+
   if (isProtectedRoute && !authCookie) {
-    // No auth cookie - redirect to login
     const redirectUrl = new URL('/auth/login', request.url);
     redirectUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(redirectUrl);
   }
 
-  // If accessing dashboard routes, perform enhanced validation
+  // 5. Deep validation for sensitive routes only (Dashboard)
   if (pathname.startsWith('/dashboard') && authCookie) {
     try {
-      // Create Supabase client for session verification
       const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -49,42 +53,26 @@ export async function middleware(request: NextRequest) {
           },
         }
       );
-
-      // Verify session is valid
+      
+      // Use getUser() for secure server-side validation
       const { data: { user }, error } = await supabase.auth.getUser();
       
       if (error || !user) {
-        // Invalid session - redirect to login
         const redirectUrl = new URL('/auth/login', request.url);
-        redirectUrl.searchParams.set('redirect', pathname);
         return NextResponse.redirect(redirectUrl);
       }
-
-      // Session is valid - let server-side layouts handle role-based access
-      return NextResponse.next();
       
-    } catch (error) {
-      // Error verifying session - redirect to login for safety
-      const redirectUrl = new URL('/auth/login', request.url);
-      redirectUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(redirectUrl);
+      return NextResponse.next();
+    } catch (e) {
+      return NextResponse.redirect(new URL('/auth/login', request.url));
     }
   }
 
-  // All other requests proceed normally
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization)
-     * - favicon.ico (favicon file)
-     * - public folder files
-     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
-

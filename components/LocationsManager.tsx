@@ -1,25 +1,42 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { MapPin, Plus, Edit, Trash2, Star, Home, Briefcase } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { MapPin, Plus, Edit, Trash2, Star, Home, Briefcase, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'react-hot-toast';
 
-// تعريف هيكل GeoJSON لضمان دقة إحداثيات الخريطة
+/**
+ * Strict Types for Location Management
+ * ✅ Prevents runtime crashes
+ * ✅ Ensures data integrity for PostGIS
+ */
+export type LocationType = 'home' | 'work' | 'other';
+
 export interface GeoJSONPoint {
   type: 'Point';
   coordinates: [number, number]; // [longitude, latitude]
 }
 
-interface UserLocation {
+export interface UserLocation {
   id: string;
   user_id: string;
   name: string;
   address: string;
   lat: number;
   lng: number;
-  location?: GeoJSONPoint;
-  type?: string;
+  location: GeoJSONPoint;
+  type: LocationType;
+  is_default: boolean;
+  created_at?: string;
+}
+
+interface FormData {
+  name: string;
+  address: string;
+  lat: number | null;
+  lng: number | null;
+  type: LocationType;
   is_default: boolean;
 }
 
@@ -27,28 +44,26 @@ interface LocationsManagerProps {
   userId: string;
 }
 
+const INITIAL_FORM_DATA: FormData = {
+  name: 'منزل',
+  address: '',
+  lat: null,
+  lng: null,
+  type: 'home',
+  is_default: false,
+};
+
 export default function LocationsManager({ userId }: LocationsManagerProps) {
   const [locations, setLocations] = useState<UserLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingLocation, setEditingLocation] = useState<UserLocation | null>(null);
   const [gettingLocation, setGettingLocation] = useState(false);
+  const [formData, setFormData] = useState<FormData>(INITIAL_FORM_DATA);
 
-  const [formData, setFormData] = useState({
-    name: 'منزل',
-    address: '',
-    lat: null as number | null,
-    lng: null as number | null,
-    type: 'home',
-    is_default: false,
-  });
-
-  useEffect(() => {
-    fetchLocations();
-  }, [userId]);
-
-  const fetchLocations = async () => {
+  const fetchLocations = useCallback(async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('user_locations')
         .select('*')
@@ -56,74 +71,78 @@ export default function LocationsManager({ userId }: LocationsManagerProps) {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setLocations(data || []);
-    } catch (error) {
+      setLocations((data as UserLocation[]) || []);
+    } catch (error: any) {
       console.error('Error fetching locations:', error);
+      toast.error('فشل تحميل المواقع');
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    if (userId) {
+      fetchLocations();
+    }
+  }, [userId, fetchLocations]);
 
   const handleGetCurrentLocation = () => {
-    setGettingLocation(true);
-    
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          
-          try {
-            const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=ar`
-            );
-            const data = await response.json();
+    if (!('geolocation' in navigator)) {
+      toast.error('المتصفح لا يدعم تحديد الموقع');
+      return;
+    }
 
-            if (data.address) {
-              setFormData(prev => ({
-                ...prev,
-                lat: latitude,
-                lng: longitude,
-                address: data.display_name || '',
-              }));
-            }
-          } catch (error) {
-            console.error('Error getting address:', error);
-            setFormData(prev => ({
-              ...prev,
-              lat: latitude,
-              lng: longitude,
-            }));
-          } finally {
-            setGettingLocation(false);
-          }
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          alert('فشل الحصول على الموقع. تأكد من تفعيل خدمات الموقع.');
+    setGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=ar`
+          );
+          const data = await response.json();
+          setFormData(prev => ({
+            ...prev,
+            lat: latitude,
+            lng: longitude,
+            address: data.display_name || prev.address,
+          }));
+          toast.success('تم تحديد موقعك بنجاح');
+        } catch (error) {
+          setFormData(prev => ({ ...prev, lat: latitude, lng: longitude }));
+          toast.error('تم تحديد الإحداثيات، فشل جلب العنوان الوصفي');
+        } finally {
           setGettingLocation(false);
         }
-      );
-    } else {
-      alert('المتصفح لا يدعم تحديد الموقع');
-      setGettingLocation(false);
-    }
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        toast.error('فشل الوصول للموقع. يرجى تفعيل الصلاحيات.');
+        setGettingLocation(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formData.lat === null || formData.lng === null) {
-      alert('يرجى تحديد الموقع على الخريطة');
+      toast.error('يرجى تحديد الموقع أولاً');
       return;
     }
 
-    // تحويل الإحداثيات إلى GeoJSON Point لـ PostGIS
-    const locationData = {
-      ...formData,
+    const payload = {
+      name: formData.name,
+      address: formData.address,
+      lat: formData.lat,
+      lng: formData.lng,
+      type: formData.type,
+      is_default: formData.is_default,
       user_id: userId,
       location: {
         type: 'Point',
-        coordinates: [formData.lng, formData.lat] // GeoJSON uses [lng, lat]
+        coordinates: [formData.lng, formData.lat]
       }
     };
     
@@ -131,274 +150,271 @@ export default function LocationsManager({ userId }: LocationsManagerProps) {
       if (editingLocation) {
         const { error } = await supabase
           .from('user_locations')
-          .update(locationData)
+          .update(payload)
           .eq('id', editingLocation.id);
-
         if (error) throw error;
+        toast.success('تم تحديث الموقع');
       } else {
         const { error } = await supabase
           .from('user_locations')
-          .insert([locationData]);
-
+          .insert([payload]);
         if (error) throw error;
+        toast.success('تم إضافة الموقع بنجاح');
       }
 
       await fetchLocations();
       setShowForm(false);
       setEditingLocation(null);
-      setFormData({
-        name: 'منزل',
-        address: '',
-        lat: null,
-        lng: null,
-        type: 'home',
-        is_default: false,
-      });
-    } catch (error) {
-      console.error('Error saving location:', error);
-      alert('حدث خطأ أثناء حفظ الموقع');
+      setFormData(INITIAL_FORM_DATA);
+    } catch (error: any) {
+      console.error('Save error:', error);
+      toast.error('حدث خطأ أثناء الحفظ');
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('هل أنت متأكد من حذف هذا الموقع؟')) return;
-
     try {
-      const { error } = await supabase
-        .from('user_locations')
-        .delete()
-        .eq('id', id);
-
+      const { error } = await supabase.from('user_locations').delete().eq('id', id);
       if (error) throw error;
+      toast.success('تم الحذف');
       await fetchLocations();
-    } catch (error) {
-      console.error('Error deleting location:', error);
-      alert('حدث خطأ أثناء حذف الموقع');
+    } catch (error: any) {
+      toast.error('فشل الحذف');
     }
   };
 
   const handleSetDefault = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('user_locations')
-        .update({ is_default: true })
-        .eq('id', id);
-
+      // Reset all to false first, then set target to true
+      await supabase.from('user_locations').update({ is_default: false }).eq('user_id', userId);
+      const { error } = await supabase.from('user_locations').update({ is_default: true }).eq('id', id);
       if (error) throw error;
+      toast.success('تم التعيين كافتراضي');
       await fetchLocations();
-    } catch (error) {
-      console.error('Error setting default:', error);
-      alert('حدث خطأ أثناء تعيين الموقع الافتراضي');
+    } catch (error: any) {
+      toast.error('فشل التعيين كافتراضي');
     }
   };
 
-  const getIconForTitle = (title: string) => {
-    switch (title) {
-      case 'منزل': return <Home className="w-5 h-5" />;
-      case 'عمل': return <Briefcase className="w-5 h-5" />;
+  const getIconForType = (type: LocationType) => {
+    switch (type) {
+      case 'home': return <Home className="w-5 h-5" />;
+      case 'work': return <Briefcase className="w-5 h-5" />;
       default: return <MapPin className="w-5 h-5" />;
     }
   };
 
-  if (loading) {
-    return <div className="text-center py-8">جاري التحميل...</div>;
+  if (loading && locations.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-600 mb-2" />
+        <p className="text-gray-500">جاري تحميل مواقعك...</p>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-bold text-gray-800">مواقعي المحفوظة</h3>
+        <h3 className="text-2xl font-bold text-gray-900">مواقعي المحفوظة</h3>
         <button
           onClick={() => {
-            setShowForm(true);
+            setFormData(INITIAL_FORM_DATA);
             setEditingLocation(null);
+            setShowForm(true);
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:shadow-lg transition"
+          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl hover:shadow-xl transition-all active:scale-95"
         >
           <Plus className="w-5 h-5" />
-          إضافة موقع جديد
+          إضافة جديد
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <AnimatePresence>
-          {locations.map((location) => (
+        <AnimatePresence mode="popLayout">
+          {locations.map((loc) => (
             <motion.div
-              key={location.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="relative bg-white border-2 border-gray-200 rounded-2xl p-4 hover:shadow-lg transition"
+              key={loc.id}
+              layout
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className={`relative p-5 rounded-3xl border-2 transition-all ${
+                loc.is_default ? 'border-purple-500 bg-purple-50/30' : 'border-gray-100 bg-white hover:border-gray-200'
+              }`}
             >
-              {location.is_default && (
-                <div className="absolute top-2 left-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+              {loc.is_default && (
+                <div className="absolute -top-3 -right-2 bg-purple-600 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
                   <Star className="w-3 h-3 fill-current" />
-                  افتراضي
+                  الافتراضي
                 </div>
               )}
 
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center text-white">
-                    {getIconForTitle(location.name)}
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-gray-800">{location.name}</h4>
-                    <p className="text-sm text-gray-500">{location.type || 'غير محدد'}</p>
-                  </div>
+              <div className="flex items-start gap-4 mb-4">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                  loc.is_default ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-500'
+                }`}>
+                  {getIconForType(loc.type)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-bold text-gray-900 truncate">{loc.name}</h4>
+                  <p className="text-sm text-gray-500 line-clamp-2 mt-1">{loc.address}</p>
                 </div>
               </div>
 
-              <p className="text-sm text-gray-600 mb-3 line-clamp-2">{location.address}</p>
-
               <div className="flex gap-2">
-                {!location.is_default && (
+                {!loc.is_default && (
                   <button
-                    onClick={() => handleSetDefault(location.id)}
-                    className="flex-1 text-xs px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
+                    onClick={() => handleSetDefault(loc.id)}
+                    className="flex-1 py-2 text-xs font-bold bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition"
                   >
-                    جعله افتراضي
+                    تعيين كافتراضي
                   </button>
                 )}
                 <button
                   onClick={() => {
-                    setEditingLocation(location);
+                    setEditingLocation(loc);
                     setFormData({
-                      name: location.name,
-                      address: location.address,
-                      lat: location.lat,
-                      lng: location.lng,
-                      type: location.type || 'home',
-                      is_default: location.is_default,
+                      name: loc.name,
+                      address: loc.address,
+                      lat: loc.lat,
+                      lng: loc.lng,
+                      type: loc.type,
+                      is_default: loc.is_default,
                     });
                     setShowForm(true);
                   }}
-                  className="flex-1 text-xs px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition flex items-center justify-center gap-1"
+                  className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition"
                 >
-                  <Edit className="w-3 h-3" />
-                  تعديل
+                  <Edit className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => handleDelete(location.id)}
-                  className="flex-1 text-xs px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition flex items-center justify-center gap-1"
+                  onClick={() => handleDelete(loc.id)}
+                  className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition"
                 >
-                  <Trash2 className="w-3 h-3" />
-                  حذف
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </motion.div>
           ))}
         </AnimatePresence>
 
-        {locations.length === 0 && (
-          <div className="col-span-2 text-center py-12 text-gray-500">
-            <MapPin className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-            <p className="text-lg font-semibold mb-2">لا توجد مواقع محفوظة</p>
-            <p className="text-sm">أضف موقعك الأول الآن</p>
+        {locations.length === 0 && !loading && (
+          <div className="col-span-full py-16 text-center bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
+            <MapPin className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+            <p className="text-gray-500 font-medium">لا توجد مواقع محفوظة بعد</p>
           </div>
         )}
       </div>
 
+      {/* Form Modal */}
       <AnimatePresence>
         {showForm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowForm(false)}
-          >
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-white rounded-3xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-              onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setShowForm(false)}
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden"
             >
-              <h3 className="text-2xl font-bold mb-6">
-                {editingLocation ? 'تعديل الموقع' : 'إضافة موقع جديد'}
-              </h3>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <button
-                  type="button"
-                  onClick={handleGetCurrentLocation}
-                  disabled={gettingLocation}
-                  className="w-full py-3 bg-purple-50 text-purple-600 rounded-xl font-bold hover:bg-purple-100 transition flex items-center justify-center gap-2"
-                >
-                  <MapPin className="w-5 h-5" />
-                  {gettingLocation ? 'جاري تحديد الموقع...' : 'استخدام موقعي الحالي'}
-                </button>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-sm font-bold text-gray-600">اسم الموقع</label>
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full p-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-purple-500 outline-none transition"
-                      placeholder="مثلاً: المنزل، العمل"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-sm font-bold text-gray-600">النوع</label>
-                    <select
-                      value={formData.type}
-                      onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                      className="w-full p-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-purple-500 outline-none transition"
-                    >
-                      <option value="home">منزل</option>
-                      <option value="work">عمل</option>
-                      <option value="other">آخر</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-sm font-bold text-gray-600">العنوان بالتفصيل</label>
-                  <textarea
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="w-full p-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-purple-500 outline-none transition"
-                    placeholder="الشارع، البناية، رقم الشقة..."
-                    rows={3}
-                    required
-                  />
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="is_default"
-                    checked={formData.is_default}
-                    onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
-                    className="w-5 h-5 rounded-lg text-purple-600 focus:ring-purple-500"
-                  />
-                  <label htmlFor="is_default" className="text-sm font-bold text-gray-600">
-                    تعيين كموقع افتراضي للتوصيل
-                  </label>
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="submit"
-                    className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl font-bold hover:shadow-lg transition"
-                  >
-                    {editingLocation ? 'حفظ التعديلات' : 'إضافة الموقع'}
-                  </button>
+              <div className="p-8">
+                <h3 className="text-2xl font-black text-gray-900 mb-6">
+                  {editingLocation ? 'تعديل الموقع' : 'إضافة موقع جديد'}
+                </h3>
+                
+                <form onSubmit={handleSubmit} className="space-y-5">
                   <button
                     type="button"
-                    onClick={() => setShowForm(false)}
-                    className="flex-1 py-4 bg-gray-100 text-gray-600 rounded-2xl font-bold hover:bg-gray-200 transition"
+                    onClick={handleGetCurrentLocation}
+                    disabled={gettingLocation}
+                    className="w-full py-4 bg-purple-50 text-purple-700 rounded-2xl font-bold hover:bg-purple-100 transition flex items-center justify-center gap-3 border-2 border-purple-100"
                   >
-                    إلغاء
+                    {gettingLocation ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <MapPin className="w-5 h-5" />
+                    )}
+                    {gettingLocation ? 'جاري التحديد...' : 'استخدام موقعي الحالي'}
                   </button>
-                </div>
-              </form>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-black text-gray-400 uppercase tracking-wider">الاسم</label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.name}
+                        onChange={e => setFormData({ ...formData, name: e.target.value })}
+                        className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-purple-500 focus:bg-white outline-none transition-all"
+                        placeholder="مثلاً: المنزل"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-black text-gray-400 uppercase tracking-wider">النوع</label>
+                      <select
+                        value={formData.type}
+                        onChange={e => setFormData({ ...formData, type: e.target.value as LocationType })}
+                        className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-purple-500 focus:bg-white outline-none transition-all appearance-none"
+                      >
+                        <option value="home">منزل</option>
+                        <option value="work">عمل</option>
+                        <option value="other">آخر</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-wider">العنوان التفصيلي</label>
+                    <textarea
+                      required
+                      rows={3}
+                      value={formData.address}
+                      onChange={e => setFormData({ ...formData, address: e.target.value })}
+                      className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-purple-500 focus:bg-white outline-none transition-all resize-none"
+                      placeholder="الشارع، البناية، رقم الشقة..."
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3 p-2">
+                    <input
+                      type="checkbox"
+                      id="is_default"
+                      checked={formData.is_default}
+                      onChange={e => setFormData({ ...formData, is_default: e.target.checked })}
+                      className="w-6 h-6 rounded-lg text-purple-600 focus:ring-purple-500 border-gray-300"
+                    />
+                    <label htmlFor="is_default" className="text-sm font-bold text-gray-700 cursor-pointer">
+                      تعيين كموقع افتراضي للتوصيل
+                    </label>
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      type="submit"
+                      className="flex-[2] py-4 bg-gray-900 text-white rounded-2xl font-bold hover:bg-black transition-all active:scale-95 shadow-lg"
+                    >
+                      {editingLocation ? 'حفظ التعديلات' : 'إضافة الموقع'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowForm(false)}
+                      className="flex-1 py-4 bg-gray-100 text-gray-600 rounded-2xl font-bold hover:bg-gray-200 transition-all"
+                    >
+                      إلغاء
+                    </button>
+                  </div>
+                </form>
+              </div>
             </motion.div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>
