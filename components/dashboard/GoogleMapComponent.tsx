@@ -47,9 +47,15 @@ export default function GoogleMapComponent({
         return;
       }
 
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+      
+      if (!apiKey) {
+        console.error('Missing NEXT_PUBLIC_GOOGLE_MAPS_API_KEY environment variable');
+        setIsLoading(false);
+        return;
+      }
+
       const script = document.createElement('script');
-      // ملاحظة: يجب استبدال YOUR_API_KEY بمفتاح API الخاص بك
-      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'YOUR_API_KEY';
       script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&language=ar`;
       script.async = true;
       script.defer = true;

@@ -32,9 +32,11 @@ export default function LocationPicker({
   });
   const [gettingLocation, setGettingLocation] = useState(false);
 
+  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''
+    googleMapsApiKey: googleMapsApiKey || ''
   });
 
   useEffect(() => {
