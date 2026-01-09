@@ -234,7 +234,7 @@ export default function VendorReviewsPage() {
             ].map((filter) => (
               <button
                 key={filter.value}
-                onClick={() => setSelectedRating(filter.value as any)}
+                onClick={() => setSelectedRating(filter.value as number | 'all')}
                 className={`px-6 py-3 rounded-xl font-bold whitespace-nowrap transition-all ${
                   selectedRating === filter.value
                     ? 'text-white shadow-lg'

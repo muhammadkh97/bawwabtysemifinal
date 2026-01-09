@@ -83,9 +83,9 @@ export default function NewProductPage() {
           .eq('is_active', true)
           .single();
 
-        const { data: storeData, error: storeError } = await Promise.race([
+        const { data: storeData, error: storeError } = await Promise.race<Awaited<ReturnType<typeof fetchPromise>>>([
           fetchPromise,
-          timeoutPromise as any
+          timeoutPromise as Promise<never>
         ]);
 
         if (storeError || !storeData) {
@@ -167,7 +167,7 @@ export default function NewProductPage() {
     setVariants(variants.filter(v => v.id !== id));
   };
 
-  const updateVariant = (id: string, field: keyof Variant, value: any) => {
+  const updateVariant = (id: string, field: keyof Variant, value: string | number) => {
     setVariants(variants.map(v => 
       v.id === id ? { ...v, [field]: value } : v
     ));
@@ -767,7 +767,7 @@ export default function NewProductPage() {
                       name="saveAs"
                       value="approved"
                       checked={saveAs === 'approved'}
-                      onChange={(e) => setSaveAs(e.target.value as any)}
+                      onChange={(e) => setSaveAs(e.target.value as 'draft' | 'approved')}
                       className="mt-1"
                     />
                     <div>
@@ -788,7 +788,7 @@ export default function NewProductPage() {
                       name="saveAs"
                       value="draft"
                       checked={saveAs === 'draft'}
-                      onChange={(e) => setSaveAs(e.target.value as any)}
+                      onChange={(e) => setSaveAs(e.target.value as 'draft' | 'approved')}
                       className="mt-1"
                     />
                     <div>

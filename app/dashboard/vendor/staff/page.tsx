@@ -30,6 +30,19 @@ interface PendingInvitation {
   created_at: string;
 }
 
+interface StaffDataFromDB {
+  id: string;
+  user_id: string;
+  permissions: string[];
+  status: 'pending' | 'active' | 'suspended' | 'removed';
+  invited_at: string;
+  accepted_at: string | null;
+  users: {
+    full_name: string | null;
+    email: string;
+  } | null;
+}
+
 export default function VendorStaffPage() {
   const { user, isVendorStaff, staffPermissions, staffVendorId } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -111,7 +124,7 @@ export default function VendorStaffPage() {
 
       if (staffError) throw staffError;
 
-      const formattedStaff: StaffMember[] = (staffData || []).map((s: any) => ({
+      const formattedStaff: StaffMember[] = (staffData as StaffDataFromDB[] || []).map((s) => ({
         id: s.id,
         user_id: s.user_id,
         name: s.users?.full_name || 'مستخدم',
@@ -137,9 +150,10 @@ export default function VendorStaffPage() {
 
       setInvitations(invitationsData || []);
       setLoading(false);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching data:', error);
-      toast.error('حدث خطأ في جلب البيانات');
+      const errorMessage = error instanceof Error ? error.message : 'حدث خطأ في جلب البيانات';
+      toast.error(errorMessage);
       setLoading(false);
     }
   };
@@ -275,14 +289,16 @@ export default function VendorStaffPage() {
       // Refresh data
       await fetchData();
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error adding staff:', error);
       
       // رسائل خطأ مخصصة
-      if (error.code === '23505') {
+      if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
         toast.error('⚠️ هذا المستخدم مضاف بالفعل كمساعد في متجرك');
-      } else {
+      } else if (error instanceof Error) {
         toast.error(error.message || 'حدث خطأ في إضافة المساعد');
+      } else {
+        toast.error('حدث خطأ في إضافة المساعد');
       }
     } finally {
       setSubmitting(false);
@@ -302,7 +318,7 @@ export default function VendorStaffPage() {
 
       toast.success('تم إزالة المساعد بنجاح');
       await fetchData();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error removing staff:', error);
       toast.error('حدث خطأ في إزالة المساعد');
     }
@@ -321,7 +337,7 @@ export default function VendorStaffPage() {
 
       toast.success('تم إلغاء الدعوة بنجاح');
       await fetchData();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error cancelling invitation:', error);
       toast.error('حدث خطأ في إلغاء الدعوة');
     }

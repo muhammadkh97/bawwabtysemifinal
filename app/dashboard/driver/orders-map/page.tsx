@@ -14,6 +14,28 @@ interface Order extends DriverOrder {
   estimated_time?: number;
 }
 
+interface OrderFromDB {
+  id: string;
+  order_number: string;
+  total_amount: number;
+  delivery_fee: number;
+  status: string;
+  created_at: string;
+  delivery_address: string;
+  users: {
+    id: string;
+    full_name: string | null;
+    phone: string | null;
+  } | null;
+  stores: {
+    id: string;
+    shop_name: string;
+    latitude: number | null;
+    longitude: number | null;
+    store_address: string | null;
+  } | null;
+}
+
 export default function OrdersMapPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -87,7 +109,7 @@ export default function OrdersMapPage() {
       if (error) throw error;
 
       if (ordersData) {
-        const enrichedOrders = ordersData.map((o: any): Order => ({
+        const enrichedOrders = (ordersData as OrderFromDB[]).map((o): Order => ({
           id: o.id,
           order_number: o.order_number,
           total: o.total_amount,

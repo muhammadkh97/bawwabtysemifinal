@@ -73,7 +73,12 @@ export default function DriverWalletPage() {
     notes: ''
   });
 
-  const checkAuth = useCallback(async () => {
+interface OrderFromDB {
+  order_number: string;
+  delivery_fee: number;
+  created_at: string;
+  status: string;
+}
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -128,7 +133,7 @@ export default function DriverWalletPage() {
 
         const txns: Transaction[] = [];
 
-        ordersData.forEach((order: any) => {
+        (ordersData as OrderFromDB[]).forEach((order) => {
           const fee = order.delivery_fee || 0;
           const date = new Date(order.created_at);
           

@@ -38,6 +38,13 @@ interface DashboardStats {
   average_rating: number;
 }
 
+interface DriverOrderFromDB {
+  id: string;
+  status: string;
+  created_at: string;
+  delivery_fee: number;
+}
+
 function DriverDashboardContent() {
   const router = useRouter();
   
@@ -107,9 +114,10 @@ function DriverDashboardContent() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const totalDeliveries = allOrders?.filter((o: any) => o.status === 'delivered').length || 0;
-      const pendingDeliveries = allOrders?.filter((o: any) => ['ready_for_pickup', 'picked_up', 'in_transit', 'out_for_delivery'].includes(o.status)).length || 0;
-      const completedToday = allOrders?.filter((o: any) => {
+      const ordersTyped = allOrders as DriverOrderFromDB[] | null;
+      const totalDeliveries = ordersTyped?.filter((o) => o.status === 'delivered').length || 0;
+      const pendingDeliveries = ordersTyped?.filter((o) => ['ready_for_pickup', 'picked_up', 'in_transit', 'out_for_delivery'].includes(o.status)).length || 0;
+      const completedToday = ordersTyped?.filter((o) => {
         const orderDate = new Date(o.created_at);
         return o.status === 'delivered' && orderDate >= today;
       }).length || 0;

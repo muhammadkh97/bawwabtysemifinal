@@ -165,9 +165,10 @@ export default function VendorSettingsPage() {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error changing password:', error);
-      showMessage('error', error.message || 'حدث خطأ أثناء تحديث كلمة المرور');
+      const errorMessage = error instanceof Error ? error.message : 'حدث خطأ أثناء تحديث كلمة المرور';
+      showMessage('error', errorMessage);
     } finally {
       setSaving(false);
     }
@@ -295,7 +296,7 @@ export default function VendorSettingsPage() {
                   return (
                     <button
                       key={tab.id}
-                      onClick={() => setActiveTab(tab.id as any)}
+                      onClick={() => setActiveTab(tab.id as 'profile' | 'security' | 'notifications')}
                       className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${
                         activeTab === tab.id
                           ? 'text-white shadow-lg'

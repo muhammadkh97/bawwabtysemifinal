@@ -19,6 +19,35 @@ import {
   BarChart3
 } from 'lucide-react';
 
+// TypeScript Interfaces
+interface User {
+  id: string;
+  full_name: string | null;
+  email: string;
+  phone: string | null;
+  user_role: 'admin' | 'vendor' | 'driver' | 'customer' | 'restaurant';
+  created_at: string;
+}
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  stock: number | null;
+}
+
+interface OrderItem {
+  product_id: string;
+  quantity: number;
+  item_total: string;
+  products: Product | null;
+}
+
+interface ProductSalesData extends Product {
+  totalQuantity: number;
+  totalRevenue: number;
+}
+
 function AdminDashboardContent() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState([
@@ -59,8 +88,8 @@ function AdminDashboardContent() {
     { label: 'عملاء', value: '0', icon: Users, color: 'from-yellow-500 to-orange-500' },
   ]);
 
-  const [recentUsers, setRecentUsers] = useState<any[]>([]);
-  const [topProducts, setTopProducts] = useState<any[]>([]);
+  const [recentUsers, setRecentUsers] = useState<User[]>([]);
+  const [topProducts, setTopProducts] = useState<ProductSalesData[]>([]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -134,8 +163,8 @@ function AdminDashboardContent() {
         `);
 
       if (orderItemsData) {
-        const productSales = new Map<string, any>();
-        orderItemsData.forEach((item: any) => {
+        const productSales = new Map<string, ProductSalesData>();
+        (orderItemsData as OrderItem[]).forEach((item) => {
           if (item.products) {
             const existing = productSales.get(item.product_id) || {
               ...item.products,
@@ -157,7 +186,7 @@ function AdminDashboardContent() {
 
       setLoading(false);
     } catch (error) {
-      console.error('خطأ في جلب البيانات:', error);
+      console.error('خطأ في جلب البيانات:', error instanceof Error ? error.message : 'Unknown error');
       setLoading(false);
     }
   };

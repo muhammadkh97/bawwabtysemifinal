@@ -245,9 +245,10 @@ export default function VendorMyStorePage() {
       // Refetch data to ensure preview is updated
       await fetchStoreData();
       
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error saving store:', error);
-      alert('❌ حدث خطأ في حفظ التغييرات: ' + error.message);
+      const errorMessage = error instanceof Error ? error.message : 'حدث خطأ غير متوقع';
+      alert('❌ حدث خطأ في حفظ التغييرات: ' + errorMessage);
     } finally {
       setSaving(false);
     }

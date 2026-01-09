@@ -29,6 +29,20 @@ interface Product {
   images?: string[];
 }
 
+interface Order {
+  id: string;
+  vendor_id: string;
+  total: string | number;
+  status: string;
+  created_at: string;
+}
+
+interface Review {
+  id: string;
+  vendor_id: string;
+  rating: number;
+}
+
 interface Stats {
   totalOrders: number;
   totalRevenue: number;
@@ -106,7 +120,7 @@ function VendorDashboardContent() {
 
       // Calculate stats
       const totalOrders = ordersData?.length || 0;
-      const totalRevenue = ordersData?.reduce((sum: number, order: any) => sum + parseFloat(order.total || 0), 0) || 0;
+      const totalRevenue = (ordersData as Order[] | null)?.reduce((sum: number, order) => sum + parseFloat(String(order.total || 0)), 0) || 0;
       const activeProducts = productsData?.length || 0;
 
       // Fetch reviews
@@ -116,7 +130,7 @@ function VendorDashboardContent() {
         .eq('vendor_id', storeData.id);
 
       const averageRating = reviewsData && reviewsData.length > 0
-        ? reviewsData.reduce((sum: number, review: any) => sum + review.rating, 0) / reviewsData.length
+        ? (reviewsData as Review[]).reduce((sum: number, review) => sum + review.rating, 0) / reviewsData.length
         : 0;
 
       setStats({

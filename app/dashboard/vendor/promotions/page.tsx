@@ -203,9 +203,10 @@ export default function VendorPromotionsPage() {
       fetchCoupons();
       
       alert('✅ تم إنشاء الكوبون بنجاح!');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating coupon:', error);
-      alert('حدث خطأ أثناء إنشاء الكوبون: ' + (error.message || 'خطأ غير معروف'));
+      const errorMessage = error instanceof Error ? error.message : 'خطأ غير معروف';
+      alert('حدث خطأ أثناء إنشاء الكوبون: ' + errorMessage);
     } finally {
       setSaving(false);
     }
