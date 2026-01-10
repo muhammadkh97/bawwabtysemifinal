@@ -9,7 +9,7 @@
  */
 
 // استيراد الدوال المساعدة
-import { createClient } from '@/lib/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 /**
  * دالة إنشاء الطلب الآمنة
@@ -25,7 +25,7 @@ async function createOrderSecure(
   couponCode?: string,
   notes?: string
 ) {
-  const supabase = createClient();
+  // استخدام supabase client المستورد
   
   // تحويل عناصر السلة إلى الصيغة المطلوبة
   const cartItemsFormatted = cartItems.map(item => ({
