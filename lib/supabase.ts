@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 
 // ⚠️ SECURITY: Never hardcode API keys - Always use environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -13,13 +13,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
   )
 }
 
-// إنشاء عميل Supabase مع تفعيل حفظ الجلسة في localStorage
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true, // حفظ الجلسة في localStorage
-    autoRefreshToken: true, // تحديث التوكن تلقائياً
-    detectSessionInUrl: true, // كشف الجلسة من الرابط
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined, // استخدام localStorage
-    storageKey: 'supabase.auth.token', // مفتاح التخزين
-  },
-})
+// عميل Supabase الجديد باستخدام @supabase/ssr
+// يدعم الـ cookies بشكل صحيح ويتزامن مع الـ middleware
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)

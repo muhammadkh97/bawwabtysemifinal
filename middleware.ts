@@ -1,75 +1,49 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { updateSession } from '@/lib/supabase-middleware'
 
 /**
- * Optimized Edge Middleware for Bawwabty
- * ✅ Full session validation for all protected routes
- * ✅ Improved performance by avoiding redundant DB calls
- * ✅ Strict route protection
+ * Optimized Edge Middleware for Bawwabty - FIXED
+ * ✅ استخدام @supabase/ssr للتعامل الصحيح مع الجلسات
+ * ✅ تحديث الجلسة تلقائياً في كل طلب
+ * ✅ دعم كامل للـ cookies
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  // 1. Skip middleware for static assets and public files
+  // 1. تخطي الملفات الثابتة
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api/public') ||
-    pathname.includes('.') // matches files like favicon.ico, images, etc.
+    pathname.includes('.')
   ) {
     return NextResponse.next();
   }
 
-  // 2. Define public routes
+  // 2. المسارات العامة
   const publicRoutes = ['/auth/login', '/auth/signup', '/auth/reset-password', '/'];
   const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith('/auth/'));
 
-  // 3. Check for auth cookie presence first (Fast check)
-  const authCookie = request.cookies.getAll().find(cookie => 
-    cookie.name.includes('sb-') && cookie.name.includes('auth-token')
-  );
+  // 3. تحديث الجلسة والحصول على المستخدم
+  const { response, user } = await updateSession(request);
 
-  // 4. Protected routes logic
+  // 4. المسارات المحمية
   const protectedPrefixes = ['/dashboard', '/vendor', '/profile', '/orders', '/settings', '/admin'];
   const isProtectedRoute = protectedPrefixes.some(prefix => pathname.startsWith(prefix));
 
-  if (isProtectedRoute) {
-    if (!authCookie) {
-      const redirectUrl = new URL('/auth/login', request.url);
-      redirectUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(redirectUrl);
-    }
-
-    // 5. Deep validation for ALL protected routes
-    try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-          global: {
-            headers: {
-              cookie: request.headers.get('cookie') || '',
-            },
-          },
-        }
-      );
-      
-      // Use getUser() for secure server-side validation
-      const { data: { user }, error } = await supabase.auth.getUser();
-      
-      if (error || !user) {
-        const redirectUrl = new URL('/auth/login', request.url);
-        redirectUrl.searchParams.set('redirect', pathname);
-        return NextResponse.redirect(redirectUrl);
-      }
-      
-      return NextResponse.next();
-    } catch (e) {
-      return NextResponse.redirect(new URL('/auth/login', request.url));
-    }
+  // 5. التحقق من المسارات المحمية
+  if (isProtectedRoute && !user) {
+    const redirectUrl = new URL('/auth/login', request.url);
+    redirectUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(redirectUrl);
   }
 
-  return NextResponse.next();
+  // 6. إذا كان المستخدم مسجل دخول ويحاول الوصول لصفحات التسجيل/الدخول
+  if (user && (pathname === '/auth/login' || pathname === '/auth/signup')) {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
+  return response;
 }
 
 export const config = {
