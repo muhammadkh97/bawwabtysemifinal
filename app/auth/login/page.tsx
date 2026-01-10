@@ -34,10 +34,20 @@ function LoginForm() {
   }, []);
 
   const checkAuth = async () => {
-    const { user } = await getCurrentUser();
-    if (user) {
-      // المستخدم مسجل دخول بالفعل، توجيهه حسب دوره
-      redirectUserByRole((user as any).role || 'customer');
+    try {
+      const { user } = await getCurrentUser();
+      if (user) {
+        // المستخدم مسجل دخول بالفعل، توجيهه حسب دوره
+        const redirectPath = searchParams.get('redirect');
+        if (redirectPath) {
+          router.push(redirectPath);
+        } else {
+          redirectUserByRole((user as any).role || 'customer');
+        }
+      }
+    } catch (error) {
+      // User not logged in, stay on login page
+      console.log('User not authenticated');
     }
   };
 
@@ -180,11 +190,18 @@ function LoginForm() {
       // رسالة نجاح
       setSuccess('✅ تم تسجيل الدخول بنجاح! جاري التوجيه...');
       
-      // تأخير قصير لعرض رسالة النجاح
-      setTimeout(() => {
-        const userRole = (user as any).role || 'customer';
+      console.log('✅ تسجيل الدخول ناجح، التوجيه حسب الدور:', (user as any).role);
+      
+      // التوجيه الفوري بدون تأخير
+      const userRole = (user as any).role || 'customer';
+      const redirectPath = searchParams.get('redirect');
+      
+      if (redirectPath) {
+        console.log('🔄 التوجيه إلى:', redirectPath);
+        router.push(redirectPath);
+      } else {
         redirectUserByRole(userRole);
-      }, 1000);
+      }
 
     } catch (err: any) {
       console.error('❌ خطأ غير متوقع:', err);

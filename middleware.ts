@@ -38,10 +38,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  // 6. إذا كان المستخدم مسجل دخول ويحاول الوصول لصفحات التسجيل/الدخول
-  if (user && (pathname === '/auth/login' || pathname === '/auth/signup')) {
-    return NextResponse.redirect(new URL('/', request.url));
-  }
+  // 6. السماح بالوصول لصفحات التسجيل/الدخول دائماً (سيتم التعامل معها في الصفحة نفسها)
+  // لا نقوم بالـ redirect هنا لتجنب infinite loop
 
   return response;
 }

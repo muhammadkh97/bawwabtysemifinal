@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { createClient } from '@supabase/supabase-js';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { redirect } from 'next/navigation';
 
 export type UserRole = 'admin' | 'vendor' | 'driver' | 'customer' | 'restaurant';
@@ -14,26 +14,27 @@ interface AuthUser {
 /**
  * Create Supabase client for server-side operations with enhanced security
  */
-function createServerSupabaseClient() {
-  const cookieStore = cookies();
+async function createServerSupabaseClient() {
+  const cookieStore = await cookies();
   
-  // Get all cookies and find auth token
-  const allCookies = cookieStore.getAll();
-  const authCookie = allCookies.find(cookie => 
-    cookie.name.includes('sb-') && cookie.name.includes('auth-token')
-  );
-  
-  if (!authCookie) {
-    throw new Error('No authentication cookie found');
-  }
-  
-  return createClient(
+  return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          try {
+            cookieStore.set({ name, value, ...options })
+          } catch {}
+        },
+        remove(name: string, options: CookieOptions) {
+          try {
+            cookieStore.set({ name, value: '', ...options })
+          } catch {}
+        },
       },
     }
   );
@@ -48,19 +49,7 @@ function createServerSupabaseClient() {
  */
 export async function getServerSession(): Promise<AuthUser | null> {
   try {
-    const cookieStore = cookies();
-    
-    // Check for Supabase auth cookies
-    const allCookies = cookieStore.getAll();
-    const authCookie = allCookies.find(cookie => 
-      cookie.name.includes('sb-') && cookie.name.includes('auth-token')
-    );
-    
-    if (!authCookie) {
-      return null;
-    }
-
-    const supabase = createServerSupabaseClient();
+    const supabase = await createServerSupabaseClient();
     
     // Get current user from auth session
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -69,10 +58,10 @@ export async function getServerSession(): Promise<AuthUser | null> {
       return null;
     }
 
-    // Get user details from public.users table
+    // Get user details from public.users table using role field
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('id, email, full_name, user_role')
+      .select('id, email, full_name, role')
       .eq('id', user.id)
       .single();
 
@@ -82,7 +71,7 @@ export async function getServerSession(): Promise<AuthUser | null> {
 
     // Validate user role
     const validRoles: UserRole[] = ['admin', 'vendor', 'driver', 'customer', 'restaurant'];
-    if (!validRoles.includes(userData.user_role as UserRole)) {
+    if (!validRoles.includes(userData.role as UserRole)) {
       return null;
     }
 
@@ -90,7 +79,7 @@ export async function getServerSession(): Promise<AuthUser | null> {
       id: userData.id,
       email: userData.email,
       full_name: userData.full_name,
-      user_role: userData.user_role as UserRole,
+      user_role: userData.role as UserRole,
     };
   } catch (error) {
     // Silent fail for security - don't expose error details
