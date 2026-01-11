@@ -51,7 +51,8 @@ export default function RestaurantMessagesPage() {
 
       setLoading(false);
     } catch (error) {
-      logger.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error:', { error: errorMessage });
       router.push('/auth/login');
     }
   };

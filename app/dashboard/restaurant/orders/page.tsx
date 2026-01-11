@@ -84,7 +84,8 @@ export default function RestaurantOrdersPage() {
 
       setLoading(false);
     } catch (error) {
-      logger.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error:', { error: errorMessage });
       router.push('/auth/login');
     }
   }, [router, fetchOrders]);
@@ -133,7 +134,8 @@ export default function RestaurantOrdersPage() {
       await fetchOrders(vendorId);
       alert('✅ تم تحديث الطلب - جاهز للاستلام');
     } catch (error) {
-      logger.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error:', { error: errorMessage });
       alert('حدث خطأ');
     }
   };
