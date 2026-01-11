@@ -42,7 +42,8 @@ export default function CartPage() {
           setUserPoints(userData.loyalty_points || 0);
         }
       } catch (error) {
-        logger.error('Error fetching user points:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        logger.error('Error fetching user points:', { error: errorMessage });
       }
     }
 
