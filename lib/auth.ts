@@ -1,4 +1,6 @@
-import { supabase } from './supabase'import { logger } from '@/lib/logger';import type { AuthChangeEvent, Session, User, AuthError } from '@supabase/supabase-js'
+import { supabase } from './supabase';
+import { logger } from '@/lib/logger';
+import type { AuthChangeEvent, Session, User, AuthError } from '@supabase/supabase-js'
 
 // ============================================
 // TYPE DEFINITIONS
