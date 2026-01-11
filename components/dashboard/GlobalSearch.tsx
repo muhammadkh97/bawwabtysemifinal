@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Package, ShoppingBag, User, Truck, TrendingUp, Clock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
 
 interface SearchResult {
   id: string;
@@ -146,7 +147,16 @@ export default function GlobalSearch({ userRole, userId }: GlobalSearchProps) {
 
       setResults(searchResults);
     } catch (error) {
-      console.error('Search error:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Search error'
+      
+      logger.error('performSearch failed', {
+        error: errorMessage,
+        component: 'GlobalSearch',
+        userRole,
+        query,
+      })
     } finally {
       setLoading(false);
     }

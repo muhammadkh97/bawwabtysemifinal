@@ -6,6 +6,7 @@ import { MoreVertical, Edit, Trash2, Eye } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 interface FuturisticProductCardProps {
   id: string;
@@ -78,7 +79,15 @@ export default function FuturisticProductCard({
       // Reload the page to refresh the products list
       if (typeof window !== 'undefined') window.location.reload();
     } catch (error) {
-      console.error('Error deleting product:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error deleting product'
+      
+      logger.error('handleDelete failed', {
+        error: errorMessage,
+        component: 'FuturisticProductCard',
+        productId: id,
+      })
       alert('حدث خطأ أثناء حذف المنتج');
       setIsDeleting(false);
     }

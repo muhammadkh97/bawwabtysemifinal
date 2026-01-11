@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
 
 interface Product {
   id: string;
@@ -57,7 +58,15 @@ export default function SmartSearch() {
         if (error) throw error;
         setResults(data || []);
       } catch (error) {
-        console.error('Search error:', error);
+        const errorMessage = error instanceof Error 
+          ? error.message 
+          : 'Search error'
+        
+        logger.error('search failed', {
+          error: errorMessage,
+          component: 'SmartSearch',
+          query,
+        })
         setResults([]);
       } finally {
         setIsSearching(false);

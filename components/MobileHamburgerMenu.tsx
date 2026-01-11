@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { signOut } from '@/lib/auth';
+import { logger } from '@/lib/logger';
 
 interface MenuItem {
   href: string;
@@ -31,7 +32,15 @@ export default function MobileHamburgerMenu({ userRole = 'customer', userName }:
       router.push('/auth/login');
       router.refresh();
     } catch (error) {
-      console.error('خطأ في تسجيل الخروج:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في تسجيل الخروج'
+      
+      logger.error('handleLogout failed', {
+        error: errorMessage,
+        component: 'MobileHamburgerMenu',
+        userRole,
+      })
     }
   };
 

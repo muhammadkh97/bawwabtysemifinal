@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { 
@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import type { Icon } from 'lucide-react'
+import { logger } from '@/lib/logger'
 
 interface BadgeCounts {
   approvals?: number;
@@ -168,7 +169,14 @@ export default function AdminSidebar() {
         tickets: openTickets || 0,
       });
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error fetching notifications'
+      
+      logger.error('fetchNotifications failed', {
+        error: errorMessage,
+        component: 'AdminSidebar',
+      })
     }
   }
 

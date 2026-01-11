@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import * as L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { logger } from '@/lib/logger'
 
 // Fix for default marker icon in Next.js
 if (typeof window !== 'undefined' && L.Icon && L.Icon.Default) {
@@ -113,7 +114,16 @@ export default function LocationPicker({
       setAddress(formattedAddress)
       onLocationSelect(lat, lng, formattedAddress)
     } catch (error) {
-      console.error('Error fetching address:', error)
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error fetching address'
+      
+      logger.error('getAddressFromCoordinates failed', {
+        error: errorMessage,
+        component: 'LocationPicker',
+        lat,
+        lng,
+      })
       setAddress('تعذر الحصول على العنوان')
     } finally {
       setLoading(false)
@@ -132,7 +142,13 @@ export default function LocationPicker({
           setLoading(false)
         },
         (error) => {
-          console.error('Error getting location:', error)
+          const errorMessage = error.message || 'Error getting location'
+          
+          logger.error('getCurrentLocation failed', {
+            error: errorMessage,
+            component: 'LocationPicker',
+            errorCode: error.code,
+          })
           alert('تعذر الحصول على موقعك الحالي. يرجى التأكد من تفعيل خدمات الموقع.')
           setLoading(false)
         }
@@ -163,7 +179,15 @@ export default function LocationPicker({
         alert('لم يتم العثور على الموقع. حاول استخدام اسم أكثر تحديداً.')
       }
     } catch (error) {
-      console.error('Error searching location:', error)
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error searching location'
+      
+      logger.error('searchLocation failed', {
+        error: errorMessage,
+        component: 'LocationPicker',
+        searchQuery,
+      })
       alert('حدث خطأ أثناء البحث. يرجى المحاولة مرة أخرى.')
     } finally {
       setLoading(false)

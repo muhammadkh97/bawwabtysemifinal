@@ -4,6 +4,7 @@ import { useState, useRef, ChangeEvent } from 'react';
 import Image from 'next/image';
 import { Upload as UploadIcon, X, Check, AlertCircle, Loader2 } from 'lucide-react';
 import { uploadFile, validateImage } from '@/lib/storage';
+import { logger } from '@/lib/logger';
 
 interface ImageUploadProps {
   onImageUploaded: (url: string) => void;
@@ -75,8 +76,17 @@ export default function ImageUpload({
         setError(result.error || 'فشل الرفع إلى الخادم');
       }
     } catch (err: unknown) {
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'حدث خطأ غير متوقع أثناء الرفع'
+      
+      logger.error('processAndUploadFile failed', {
+        error: errorMessage,
+        component: 'ImageUpload',
+        bucket,
+        folder,
+      })
       setError('حدث خطأ غير متوقع أثناء الرفع');
-      console.error(err);
     } finally {
       setUploading(false);
     }

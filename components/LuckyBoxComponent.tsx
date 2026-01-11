@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Gift, Sparkles, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
+import { logger } from '@/lib/logger';
 
 interface LuckyBox {
   id: string;
@@ -43,7 +44,14 @@ export default function LuckyBoxComponent() {
       if (error) throw error;
       setLuckyBoxes(data || []);
     } catch (error) {
-      console.error('Error fetching lucky boxes:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error fetching lucky boxes'
+      
+      logger.error('fetchLuckyBoxes failed', {
+        error: errorMessage,
+        component: 'LuckyBoxComponent',
+      })
     }
   };
 
@@ -98,8 +106,17 @@ export default function LuckyBoxComponent() {
       }, 2000);
 
     } catch (error: any) {
-      console.error('Error opening box:', error);
-      toast.error(error.message || 'حدث خطأ أثناء فتح الصندوق');
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'حدث خطأ أثناء فتح الصندوق'
+      
+      logger.error('handleOpenBox failed', {
+        error: errorMessage,
+        component: 'LuckyBoxComponent',
+        boxId: box.id,
+        userId: authUser.id,
+      })
+      toast.error(errorMessage);
       setOpening(false);
       setSelectedBox(null);
     }

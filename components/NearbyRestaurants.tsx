@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { MapPin, Star, ChefHat, Clock, DollarSign } from 'lucide-react';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
 
 interface Restaurant {
   id: string;
@@ -85,7 +86,15 @@ export default function NearbyRestaurants() {
 
       setRestaurants(restaurantsWithDistance);
     } catch (error) {
-      console.error('Error fetching nearby restaurants:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error fetching nearby restaurants'
+      
+      logger.error('fetchNearbyRestaurants failed', {
+        error: errorMessage,
+        component: 'NearbyRestaurants',
+        userLocation,
+      })
     } finally {
       setLoading(false);
     }
@@ -105,7 +114,14 @@ export default function NearbyRestaurants() {
       if (error) throw error;
       setRestaurants(data || []);
     } catch (error) {
-      console.error('Error fetching restaurants:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error fetching restaurants'
+      
+      logger.error('fetchFeaturedRestaurants failed', {
+        error: errorMessage,
+        component: 'NearbyRestaurants',
+      })
     } finally {
       setLoading(false);
     }

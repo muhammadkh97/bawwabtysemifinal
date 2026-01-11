@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { 
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { signOut } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
+import { logger } from '@/lib/logger'
 
 interface NavItem {
   title: string
@@ -43,7 +44,14 @@ export default function DriverSidebar() {
 
       setAvailableOrders(count || 0)
     } catch (error) {
-      console.error('Error fetching available orders:', error)
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error fetching available orders'
+      
+      logger.error('fetchAvailableOrders failed', {
+        error: errorMessage,
+        component: 'DriverSidebar',
+      })
     }
   }
 
