@@ -3,6 +3,8 @@
  */
 
 import { supabase } from './supabase';
+import { logger } from '@/lib/logger';
+import { generatePickupCodes, generateDeliveryCodes } from './qrOtpUtils';
 
 // أنواع الحالات المسموح بها
 export type OrderStatus = 
