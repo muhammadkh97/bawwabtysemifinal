@@ -13,6 +13,34 @@ if (!supabaseUrl || !supabaseAnonKey) {
   )
 }
 
-// عميل Supabase الجديد باستخدام @supabase/ssr
-// يدعم الـ cookies بشكل صحيح ويتزامن مع الـ middleware
-export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
+// عميل Supabase المحسّن مع دعم كامل للـ cookies والجلسات
+// ✅ يحفظ الجلسة في cookies ويتزامن مع الـ middleware
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+  cookies: {
+    get(name: string) {
+      if (typeof document === 'undefined') return undefined
+      const value = document.cookie
+        .split('; ')
+        .find(row => row.startsWith(`${name}=`))
+        ?.split('=')[1]
+      return value
+    },
+    set(name: string, value: string, options: any) {
+      if (typeof document === 'undefined') return
+      let cookie = `${name}=${value}`
+      if (options?.maxAge) cookie += `; max-age=${options.maxAge}`
+      if (options?.path) cookie += `; path=${options.path}`
+      if (options?.domain) cookie += `; domain=${options.domain}`
+      if (options?.sameSite) cookie += `; samesite=${options.sameSite}`
+      if (options?.secure) cookie += '; secure'
+      document.cookie = cookie
+    },
+    remove(name: string, options: any) {
+      if (typeof document === 'undefined') return
+      let cookie = `${name}=; max-age=0`
+      if (options?.path) cookie += `; path=${options.path}`
+      if (options?.domain) cookie += `; domain=${options.domain}`
+      document.cookie = cookie
+    },
+  },
+})

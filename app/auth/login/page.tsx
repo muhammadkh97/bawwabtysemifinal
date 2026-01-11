@@ -192,15 +192,36 @@ function LoginForm() {
       
       console.log('✅ تسجيل الدخول ناجح، التوجيه حسب الدور:', (user as any).role);
       
-      // التوجيه الفوري بدون تأخير
+      // انتظار قليلاً للتأكد من حفظ الجلسة في الـ cookies قبل التوجيه
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // التوجيه حسب الدور
       const userRole = (user as any).role || 'customer';
       const redirectPath = searchParams.get('redirect');
       
       if (redirectPath) {
         console.log('🔄 التوجيه إلى:', redirectPath);
-        router.push(redirectPath);
+        // استخدام window.location للتأكد من إعادة تحميل الصفحة وتحديث الجلسة
+        window.location.href = redirectPath;
       } else {
-        redirectUserByRole(userRole);
+        console.log('🔄 التوجيه حسب الدور:', userRole);
+        // استخدام window.location للتأكد من إعادة تحميل الصفحة
+        switch (userRole) {
+          case 'admin':
+            window.location.href = '/dashboard/admin';
+            break;
+          case 'vendor':
+            window.location.href = '/dashboard/vendor';
+            break;
+          case 'restaurant':
+            window.location.href = '/dashboard/restaurant';
+            break;
+          case 'driver':
+            window.location.href = '/dashboard/driver';
+            break;
+          default:
+            window.location.href = '/';
+        }
       }
 
     } catch (err: any) {

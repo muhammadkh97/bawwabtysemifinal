@@ -160,10 +160,12 @@ export async function signUp(
 }
 
 /**
- * تسجيل الدخول - FIXED
+ * تسجيل الدخول - FIXED & OPTIMIZED
  */
 export async function signIn(email: string, password: string): Promise<AuthResponse> {
   try {
+    console.log('🔐 محاولة تسجيل الدخول...', email);
+    
     // تسجيل الدخول في Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email,
@@ -175,10 +177,15 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
       return { user: null, error: authError.message }
     }
 
-    if (!authData.user) {
-      console.error('❌ لا توجد بيانات مستخدم في الاستجابة');
+    if (!authData.user || !authData.session) {
+      console.error('❌ لا توجد بيانات مستخدم أو جلسة في الاستجابة');
       return { user: null, error: 'فشل تسجيل الدخول' }
     }
+
+    console.log('✅ تم تسجيل الدخول في Auth');
+
+    // الانتظار قليلاً للتأكد من حفظ الجلسة في الـ cookies
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     // جلب بيانات المستخدم من public.users باستخدام دالة آمنة
     const { data: userData, error: userError } = await supabase
@@ -186,22 +193,28 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
       .single<DbUser>()
 
     if (userError) {
-      // Silent fallback to direct fetch
+      console.warn('⚠️ خطأ في get_current_user، محاولة جلب مباشر:', userError.message);
       
       // محاولة جلب مباشرة من الجدول كخطة بديلة
-      const directData = await supabase
+      const { data: directData, error: directError } = await supabase
         .from('users')
-        .select('id, email, full_name, role')
+        .select('id, email, full_name, role, phone, avatar_url')
         .eq('id', authData.user.id)
         .single();
+
+      if (directError) {
+        console.error('❌ فشل الجلب المباشر أيضاً:', directError);
+      }
 
       const user: ExtendedUser = {
         ...authData.user,
         id: authData.user.id,
         email: authData.user.email,
-        role: (directData?.data?.role as UserRole) || (authData.user.user_metadata?.role as UserRole) || 'customer',
-        full_name: directData?.data?.full_name || authData.user.user_metadata?.name || authData.user.email?.split('@')[0],
+        role: (directData?.role as UserRole) || (authData.user.user_metadata?.role as UserRole) || 'customer',
+        full_name: directData?.full_name || authData.user.user_metadata?.name || authData.user.email?.split('@')[0],
       };
+      
+      console.log('✅ تم إنشاء بيانات المستخدم من البديل:', user.role);
       return { 
         user, 
         error: null 
@@ -219,6 +232,7 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
       name: safeUserData.name || null
     };
     
+    console.log('✅ تم تسجيل الدخول بنجاح، الدور:', user.role);
     return { 
       user, 
       error: null 
@@ -247,57 +261,57 @@ export async function signOut(): Promise<{ error: string | null }> {
 }
 
 /**
- * الحصول على المستخدم الحالي - FIXED
+ * الحصول على المستخدم الحالي - FIXED & OPTIMIZED
  */
 export async function getCurrentUser(): Promise<AuthResponse> {
   try {
-    return new Promise((resolve) => {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
-        subscription.unsubscribe();
-        
-        if (!session?.user) {
-          resolve({ user: null, error: 'لم يتم تسجيل الدخول' });
-          return;
-        }
-        
-        const user = session.user;
+    // استخدام getUser بدلاً من onAuthStateChange للحصول على الجلسة الحالية مباشرة
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-        // جلب بيانات المستخدم من public.users باستخدام دالة آمنة
-        const { data: userData, error: userError } = await supabase
-          .rpc('get_current_user')
-          .single<DbUser>()
+    if (authError) {
+      console.log('لا توجد جلسة نشطة:', authError.message);
+      return { user: null, error: authError.message }
+    }
 
-        if (userError) {
-          // Silent fallback to direct fetch
-          
-          // محاولة جلب مباشرة
-          const { data: directData } = await supabase
-            .from('users')
-            .select('id, email, full_name, role')
-            .eq('id', user.id)
-            .single();
+    if (!user) {
+      return { user: null, error: 'لم يتم تسجيل الدخول' }
+    }
 
-          resolve({ 
-            user: {
-              ...user,
-              role: (directData?.role as UserRole) || 'customer',
-              full_name: directData?.full_name
-            } as ExtendedUser, 
-            error: null 
-          });
-          return;
-        }
+    console.log('✅ تم العثور على جلسة نشطة للمستخدم:', user.id);
 
-        resolve({ 
-          user: {
-            ...user,
-            ...ensureUserObject(userData),
-            role: resolveRole(userData)
-          } as ExtendedUser, 
-          error: null 
-        });
-      });
-    });
+    // جلب بيانات المستخدم من public.users باستخدام دالة آمنة
+    const { data: userData, error: userError } = await supabase
+      .rpc('get_current_user')
+      .single<DbUser>()
+
+    if (userError) {
+      console.warn('⚠️ خطأ في get_current_user، محاولة جلب مباشر:', userError.message);
+      
+      // محاولة جلب مباشرة من الجدول
+      const { data: directData } = await supabase
+        .from('users')
+        .select('id, email, full_name, role, phone, avatar_url')
+        .eq('id', user.id)
+        .single();
+
+      return { 
+        user: {
+          ...user,
+          role: (directData?.role as UserRole) || 'customer',
+          full_name: directData?.full_name
+        } as ExtendedUser, 
+        error: null 
+      };
+    }
+
+    return { 
+      user: {
+        ...user,
+        ...ensureUserObject(userData),
+        role: resolveRole(userData)
+      } as ExtendedUser, 
+      error: null 
+    };
   } catch (error: unknown) {
     console.error('GetCurrentUser error:', getAuthErrorMessage(error))
     return { user: null, error: getAuthErrorMessage(error) }
