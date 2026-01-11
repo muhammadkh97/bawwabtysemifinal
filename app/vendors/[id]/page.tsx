@@ -15,6 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useStoreFollow } from '@/contexts/StoreFollowContext';
 import { useChats } from '@/contexts/ChatsContext';
 import toast from 'react-hot-toast';
+import { logger } from '@/lib/logger';
 
 interface Vendor {
   id: string;
@@ -55,10 +56,21 @@ export default function VendorStorePage() {
         .eq('id', vendorId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(`فشل جلب بيانات البائع: ${error.message}`);
+      }
+      
       setVendor(data);
     } catch (error) {
-      console.error('Error fetching vendor:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في جلب بيانات البائع';
+      
+      logger.error('fetchVendor failed', {
+        error: errorMessage,
+        component: 'VendorStorePage',
+        vendorId,
+      });
     } finally {
       setLoading(false);
     }
@@ -74,10 +86,23 @@ export default function VendorStorePage() {
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(`فشل جلب المنتجات: ${error.message}`);
+      }
+      
       setProducts(data || []);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في جلب المنتجات';
+      
+      logger.error('fetchProducts failed', {
+        error: errorMessage,
+        component: 'VendorStorePage',
+        vendorId,
+      });
+      
+      setProducts([]);
     } finally {
       setProductsLoading(false);
     }
@@ -124,7 +149,16 @@ export default function VendorStorePage() {
         window.dispatchEvent(event);
       }
     } catch (error) {
-      console.error('Error opening chat:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في فتح المحادثة';
+      
+      logger.error('handleChatWithVendor failed', {
+        error: errorMessage,
+        component: 'VendorStorePage',
+        vendorId,
+      });
+      
       toast.error('فشل فتح المحادثة');
     }
   }, [user, userRole, vendorId, createOrGetChat]);
@@ -156,7 +190,16 @@ export default function VendorStorePage() {
       // إعادة تحميل العدد الفعلي من قاعدة البيانات للتأكد
       setTimeout(() => loadFollowersCount(), 500);
     } catch (error) {
-      console.error('Error toggling follow:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في المتابعة';
+      
+      logger.error('handleFollowToggle failed', {
+        error: errorMessage,
+        component: 'VendorStorePage',
+        vendorId,
+      });
+      
       // في حالة الخطأ، إعادة تحميل العدد الصحيح
       await loadFollowersCount();
     } finally {

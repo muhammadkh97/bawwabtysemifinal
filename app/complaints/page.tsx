@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { getCurrentUser } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
 
 interface Order {
   id: string;
@@ -38,7 +39,7 @@ export default function ComplaintsPage() {
     checkAuthAndFetchOrders();
   }, []);
 
-  const checkAuthAndFetchOrders = async () => {
+  const checkAuthAndFetchOrders = useCallback(async () => {
     try {
       const { user } = await getCurrentUser();
       if (!user) {
@@ -48,12 +49,20 @@ export default function ComplaintsPage() {
       setUserId(user.id);
       await fetchOrders(user.id);
     } catch (error) {
-      console.error('خطأ في التحقق من المصادقة:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في المصادقة';
+      
+      logger.error('checkAuthAndFetchOrders failed', {
+        error: errorMessage,
+        component: 'ComplaintsPage',
+      });
+      
       router.push('/auth/login');
     }
-  };
+  }, [router]);
 
-  const fetchOrders = async (userId: string) => {
+  const fetchOrders = useCallback(async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from('orders')
@@ -62,12 +71,25 @@ export default function ComplaintsPage() {
         .order('created_at', { ascending: false })
         .limit(20);
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(`فشل جلب الطلبات: ${error.message}`);
+      }
+      
       setOrders(data || []);
     } catch (error) {
-      console.error('خطأ في جلب الطلبات:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في جلب الطلبات';
+      
+      logger.error('fetchOrders failed', {
+        error: errorMessage,
+        component: 'ComplaintsPage',
+        userId,
+      });
+      
+      setOrders([]);
     }
-  };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,7 +151,16 @@ export default function ComplaintsPage() {
         router.push('/my-tickets');
       }, 2000);
     } catch (err: any) {
-      console.error('خطأ في إرسال الشكوى:', err);
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'خطأ في إرسال الشكوى';
+      
+      logger.error('handleSubmit complaint failed', {
+        error: errorMessage,
+        component: 'ComplaintsPage',
+        userId,
+      });
+      
       setError('حدث خطأ أثناء إرسال الشكوى. يرجى المحاولة مرة أخرى.');
     } finally {
       setLoading(false);

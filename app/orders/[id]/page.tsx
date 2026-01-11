@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Loader2, Package, Calendar } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface OrderStatus {
   status: string;
@@ -59,7 +60,7 @@ export default function OrderTrackingPage() {
     }
   }, [params.id]);
 
-  const fetchOrderDetails = async () => {
+  const fetchOrderDetails = useCallback(async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -80,9 +81,7 @@ export default function OrderTrackingPage() {
         .single();
 
       if (orderError) {
-        console.error('Error fetching order:', orderError);
-        router.push('/orders');
-        return;
+        throw new Error(`فشل جلب بيانات الطلب: ${orderError.message}`);
       }
 
       // Fetch order items
@@ -92,7 +91,11 @@ export default function OrderTrackingPage() {
         .eq('order_id', params.id);
 
       if (itemsError) {
-        console.error('Error fetching items:', itemsError);
+        logger.error('Error fetching order items', {
+          error: itemsError.message,
+          component: 'OrderTrackingPage',
+          orderId: params.id,
+        });
       }
 
       setOrder({
@@ -100,11 +103,21 @@ export default function OrderTrackingPage() {
         items: itemsData || []
       });
     } catch (error) {
-      console.error('Error:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في جلب بيانات الطلب';
+      
+      logger.error('fetchOrderDetails failed', {
+        error: errorMessage,
+        component: 'OrderTrackingPage',
+        orderId: params.id,
+      });
+      
+      router.push('/orders');
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id, router]);
 
   // محاكاة تحديث موقع المندوب Real-time
   useEffect(() => {

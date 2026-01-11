@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Sparkles, TrendingUp, Clock, Tag, ShoppingCart } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface Offer {
   id: string;
@@ -29,7 +30,7 @@ export default function OffersPage() {
     fetchOffers();
   }, []);
 
-  const fetchOffers = async () => {
+  const fetchOffers = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -43,9 +44,7 @@ export default function OffersPage() {
         .order('created_at', { ascending: false });
 
       if (fetchError) {
-        console.error('Error fetching offers:', fetchError);
-        // استخدام عروض افتراضية
-        setOffers(getDefaultOffers());
+        throw new Error(`فشل جلب العروض: ${fetchError.message}`);
       } else if (data && data.length > 0) {
         setOffers(data);
       } else {
@@ -53,12 +52,20 @@ export default function OffersPage() {
         setOffers(getDefaultOffers());
       }
     } catch (err) {
-      console.error('Unexpected error:', err);
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'خطأ في جلب العروض';
+      
+      logger.error('fetchOffers failed', {
+        error: errorMessage,
+        component: 'OffersPage',
+      });
+      
       setOffers(getDefaultOffers());
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const getDefaultOffers = (): Offer[] => [
     {

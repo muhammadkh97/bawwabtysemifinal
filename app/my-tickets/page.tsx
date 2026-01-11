@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { getCurrentUser } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
 
 interface Ticket {
   id: string;
@@ -96,7 +97,15 @@ export default function MyTicketsPage() {
 
       setTickets(formattedTickets);
     } catch (error) {
-      console.error('خطأ في جلب التذاكر:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في جلب التذاكر';
+      
+      logger.error('fetchTickets failed', {
+        error: errorMessage,
+        component: 'MyTicketsPage',
+        userId,
+      });
     } finally {
       setLoading(false);
     }
@@ -127,7 +136,16 @@ export default function MyTicketsPage() {
 
       setReplies(formattedReplies);
     } catch (error) {
-      console.error('Error fetching replies:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في جلب الردود';
+      
+      logger.error('fetchReplies failed', {
+        error: errorMessage,
+        component: 'MyTicketsPage',
+        ticketId,
+      });
+      
       setReplies([]);
     }
   }, []);
@@ -141,7 +159,15 @@ export default function MyTicketsPage() {
       }
       await fetchTickets(user.id);
     } catch (error) {
-      console.error('خطأ في التحقق من المصادقة:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في المصادقة';
+      
+      logger.error('checkAuthAndFetchTickets failed', {
+        error: errorMessage,
+        component: 'MyTicketsPage',
+      });
+      
       router.push('/auth/login');
     }
   }, [fetchTickets, router]);
