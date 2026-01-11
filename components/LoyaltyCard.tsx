@@ -56,16 +56,6 @@ export default function LoyaltyCard() {
       if (error) {
         throw new Error(`فشل جلب بيانات الولاء: ${error.message}`);
       }
-        // حتى لو حدث خطأ، أظهر البطاقة مع نقاط 0
-        setLoyaltyData({
-          points: 0,
-          tier: 'bronze',
-          userName: user.email?.split('@')[0] || 'عضو مميز',
-          memberSince: new Date().toISOString()
-        });
-        setIsLoading(false);
-        return;
-      }
 
       
       // تحديد المستوى بناءً على النقاط

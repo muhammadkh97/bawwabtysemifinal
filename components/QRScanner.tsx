@@ -113,17 +113,17 @@ export default function QRScanner({
   // Stop scanning
   const stopScanning = async () => {
     if (scannerRef.current) {
-        logger.debug('QR Scanner stopped successfully')
+      try {
+        await scannerRef.current.stop();
+        scannerRef.current = null;
+        setIsScanning(false);
+        logger.debug('QR Scanner stopped successfully');
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'خطأ غير معروف';
         logger.error('Error stopping scanner', {
           error: errorMessage,
           component: 'QRScanner',
         });
-        scannerRef.current = null
-        setIsScanning(false)
-      } catch (err) {
-        console.error('Error stopping scanner:', err)
       }
     }
   }
