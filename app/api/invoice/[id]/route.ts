@@ -259,7 +259,8 @@ export async function GET(
     });
 
   } catch (error) {
-    logger.error('Error generating invoice:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error generating invoice:', { error: errorMessage });
     return NextResponse.json(
       { error: 'Failed to generate invoice' },
       { status: 500 }

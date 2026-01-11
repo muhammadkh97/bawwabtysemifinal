@@ -32,7 +32,8 @@ export default function ResetPasswordPage() {
         setError('الرابط غير صالح أو منتهي الصلاحية');
       }
     } catch (err) {
-      logger.error('Session check error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      logger.error('Session check error:', { error: errorMessage });
       setError('حدث خطأ في التحقق من الرابط');
     }
   };
