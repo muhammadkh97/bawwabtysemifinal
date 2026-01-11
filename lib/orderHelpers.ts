@@ -217,7 +217,7 @@ export async function updateOrderStatus(
       .eq('id', orderId);
 
     if (updateError) {
-      console.error('Error updating order:', updateError);
+      logger.error('Error updating order', { error: updateError.message, component: 'updateOrderStatus', orderId, newStatus });
       return { success: false, error: 'فشل تحديث الطلب' };
     }
 
@@ -232,7 +232,7 @@ export async function updateOrderStatus(
 
     return { success: true };
   } catch (error: unknown) {
-    console.error('Error in updateOrderStatus:', error);
+    logger.error('Error in updateOrderStatus', { error: getErrorMessage(error), component: 'updateOrderStatus', orderId, newStatus });
     return { success: false, error: getErrorMessage(error) };
   }
 }
@@ -291,7 +291,7 @@ export async function acceptOrderByDriver(
       });
 
     if (assignError) {
-      console.error('Error creating assignment:', assignError);
+      logger.error('Error creating assignment', { error: assignError.message, component: 'acceptOrderByDriver', orderId, driverId });
       return { success: false, error: 'فشل قبول الطلب' };
     }
 
@@ -303,7 +303,7 @@ export async function acceptOrderByDriver(
 
     return { success: true };
   } catch (error: unknown) {
-    console.error('Error in acceptOrderByDriver:', error);
+    logger.error('Error in acceptOrderByDriver', { error: getErrorMessage(error), component: 'acceptOrderByDriver', orderId, driverId });
     return { success: false, error: getErrorMessage(error) };
   }
 }
@@ -350,7 +350,7 @@ export async function verifyPickupCode(
 
     return { success: true };
   } catch (error: unknown) {
-    console.error('Error in verifyPickupCode:', error);
+    logger.error('Error in verifyPickupCode', { error: getErrorMessage(error), component: 'verifyPickupCode', orderId });
     return { success: false, error: getErrorMessage(error) };
   }
 }

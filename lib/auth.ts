@@ -184,7 +184,7 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
       return { user: null, error: 'فشل تسجيل الدخول' }
     }
 
-    console.log('✅ تم تسجيل الدخول في Auth');
+    logger.debug('Signed in to Auth successfully', { component: 'signIn' });
 
     // الانتظار قليلاً للتأكد من حفظ الجلسة في الـ cookies
     await new Promise(resolve => setTimeout(resolve, 100));

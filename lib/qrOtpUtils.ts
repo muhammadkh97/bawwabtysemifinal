@@ -4,6 +4,7 @@
  */
 
 import { supabase } from './supabase'
+import { logger } from '@/lib/logger'
 
 // دالة مساعدة لاستخراج رسائل الأخطاء
 function getErrorMessage(error: unknown): string {
@@ -61,7 +62,8 @@ export async function generatePickupCodes(orderId: string): Promise<{
       expiresAt: new Date(result[0].expires_at),
     }
   } catch (error) {
-    console.error('Error generating pickup codes:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error generating pickup codes', { error: errorMessage, component: 'generatePickupCodes', orderId });
     return null
   }
 }
@@ -90,7 +92,8 @@ export async function generateDeliveryCodes(orderId: string): Promise<{
       expiresAt: new Date(result[0].expires_at),
     }
   } catch (error) {
-    console.error('Error generating delivery codes:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error generating delivery codes', { error: errorMessage, component: 'generateDeliveryCodes', orderId });
     return null
   }
 }
@@ -114,7 +117,7 @@ export async function verifyPickupWithOTP(
     
     return (data as VerificationResponse) || { success: false, message: 'فشل التحقق' }
   } catch (error: unknown) {
-    console.error('Error verifying pickup OTP:', error)
+    logger.error('Error verifying pickup OTP', { error: getErrorMessage(error), component: 'verifyPickupWithOTP', orderId, driverId });
     return { success: false, message: getErrorMessage(error) }
   }
 }
@@ -142,7 +145,7 @@ export async function verifyDeliveryWithOTP(
     
     return (data as VerificationResponse) || { success: false, message: 'فشل التحقق' }
   } catch (error: unknown) {
-    console.error('Error verifying delivery OTP:', error)
+    logger.error('Error verifying delivery OTP', { error: getErrorMessage(error), component: 'verifyDeliveryWithOTP', orderId, customerId });
     return { success: false, message: getErrorMessage(error) }
   }
 }
@@ -163,7 +166,8 @@ export async function verifyPickupWithQR(
 
     return await verifyPickupWithOTP(parsed.order_id, parsed.otp, driverId)
   } catch (error: unknown) {
-    console.error('Error verifying pickup QR:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error verifying pickup QR', { error: errorMessage, component: 'verifyPickupWithQR', driverId });
     return { success: false, message: 'رمز QR غير صالح' }
   }
 }
@@ -192,7 +196,8 @@ export async function verifyDeliveryWithQR(
       photo
     )
   } catch (error: unknown) {
-    console.error('Error verifying delivery QR:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error verifying delivery QR', { error: errorMessage, component: 'verifyDeliveryWithQR', customerId });
     return { success: false, message: 'رمز QR غير صالح' }
   }
 }
@@ -248,7 +253,8 @@ export async function getOrderHandoffs(orderId: string): Promise<any[]> {
     if (error) throw error
     return data || []
   } catch (error) {
-    console.error('Error fetching handoffs:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error fetching handoffs', { error: errorMessage, component: 'fetchOrderHandoffs', orderId });
     return []
   }
 }
@@ -278,7 +284,8 @@ export async function createManualHandoff(
     if (error) throw error
     return true
   } catch (error) {
-    console.error('Error creating manual handoff:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error creating manual handoff', { error: errorMessage, component: 'createManualHandoff', orderId, type });
     return false
   }
 }

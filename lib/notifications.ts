@@ -3,6 +3,8 @@
  * نظام الإشعارات الفورية للمتصفح
  */
 
+import { logger } from '@/lib/logger';
+
 export interface NotificationPayload {
   title: string;
   body: string;
@@ -40,7 +42,7 @@ export function getNotificationPermission(): NotificationPermission {
  */
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
   if (!isNotificationSupported()) {
-    console.error('Notifications not supported');
+    logger.warn('Notifications not supported', { component: 'requestNotificationPermission' });
     return 'denied';
   }
 
@@ -48,7 +50,8 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
     const permission = await Notification.requestPermission();
     return permission;
   } catch (error) {
-    console.error('Error requesting notification permission:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error requesting notification permission', { error: errorMessage, component: 'requestNotificationPermission' });
     return 'denied';
   }
 }
@@ -58,7 +61,7 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
  */
 export async function sendLocalNotification(payload: NotificationPayload): Promise<void> {
   if (!isNotificationSupported()) {
-    console.error('Notifications not supported');
+    logger.warn('Notifications not supported', { component: 'sendLocalNotification' });
     return;
   }
 
@@ -101,7 +104,8 @@ export async function sendLocalNotification(payload: NotificationPayload): Promi
     
     await registration.showNotification(payload.title, options);
   } catch (error) {
-    console.error('Error showing notification:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error showing notification', { error: errorMessage, component: 'sendLocalNotification' });
   }
 }
 
@@ -112,7 +116,7 @@ export async function subscribeToPushNotifications(
   vapidPublicKey: string
 ): Promise<PushSubscription | null> {
   if (!isNotificationSupported()) {
-    console.error('Push notifications not supported');
+    logger.warn('Push notifications not supported', { component: 'subscribeToPushNotifications' });
     return null;
   }
 
@@ -126,7 +130,8 @@ export async function subscribeToPushNotifications(
 
     return subscription;
   } catch (error) {
-    console.error('Error subscribing to push notifications:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error subscribing to push notifications', { error: errorMessage, component: 'subscribeToPushNotifications' });
     return null;
   }
 }
@@ -146,7 +151,8 @@ export async function unsubscribeFromPushNotifications(): Promise<boolean> {
     
     return false;
   } catch (error) {
-    console.error('Error unsubscribing from push notifications:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error unsubscribing from push notifications', { error: errorMessage, component: 'unsubscribeFromPushNotifications' });
     return false;
   }
 }
@@ -159,7 +165,8 @@ export async function getCurrentSubscription(): Promise<PushSubscription | null>
     const registration = await navigator.serviceWorker.ready;
     return await registration.pushManager.getSubscription();
   } catch (error) {
-    console.error('Error getting current subscription:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error getting current subscription', { error: errorMessage, component: 'getCurrentSubscription' });
     return null;
   }
 }
@@ -201,7 +208,8 @@ export async function savePushSubscription(
 
     return response.ok;
   } catch (error) {
-    console.error('Error saving push subscription:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error saving push subscription', { error: errorMessage, component: 'savePushSubscription', userId });
     return false;
   }
 }
@@ -302,7 +310,8 @@ export function playNotificationSound(type: 'success' | 'info' | 'warning' | 'er
   const audio = new Audio(`/sounds/notification-${type}.mp3`);
   audio.volume = 0.5;
   audio.play().catch((error) => {
-    console.error('Error playing notification sound:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error playing notification sound', { error: errorMessage, component: 'playNotificationSound', type });
   });
 }
 
@@ -354,7 +363,7 @@ export function showToast(
  */
 export async function setupNotificationServiceWorker(): Promise<boolean> {
   if (!('serviceWorker' in navigator)) {
-    console.error('Service Worker not supported');
+    logger.warn('Service Worker not supported', { component: 'setupNotificationServiceWorker' });
     return false;
   }
 
@@ -362,7 +371,8 @@ export async function setupNotificationServiceWorker(): Promise<boolean> {
     const registration = await navigator.serviceWorker.register('/sw.js');
     return true;
   } catch (error) {
-    console.error('Service Worker registration failed:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Service Worker registration failed', { error: errorMessage, component: 'setupNotificationServiceWorker' });
     return false;
   }
 }

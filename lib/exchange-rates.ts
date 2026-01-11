@@ -310,13 +310,14 @@ export async function getAllCurrencies(): Promise<Currency[]> {
       .order('display_order');
     
     if (error) {
-      console.error('❌ خطأ في جلب العملات:', error);
+      logger.error('Error fetching currencies', { error: error.message, component: 'getAllCurrencies' });
       throw error;
     }
     
     return data || [];
   } catch (error) {
-    console.error('Error in getAllCurrencies:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error in getAllCurrencies', { error: errorMessage, component: 'getAllCurrencies' });
     throw error;
   }
 }
@@ -340,13 +341,14 @@ export async function convertCurrency(
     });
     
     if (error) {
-      console.error(`❌ خطأ في تحويل ${amount} ${fromCurrency} إلى ${toCurrency}:`, error);
+      logger.error('Error converting currency', { error: error.message, component: 'convertCurrency', amount, fromCurrency, toCurrency });
       throw error;
     }
     
     return data;
   } catch (error) {
-    console.error('Error in convertCurrency:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error in convertCurrency', { error: errorMessage, component: 'convertCurrency', amount, fromCurrency, toCurrency });
     throw error;
   }
 }
@@ -361,13 +363,14 @@ export async function getCurrencyInfo(code: string): Promise<Currency | null> {
     });
     
     if (error) {
-      console.error(`❌ خطأ في جلب معلومات العملة ${code}:`, error);
+      logger.error('Error fetching currency info', { error: error.message, component: 'getCurrencyInfo', code });
       return null;
     }
     
     return data?.[0] || null;
   } catch (error) {
-    console.error('Error in getCurrencyInfo:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error in getCurrencyInfo', { error: errorMessage, component: 'getCurrencyInfo', code });
     return null;
   }
 }
@@ -380,13 +383,14 @@ export async function markStaleRates(): Promise<number> {
     const { data, error } = await supabase.rpc('mark_stale_exchange_rates');
     
     if (error) {
-      console.error('❌ خطأ في تمييز الأسعار القديمة:', error);
+      logger.error('Error marking stale rates', { error: error.message, component: 'markStaleRates' });
       throw error;
     }
     
     return data || 0;
   } catch (error) {
-    console.error('Error in markStaleRates:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error in markStaleRates', { error: errorMessage, component: 'markStaleRates' });
     throw error;
   }
 }

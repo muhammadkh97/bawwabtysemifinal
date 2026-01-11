@@ -3,6 +3,8 @@
  * للتعامل مع المواقع، المسافات، والتتبع
  */
 
+import { logger } from '@/lib/logger';
+
 export interface Coordinates {
   lat: number;
   lng: number;
@@ -220,7 +222,8 @@ export async function getAddressFromCoordinates(
     
     return `${coordinates.lat.toFixed(4)}, ${coordinates.lng.toFixed(4)}`;
   } catch (error) {
-    console.error('خطأ في Reverse Geocoding:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Reverse Geocoding error', { error: errorMessage, component: 'reverseGeocode', coordinates });
     return `${coordinates.lat.toFixed(4)}, ${coordinates.lng.toFixed(4)}`;
   }
 }
@@ -255,7 +258,8 @@ export async function getCoordinatesFromAddress(
     
     return null;
   } catch (error) {
-    console.error('خطأ في Geocoding:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Geocoding error', { error: errorMessage, component: 'getCoordinatesFromAddress', address });
     return null;
   }
 }
@@ -311,7 +315,8 @@ export async function saveLocationToDatabase(
 
     return response.ok;
   } catch (error) {
-    console.error('خطأ في حفظ الموقع:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error saving location', { error: errorMessage, component: 'saveLocationToDatabase', driverId, orderId });
     return false;
   }
 }
@@ -334,7 +339,8 @@ export async function getDriverLastLocation(driverId: string): Promise<LocationD
       timestamp: new Date(data.timestamp),
     };
   } catch (error) {
-    console.error('خطأ في جلب موقع السائق:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error fetching driver location', { error: errorMessage, component: 'getDriverLastLocation', driverId });
     return null;
   }
 }
@@ -388,7 +394,8 @@ export async function requestLocationPermission(): Promise<boolean> {
     
     return false;
   } catch (error) {
-    console.error('خطأ في طلب صلاحيات الموقع:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error requesting location permission', { error: errorMessage, component: 'requestLocationPermission' });
     return false;
   }
 }
