@@ -139,7 +139,7 @@ export async function signUp(
     })
 
     if (authError) {
-      logger.error('Auth error', { error: authError.message, component: 'signUp', email: userData.email });
+      logger.error('Auth error', { error: authError.message, component: 'signUp', email });
       return { user: null, error: authError.message }
     }
 
