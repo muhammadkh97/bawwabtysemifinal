@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { logger } from '@/lib/logger';
 import { Search, Filter, SlidersHorizontal, ChevronDown, Star, ShoppingCart, Eye, LayoutGrid, List } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -115,7 +116,8 @@ function ProductsContent() {
 
       setSubcategories(formatted);
     } catch (err) {
-      console.error('Error fetching subcategories:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      logger.error('Error fetching subcategories', { error: errorMessage, component: 'ProductsPage', selectedCategory });
       setSubcategories([]);
     }
   }, [selectedCategory]);
@@ -175,7 +177,8 @@ function ProductsContent() {
       
       setProducts(mappedProducts);
     } catch (err) {
-      console.error('Error fetching products:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      logger.error('Error fetching products', { error: errorMessage, component: 'ProductsPage', selectedCategory, selectedSubcategory });
       setError('حدث خطأ في تحميل المنتجات');
     } finally {
       setLoading(false);

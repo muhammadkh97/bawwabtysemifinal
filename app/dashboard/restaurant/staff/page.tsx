@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
+import { logger } from '@/lib/logger';
 
 interface StaffMember {
   id: string;
@@ -126,7 +127,8 @@ export default function RestaurantStaffPage() {
       setInvitations(invitationsData || []);
       setLoading(false);
     } catch (error: any) {
-      console.error('Error fetching data:', error);
+      const errorMessage = error?.message || 'Unknown error';
+      logger.error('Error fetching restaurant staff data', { error: errorMessage, component: 'RestaurantStaffPage' });
       toast.error('حدث خطأ في جلب البيانات');
       setLoading(false);
     }
@@ -209,8 +211,9 @@ export default function RestaurantStaffPage() {
       await fetchData();
 
     } catch (error: any) {
-      console.error('Error adding staff:', error);
-      toast.error(error.message || 'حدث خطأ في إضافة المساعد');
+      const errorMessage = error?.message || 'حدث خطأ في إضافة المساعد';
+      logger.error('Error adding restaurant staff', { error: errorMessage, component: 'RestaurantStaffPage' });
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -230,7 +233,8 @@ export default function RestaurantStaffPage() {
       toast.success('تم إزالة المساعد بنجاح');
       await fetchData();
     } catch (error: any) {
-      console.error('Error removing staff:', error);
+      const errorMessage = error?.message || 'Unknown error';
+      logger.error('Error removing restaurant staff', { error: errorMessage, component: 'RestaurantStaffPage', staffId });
       toast.error('حدث خطأ في إزالة المساعد');
     }
   };
@@ -249,7 +253,8 @@ export default function RestaurantStaffPage() {
       toast.success('تم إلغاء الدعوة بنجاح');
       await fetchData();
     } catch (error: any) {
-      console.error('Error cancelling invitation:', error);
+      const errorMessage = error?.message || 'Unknown error';
+      logger.error('Error cancelling restaurant invitation', { error: errorMessage, component: 'RestaurantStaffPage', invitationId });
       toast.error('حدث خطأ في إلغاء الدعوة');
     }
   };

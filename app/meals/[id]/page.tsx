@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 import { 
   UtensilsCrossed, Star, Clock, ChevronLeft, Heart, 
   Plus, Minus, AlertCircle, Check
@@ -187,7 +188,8 @@ export default function MealDetailsPage() {
         }
       }
     } catch (error) {
-      console.error('Error fetching meal:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching meal', { error: errorMessage, component: 'MealPage', mealId: id });
       toast.error('حدث خطأ في تحميل تفاصيل الوجبة');
       router.push('/restaurants');
     } finally {
@@ -222,7 +224,8 @@ export default function MealDetailsPage() {
       setSpecialInstructions('');
       setSelectedVariants({});
     } catch (error) {
-      console.error('Error adding to cart:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error adding to cart', { error: errorMessage, component: 'MealPage', mealId: meal?.id });
       toast.error('حدث خطأ في إضافة الوجبة');
     } finally {
       setAdding(false);

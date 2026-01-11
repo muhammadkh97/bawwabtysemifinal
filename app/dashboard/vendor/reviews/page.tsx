@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Star, Calendar, Package, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '@/lib/logger';
 
 interface Review {
   id: string;
@@ -76,7 +77,7 @@ export default function VendorReviewsPage() {
         .order('created_at', { ascending: false});
 
       if (reviewsError) {
-        console.error('خطأ في جلب المراجعات:', reviewsError);
+        logger.error('خطأ في جلب المراجعات', { error: reviewsError.message, component: 'VendorReviewsPage' });
         setLoading(false);
         return;
       }

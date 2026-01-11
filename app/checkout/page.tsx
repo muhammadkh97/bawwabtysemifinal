@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { logger } from '@/lib/logger';
 import { 
   ShoppingCart, MapPin, CreditCard, Truck, CheckCircle, Package, 
   ArrowRight, ArrowLeft, Tag, X, AlertCircle, Sparkles, User, 
@@ -133,10 +134,8 @@ export default function CheckoutPage() {
           });
         }
       } catch (error) {
-        console.error('Error fetching shipping settings:', error);
-      }
-    };
-
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching shipping settings', { error: errorMessage, component: 'CheckoutPage' });
     fetchShippingSettings();
   }, []);
 
@@ -161,7 +160,8 @@ export default function CheckoutPage() {
             }));
           }
         } catch (error) {
-          console.error('Error fetching user data:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          logger.error('Error fetching user data', { error: errorMessage, component: 'CheckoutPage' });
         }
       }
     };
@@ -238,14 +238,16 @@ export default function CheckoutPage() {
 
           alert(`✅ تم تحديد موقعك بنجاح!\n📍 ${fullAddress}`);
         } catch (error) {
-          console.error('Error:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          logger.error('Error getting location', { error: errorMessage, component: 'CheckoutPage' });
           alert('❌ حدث خطأ في تحديد الموقع');
         } finally {
           setIsGettingLocation(false);
         }
       },
       (error) => {
-        console.error('Geolocation error:', error);
+        const errorMessage = error instanceof GeolocationPositionError ? error.message : 'Unknown error';
+        logger.error('Geolocation error', { error: errorMessage, code: error instanceof GeolocationPositionError ? error.code : undefined, component: 'CheckoutPage' });
         alert('❌ تعذر الوصول إلى موقعك');
         setIsGettingLocation(false);
       }
@@ -278,7 +280,8 @@ export default function CheckoutPage() {
         });
       }
     } catch (error) {
-      console.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error selecting location', { error: errorMessage, component: 'CheckoutPage', lat, lng });
     }
   };
 
@@ -347,7 +350,8 @@ export default function CheckoutPage() {
       setDiscount(discountAmount);
       alert(`✅ تم تطبيق الكوبون! وفرت ${discountAmount.toFixed(2)} ₪ 🎉`);
     } catch (error) {
-      console.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error validating coupon', { error: errorMessage, component: 'CheckoutPage', couponCode });
       alert('❌ حدث خطأ أثناء التحقق من الكوبون');
     } finally {
       setCouponLoading(false);
@@ -437,7 +441,7 @@ export default function CheckoutPage() {
         .single();
 
       if (orderError || !newOrder) {
-        console.error('Order error:', orderError);
+        logger.error('Order creation error', { error: orderError?.message, component: 'CheckoutPage', orderData });
         alert(`❌ حدث خطأ: ${orderError?.message || 'فشل إنشاء الطلب'}`);
         setLoading(false);
         return;
@@ -506,8 +510,7 @@ export default function CheckoutPage() {
         .insert(orderItems);
 
       if (itemsError) {
-        console.error('❌ Items error details:', itemsError);
-        console.error('❌ Failed items:', orderItems);
+        logger.error('Items insertion error', { error: itemsError.message, component: 'CheckoutPage', orderId: newOrder.id, itemsCount: orderItems.length });
         await supabase.from('orders').delete().eq('id', newOrder.id);
         alert(`❌ حدث خطأ في إضافة المنتجات: ${itemsError.message}`);
         setLoading(false);
@@ -543,7 +546,8 @@ export default function CheckoutPage() {
       }, 1500);
 
     } catch (error) {
-      console.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Unexpected checkout error', { error: errorMessage, component: 'CheckoutPage' });
       alert('❌ حدث خطأ غير متوقع');
       setLoading(false);
     }

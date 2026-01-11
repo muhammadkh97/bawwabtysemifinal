@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { logger } from '@/lib/logger';
 import { Mail, CheckCircle, XCircle, Clock, Store, UtensilsCrossed, Shield } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { getCurrentUser } from '@/lib/auth';
@@ -105,7 +106,8 @@ export default function InvitationsPage() {
 
       setInvitations(formattedInvitations);
     } catch (error) {
-      console.error('Error fetching invitations:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching invitations', { error: errorMessage, component: 'InvitationsPage' });
       toast.error('حدث خطأ في جلب الدعوات');
     } finally {
       setLoading(false);
@@ -123,7 +125,8 @@ export default function InvitationsPage() {
         await fetchInvitations(user.email);
       }
     } catch (error) {
-      console.error('خطأ في التحقق من المصادقة:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Auth check error', { error: errorMessage, component: 'InvitationsPage' });
       router.push('/auth/login');
     }
   }, [fetchInvitations, router]);
@@ -221,7 +224,8 @@ export default function InvitationsPage() {
       }, 1500);
 
     } catch (error: any) {
-      console.error('Error accepting invitation:', error);
+      const errorMessage = error instanceof Error ? error.message : error?.message || 'Unknown error';
+      logger.error('Error accepting invitation', { error: errorMessage, component: 'InvitationsPage', invitationId });
       toast.error(error.message || 'حدث خطأ في قبول الدعوة');
     } finally {
       setProcessing(null);
@@ -249,7 +253,8 @@ export default function InvitationsPage() {
         await fetchInvitations(user.email);
       }
     } catch (error: any) {
-      console.error('Error rejecting invitation:', error);
+      const errorMessage = error instanceof Error ? error.message : error?.message || 'Unknown error';
+      logger.error('Error rejecting invitation', { error: errorMessage, component: 'InvitationsPage', invitationId });
       toast.error('حدث خطأ في رفض الدعوة');
     } finally {
       setProcessing(null);

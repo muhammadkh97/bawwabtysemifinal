@@ -6,6 +6,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 import { Loader2 } from 'lucide-react';
 
 interface Transaction {
@@ -91,7 +92,7 @@ export default function VendorWalletPage() {
         .single<VendorWalletSummary>();
 
       if (summaryError) {
-        console.error('Error fetching wallet summary:', summaryError);
+        logger.error('Error fetching wallet summary', { error: summaryError.message, component: 'VendorWalletPage', vendorId: vendorData.id });
       } else if (summary) {
         // حساب نسبة العمولة من إجمالي الأرباح
         const commissionRate = summary.total_earned > 0 
@@ -117,7 +118,7 @@ export default function VendorWalletPage() {
         });
 
       if (txnsError) {
-        console.error('Error fetching transactions:', txnsError);
+        logger.error('Error fetching transactions', { error: txnsError.message, component: 'VendorWalletPage', vendorId: vendorData.id });
       } else if (transactionsData) {
         setTransactions(transactionsData);
       }
@@ -134,7 +135,8 @@ export default function VendorWalletPage() {
       }
 
     } catch (error) {
-      console.error('Error fetching wallet data:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching wallet data', { error: errorMessage, component: 'VendorWalletPage' });
     } finally {
       setLoading(false);
     }
@@ -220,7 +222,8 @@ export default function VendorWalletPage() {
       setAccountNumber('');
 
     } catch (error) {
-      console.error('Error creating payout request:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error creating payout request', { error: errorMessage, component: 'VendorWalletPage', amount: payoutAmount });
       alert('❌ حدث خطأ أثناء إرسال طلب السحب. يرجى المحاولة مرة أخرى');
     } finally {
       setSubmitting(false);

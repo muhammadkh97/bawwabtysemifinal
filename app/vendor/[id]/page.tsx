@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 import { 
   MapPin, Star, Clock, Phone, ChefHat, Package, 
   ArrowRight, ShoppingCart, Heart, Share2, Info, Utensils,
@@ -119,7 +120,8 @@ export default function VendorDetailsPage() {
       if (error) throw error;
       setProducts(data || []);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching products', { error: errorMessage, component: 'VendorPage', vendorId });
     }
   };
 

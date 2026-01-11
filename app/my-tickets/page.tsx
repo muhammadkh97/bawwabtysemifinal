@@ -8,6 +8,7 @@ import { MessageSquare, Clock, CheckCircle, XCircle, AlertCircle, Calendar, Eye,
 import { supabase } from '@/lib/supabase';
 import { getCurrentUser } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
+import { logger } from '@/lib/logger';
 import Link from 'next/link';
 import { logger } from '@/lib/logger';
 
@@ -211,7 +212,8 @@ export default function MyTicketsPage() {
       await fetchReplies(selectedTicket.id);
       setReplyText('');
     } catch (error) {
-      console.error('Error sending reply:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error sending reply', { error: errorMessage, component: 'MyTicketsPage', ticketId: selectedTicket?.id });
       alert('❌ حدث خطأ في إرسال الرد');
     } finally {
       setSendingReply(false);

@@ -9,6 +9,7 @@ import { hasPermission } from '@/lib/permissions';
 import toast from 'react-hot-toast';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
+import { logger } from '@/lib/logger';
 
 interface StaffMember {
   id: string;
@@ -154,8 +155,8 @@ export default function VendorStaffPage() {
       setInvitations(invitationsData || []);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching data:', error);
       const errorMessage = error instanceof Error ? error.message : 'حدث خطأ في جلب البيانات';
+      logger.error('Error fetching staff data', { error: errorMessage, component: 'VendorStaffPage' });
       toast.error(errorMessage);
       setLoading(false);
     }
@@ -293,7 +294,8 @@ export default function VendorStaffPage() {
       await fetchData();
 
     } catch (error) {
-      console.error('Error adding staff:', error);
+      const errorMessage = error instanceof Error ? error.message : 'حدث خطأ في إضافة المساعد';
+      logger.error('Error adding staff', { error: errorMessage, component: 'VendorStaffPage', email: newStaffEmail });
       
       // رسائل خطأ مخصصة
       if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
@@ -322,7 +324,8 @@ export default function VendorStaffPage() {
       toast.success('تم إزالة المساعد بنجاح');
       await fetchData();
     } catch (error) {
-      console.error('Error removing staff:', error);
+      const errorMessage = error instanceof Error ? error.message : 'حدث خطأ في إزالة المساعد';
+      logger.error('Error removing staff', { error: errorMessage, component: 'VendorStaffPage', staffId });
       toast.error('حدث خطأ في إزالة المساعد');
     }
   };
@@ -341,7 +344,8 @@ export default function VendorStaffPage() {
       toast.success('تم إلغاء الدعوة بنجاح');
       await fetchData();
     } catch (error) {
-      console.error('Error cancelling invitation:', error);
+      const errorMessage = error instanceof Error ? error.message : 'حدث خطأ في إلغاء الدعوة';
+      logger.error('Error cancelling invitation', { error: errorMessage, component: 'VendorStaffPage', invitationId });
       toast.error('حدث خطأ في إلغاء الدعوة');
     }
   };

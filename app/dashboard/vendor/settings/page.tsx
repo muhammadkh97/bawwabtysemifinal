@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Settings, User, Lock, Bell, CreditCard, Shield, Save, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '@/lib/logger';
 
 interface VendorSettings {
   notifications_email: boolean;
@@ -84,7 +85,7 @@ export default function VendorSettingsPage() {
         .single();
 
       if (vendorError && vendorError.code !== 'PGRST116') {
-        console.error('Error fetching vendor data:', vendorError);
+        logger.error('Error fetching vendor data', { error: vendorError.message, component: 'VendorSettingsPage', code: vendorError.code });
       }
 
       if (vendorData) {
@@ -101,7 +102,8 @@ export default function VendorSettingsPage() {
         setIban(vendorData.iban || '');
       }
     } catch (error) {
-      console.error('Error fetching vendor data:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching vendor data', { error: errorMessage, component: 'VendorSettingsPage' });
       showMessage('error', 'حدث خطأ أثناء جلب البيانات');
     } finally {
       setLoading(false);
@@ -129,7 +131,8 @@ export default function VendorSettingsPage() {
 
       showMessage('success', 'تم تحديث الملف الشخصي بنجاح!');
     } catch (error) {
-      console.error('Error updating profile:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error updating profile', { error: errorMessage, component: 'VendorSettingsPage' });
       showMessage('error', 'حدث خطأ أثناء حفظ التغييرات');
     } finally {
       setSaving(false);
@@ -166,8 +169,8 @@ export default function VendorSettingsPage() {
       setNewPassword('');
       setConfirmPassword('');
     } catch (error) {
-      console.error('Error changing password:', error);
       const errorMessage = error instanceof Error ? error.message : 'حدث خطأ أثناء تحديث كلمة المرور';
+      logger.error('Error changing password', { error: errorMessage, component: 'VendorSettingsPage' });
       showMessage('error', errorMessage);
     } finally {
       setSaving(false);
@@ -193,7 +196,8 @@ export default function VendorSettingsPage() {
 
       showMessage('success', 'تم تحديث إعدادات الإشعارات بنجاح!');
     } catch (error) {
-      console.error('Error updating notifications:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error updating notifications', { error: errorMessage, component: 'VendorSettingsPage' });
       showMessage('error', 'حدث خطأ أثناء حفظ التغييرات');
     } finally {
       setSaving(false);
@@ -217,7 +221,8 @@ export default function VendorSettingsPage() {
 
       showMessage('success', 'تم تحديث معلومات الدفع بنجاح!');
     } catch (error) {
-      console.error('Error updating payment info:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error updating payment info', { error: errorMessage, component: 'VendorSettingsPage' });
       showMessage('error', 'حدث خطأ أثناء حفظ التغييرات');
     } finally {
       setSaving(false);

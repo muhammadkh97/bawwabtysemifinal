@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import { Wallet, DollarSign, TrendingUp, Calendar, ArrowUpRight, ArrowDownLeft, Clock, CreditCard, Download, AlertCircle } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface Transaction {
   id: string;
@@ -69,7 +70,8 @@ export default function RestaurantWalletPage() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error initializing restaurant wallet', { error: errorMessage, component: 'RestaurantWalletPage' });
       router.push('/auth/login');
     }
   }, [router]);
@@ -102,7 +104,8 @@ export default function RestaurantWalletPage() {
       if (txnsError) throw txnsError;
       setTransactions(txns || []);
     } catch (error) {
-      console.error('Error fetching wallet data:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching wallet data', { error: errorMessage, component: 'RestaurantWalletPage', vendorId });
     }
   };
 
@@ -132,7 +135,8 @@ export default function RestaurantWalletPage() {
       setShowPayoutModal(false);
       fetchWalletData(vendorId);
     } catch (error) {
-      console.error('Error requesting payout:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error requesting payout', { error: errorMessage, component: 'RestaurantWalletPage', vendorId });
       alert('حدث خطأ في إرسال الطلب');
     }
   };
