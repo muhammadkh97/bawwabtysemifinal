@@ -104,48 +104,49 @@ export default function ReferralPage() {
   };
 
   const fetchReferrals = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('referrals')
-      .select(`
-        id,
-        reward_points,
-        status,
-        created_at,
-        completed_at,
-        referred:referred_id (
-          full_name,
-          email
-        )
-      `)
-      .eq('referrer_id', userId)
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('referrals')
+        .select(`
+          id,
+          reward_points,
+          status,
+          created_at,
+          completed_at,
+          referred:referred_id (
+            full_name,
+            email
+          )
+        `)
+        .eq('referrer_id', userId)
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      throw new Error(`فشل جلب الإحالات: ${error.message}`);
+      if (error) {
+        throw new Error(`فشل جلب الإحالات: ${error.message}`);
+      }
+
+      const formattedReferrals = (data || []).map((r: any) => ({
+        id: r.id,
+        referred_name: r.referred?.full_name || r.referred?.[0]?.full_name || 'مستخدم جديد',
+        referred_email: r.referred?.email || r.referred?.[0]?.email || '',
+        reward_points: r.reward_points,
+        status: r.status,
+        created_at: r.created_at,
+        completed_at: r.completed_at,
+      }));
+
+      setReferrals(formattedReferrals);
+    } catch (error) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في جلب الإحالات';
+      
+      logger.error('fetchReferrals failed', {
+        error: errorMessage,
+        component: 'ReferralPage',
+        userId,
+      });
     }
-
-    const formattedReferrals = (data || []).map((r: any) => ({
-      id: r.id,
-      referred_name: r.referred?.full_name || r.referred?.[0]?.full_name || 'مستخدم جديد',
-      referred_email: r.referred?.email || r.referred?.[0]?.email || '',
-      reward_points: r.reward_points,
-      status: r.status,
-      created_at: r.created_at,
-      completed_at: r.completed_at,
-    }));
-
-    setReferrals(formattedReferrals);
-  } catch (error) {
-    const errorMessage = error instanceof Error 
-      ? error.message 
-      : 'خطأ في جلب الإحالات';
-    
-    logger.error('fetchReferrals failed', {
-      error: errorMessage,
-      component: 'ReferralPage',
-      userId,
-    });
-  }
   };
 
   const copyReferralLink = () => {
