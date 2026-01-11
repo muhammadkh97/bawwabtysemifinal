@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { MapPin, Star, Clock, ChefHat, Search, Filter, DollarSign, Map as MapIcon, X, Sparkles, TrendingUp, Flame, Tag, Award } from 'lucide-react';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { logger } from '@/lib/logger';
 
 interface Restaurant {
   id: string;
@@ -90,13 +91,16 @@ export default function RestaurantsPage() {
           });
         },
         (error) => {
-          console.error('Error getting location:', error);
+          logger.error('Error getting location', {
+            error: error.message,
+            component: 'RestaurantsPage',
+          });
         }
       );
     }
   };
 
-  const fetchRestaurants = async () => {
+  const fetchRestaurants = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('stores')
@@ -120,7 +124,9 @@ export default function RestaurantsPage() {
         .order('is_featured', { ascending: false })
         .order('rating', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(`فشل جلب المطاعم: ${error.message}`);
+      }
       
       // Check if restaurants have active offers
       const restaurantData = await Promise.all((data || []).map(async (restaurant) => {
@@ -140,11 +146,20 @@ export default function RestaurantsPage() {
       
       setRestaurants(restaurantData);
     } catch (error) {
-      console.error('Error fetching restaurants:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في جلب المطاعم';
+      
+      logger.error('fetchRestaurants failed', {
+        error: errorMessage,
+        component: 'RestaurantsPage',
+      });
+      
+      setRestaurants([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const R = 6371;

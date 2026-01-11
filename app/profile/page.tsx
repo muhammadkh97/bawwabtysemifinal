@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -12,6 +12,7 @@ import { supabase } from '@/lib/supabase';
 import { getCurrentUser } from '@/lib/auth';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { Upload, Camera } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface UserProfile {
   id: string;
@@ -86,7 +87,7 @@ export default function ProfilePage() {
     is_default: false,
   });
 
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     try {
       
       const { data: { user } } = await supabase.auth.getUser();
@@ -105,9 +106,7 @@ export default function ProfilePage() {
 
 
       if (directError || !userData) {
-        console.error('❌ [Profile] فشل جلب البيانات:', directError);
-        setLoading(false);
-        return;
+        throw new Error(`فشل جلب البيانات: ${directError?.message || 'بيانات غير موجودة'}`);
       }
 
       // تحديث الـ state مباشرة بالبيانات من قاعدة البيانات
@@ -145,10 +144,18 @@ export default function ProfilePage() {
 
       setLoading(false);
     } catch (error) {
-      console.error('❌ [Profile] خطأ غير متوقع:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في جلب بيانات الملف الشخصي';
+      
+      logger.error('fetchUserData failed', {
+        error: errorMessage,
+        component: 'ProfilePage',
+      });
+      
       setLoading(false);
     }
-  };
+  }, [router]);
 
   // تحميل البيانات عند فتح الصفحة
   useEffect(() => {
@@ -209,7 +216,10 @@ export default function ProfilePage() {
             });
 
           if (uploadError) {
-            console.error('❌ [Profile] خطأ في رفع الصورة:', uploadError);
+            logger.error('Avatar upload failed', {
+              error: uploadError.message,
+              component: 'ProfilePage',
+            });
             alert('⚠️ فشل رفع الصورة، سيتم حفظ البيانات الأخرى فقط');
           } else {
             const { data: { publicUrl } } = supabase.storage
@@ -219,7 +229,11 @@ export default function ProfilePage() {
             avatarUrl = publicUrl;
           }
         } catch (storageError) {
-          console.error('❌ [Profile] خطأ غير متوقع في رفع الصورة:', storageError);
+          const errorMsg = storageError instanceof Error ? storageError.message : 'خطأ غير معروف';
+          logger.error('Storage error', {
+            error: errorMsg,
+            component: 'ProfilePage',
+          });
           alert('⚠️ حدث خطأ أثناء رفع الصورة');
         }
       }
@@ -238,9 +252,7 @@ export default function ProfilePage() {
         .eq('id', profile.id);
 
       if (updateError) {
-        console.error('❌ [Profile] خطأ في التحديث:', updateError);
-        console.error('❌ [Profile] تفاصيل الخطأ:', JSON.stringify(updateError, null, 2));
-        throw updateError;
+        throw new Error(`فشل تحديث الملف الشخصي: ${updateError.message}`);
       }
       
 
@@ -263,8 +275,16 @@ export default function ProfilePage() {
       // Reload data to ensure sync
       await fetchUserData();
     } catch (error) {
-      console.error('❌ [Profile] Error updating profile:', error);
-      alert('❌ حدث خطأ أثناء التحديث. يرجى المحاولة مرة أخرى.');
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في تحديث الملف الشخصي';
+      
+      logger.error('handleUpdateProfile failed', {
+        error: errorMessage,
+        component: 'ProfilePage',
+      });
+      
+      alert('❌ حدث خطأ أثناء التحديث: ' + errorMessage);
     }
   };
 
@@ -295,8 +315,7 @@ export default function ProfilePage() {
       });
 
       if (error) {
-        console.error('❌ [Profile] خطأ في تغيير كلمة المرور:', error);
-        throw error;
+        throw new Error(`فشل تغيير كلمة المرور: ${error.message}`);
       }
 
       alert('✅ تم تغيير كلمة المرور بنجاح!');
@@ -307,8 +326,16 @@ export default function ProfilePage() {
       setConfirmPassword('');
       setShowPasswordChange(false);
     } catch (error: any) {
-      console.error('❌ [Profile] Error changing password:', error);
-      alert('❌ حدث خطأ أثناء تغيير كلمة المرور: ' + (error.message || 'يرجى المحاولة مرة أخرى'));
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في تغيير كلمة المرور';
+      
+      logger.error('handleChangePassword failed', {
+        error: errorMessage,
+        component: 'ProfilePage',
+      });
+      
+      alert('❌ حدث خطأ أثناء تغيير كلمة المرور: ' + errorMessage);
     }
   };
 
@@ -354,7 +381,15 @@ export default function ProfilePage() {
       setNewAddress({ title: 'منزل', city: 'عمان', is_default: false });
       alert('✅ تم إضافة العنوان بنجاح!');
     } catch (error) {
-      console.error('Error adding address:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في إضافة العنوان';
+      
+      logger.error('handleAddAddress failed', {
+        error: errorMessage,
+        component: 'ProfilePage',
+      });
+      
       alert('❌ حدث خطأ أثناء إضافة العنوان.');
     }
   };

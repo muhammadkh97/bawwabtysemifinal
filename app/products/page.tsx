@@ -12,6 +12,7 @@ import EmptyState from '@/components/EmptyState';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
+import { logger } from '@/lib/logger';
 
 interface Product {
   id: string;
@@ -59,8 +60,7 @@ function ProductsContent() {
 
 
       if (fetchError) {
-        console.error('❌ [Products Page] خطأ في جلب التصنيفات:', fetchError);
-        throw fetchError;
+        throw new Error(`فشل جلب التصنيفات: ${fetchError.message}`);
       }
 
       // فلترة التصنيفات النشطة فقط
@@ -76,7 +76,14 @@ function ProductsContent() {
 
       setCategories(formattedCategories);
     } catch (err) {
-      console.error('Error fetching categories:', err);
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'خطأ في جلب التصنيفات';
+      
+      logger.error('fetchCategories failed', {
+        error: errorMessage,
+        component: 'ProductsPage',
+      });
     }
   }, []);
 
