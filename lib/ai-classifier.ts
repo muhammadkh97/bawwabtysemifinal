@@ -3,6 +3,8 @@
 // محرك التصنيف الذكي للمنتجات
 // ==========================================
 
+import { logger } from '@/lib/logger';
+
 interface ProductData {
   name_ar: string;
   name_en: string;
@@ -82,7 +84,8 @@ export async function classifyProductWithOpenAI(
       reviewReason: result.review_reason,
     };
   } catch (error) {
-    console.error('❌ OpenAI classification failed:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('OpenAI classification failed', { error: errorMessage, component: 'classifyProductWithOpenAI' });
     return fallbackClassification(productData, availableCategories);
   }
 }
@@ -139,7 +142,8 @@ export async function classifyProductWithClaude(
       reviewReason: result.review_reason,
     };
   } catch (error) {
-    console.error('❌ Claude classification failed:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Claude classification failed', { error: errorMessage, component: 'classifyProductWithClaude' });
     return fallbackClassification(productData, availableCategories);
   }
 }
@@ -325,7 +329,8 @@ export async function analyzeProductImages(imageUrls: string[]): Promise<string>
     const data = await response.json();
     return data.choices[0].message.content;
   } catch (error) {
-    console.error('❌ Image analysis failed:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Image analysis failed', { error: errorMessage, component: 'analyzeImageWithAI' });
     return 'فشل تحليل الصورة';
   }
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Loader } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 // Google Maps Types
 declare global {
@@ -50,7 +51,10 @@ export default function GoogleMapComponent({
       const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
       
       if (!apiKey) {
-        console.error('Missing NEXT_PUBLIC_GOOGLE_MAPS_API_KEY environment variable');
+        logger.error('Google Maps API key missing', {
+          error: 'Missing NEXT_PUBLIC_GOOGLE_MAPS_API_KEY environment variable',
+          component: 'GoogleMapComponent',
+        })
         setIsLoading(false);
         return;
       }
@@ -140,7 +144,11 @@ export default function GoogleMapComponent({
             }
           },
           (error) => {
-            console.error('خطأ في الحصول على الموقع:', error);
+            logger.error('getCurrentPosition failed', {
+              error: error.message || 'خطأ في الحصول على الموقع',
+              component: 'GoogleMapComponent',
+              errorCode: error.code,
+            })
           }
         );
 
@@ -161,7 +169,11 @@ export default function GoogleMapComponent({
             }
           },
           (error) => {
-            console.error('خطأ في تتبع الموقع:', error);
+            logger.error('watchPosition failed', {
+              error: error.message || 'خطأ في تتبع الموقع',
+              component: 'GoogleMapComponent',
+              errorCode: error.code,
+            })
           },
           { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
         );

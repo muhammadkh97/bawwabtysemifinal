@@ -180,7 +180,12 @@ export default function QRScanner({
   useEffect(() => {
     return () => {
       if (scannerRef.current) {
-        scannerRef.current.stop().catch(console.error)
+        scannerRef.current.stop().catch((error) => {
+          logger.error('QRScanner cleanup failed', {
+            error: error instanceof Error ? error.message : 'Unknown error',
+            component: 'QRScanner',
+          })
+        })
       }
     }
   }, [])

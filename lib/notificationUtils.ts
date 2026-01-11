@@ -4,6 +4,7 @@
  */
 
 import { supabase } from './supabase'
+import { logger } from '@/lib/logger'
 
 export interface Notification {
   id: string
@@ -49,7 +50,7 @@ export async function getNotifications(limit = 50): Promise<Notification[]> {
     .limit(limit)
 
   if (error) {
-    console.error('Error fetching notifications:', error)
+    logger.error('Error fetching notifications', { error: error.message, component: 'fetchNotifications' });
     return []
   }
 
@@ -63,7 +64,7 @@ export async function getUnreadCount(): Promise<number> {
   const { data, error } = await supabase.rpc('get_unread_count')
 
   if (error) {
-    console.error('Error getting unread count:', error)
+    logger.error('Error getting unread count', { error: error.message, component: 'getUnreadCount' });
     return 0
   }
 
@@ -79,7 +80,7 @@ export async function markAsRead(notificationId: string): Promise<boolean> {
   })
 
   if (error) {
-    console.error('Error marking notification as read:', error)
+    logger.error('Error marking notification as read', { error: error.message, component: 'markAsRead', notificationId });
     return false
   }
 
@@ -93,7 +94,7 @@ export async function markAllAsRead(): Promise<boolean> {
   const { error } = await supabase.rpc('mark_all_notifications_read')
 
   if (error) {
-    console.error('Error marking all as read:', error)
+    logger.error('Error marking all as read', { error: error.message, component: 'markAllAsRead' });
     return false
   }
 
@@ -112,7 +113,7 @@ export async function deleteNotification(
     .eq('id', notificationId)
 
   if (error) {
-    console.error('Error deleting notification:', error)
+    logger.error('Error deleting notification', { error: error.message, component: 'deleteNotification', notificationId });
     return false
   }
 
@@ -144,7 +145,7 @@ export async function createNotification(
   })
 
   if (error) {
-    console.error('Error creating notification:', error)
+    logger.error('Error creating notification', { error: error.message, component: 'createNotification', userId, type });
     return null
   }
 

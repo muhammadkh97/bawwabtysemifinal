@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { logger } from '@/lib/logger';
 
 export interface DeliveryZone {
   id: string;
@@ -34,7 +35,7 @@ export async function getActiveDeliveryZones(): Promise<DeliveryZone[]> {
     .order('display_order', { ascending: true });
 
   if (error) {
-    console.error('Error fetching delivery zones:', error);
+    logger.error('Error fetching delivery zones', { error: error.message, component: 'getActiveDeliveryZones' });
     return [];
   }
 
@@ -59,7 +60,8 @@ export async function findDeliveryZone(
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Error finding delivery zone:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error finding delivery zone', { error: errorMessage, component: 'findDeliveryZone', lat, lng, city });
     return null;
   }
 }
@@ -82,7 +84,8 @@ export async function calculateDeliveryFee(
     if (error) throw error;
     return data || 5;
   } catch (error) {
-    console.error('Error calculating delivery fee:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error calculating delivery fee', { error: errorMessage, component: 'calculateDeliveryFee', zoneId, deliveryType });
     return 5;
   }
 }
@@ -149,7 +152,8 @@ export async function getDeliveryEstimate(
       zone_name_ar: zoneData.name_ar,
     };
   } catch (error) {
-    console.error('Error getting delivery estimate:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error getting delivery estimate', { error: errorMessage, component: 'getDeliveryEstimate', vendorId });
     return null;
   }
 }
@@ -170,7 +174,8 @@ export async function getZoneByCity(city: string): Promise<DeliveryZone | null> 
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Error getting zone by city:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error getting zone by city', { error: errorMessage, component: 'getZoneByCity', city });
     return null;
   }
 }

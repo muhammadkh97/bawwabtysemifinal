@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 /**
  * واجهات APIs لأسعار الصرف
@@ -22,7 +23,8 @@ const exchangeRateAPI: ExchangeRateSource = {
       const data = await response.json();
       return data.rates || null;
     } catch (error) {
-      console.error('ExchangeRate-API error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('ExchangeRate-API error', { error: errorMessage, component: 'exchangeRateAPI' });
       return null;
     }
   },
@@ -41,7 +43,8 @@ const frankfurterAPI: ExchangeRateSource = {
       const data = await response.json();
       return data.rates || null;
     } catch (error) {
-      console.error('Frankfurter API error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Frankfurter API error', { error: errorMessage, component: 'frankfurterAPI' });
       return null;
     }
   },
@@ -60,7 +63,8 @@ const currencyAPI: ExchangeRateSource = {
       const data = await response.json();
       return data.sar || null;
     } catch (error) {
-      console.error('Currency API error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Currency API error', { error: errorMessage, component: 'currencyAPI' });
       return null;
     }
   },
@@ -80,7 +84,7 @@ export async function fetchGlobalExchangeRates(): Promise<Record<string, number>
     }
   }
 
-  console.error('❌ All exchange rate APIs failed');
+  logger.error('All exchange rate APIs failed', { component: 'fetchGlobalExchangeRates' });
   return null;
 }
 
@@ -93,7 +97,7 @@ export async function getLatestExchangeRates() {
     const { data, error } = await supabase.rpc('get_latest_exchange_rates');
 
     if (error) {
-      console.error('Error fetching exchange rates:', error);
+      logger.error('Error fetching exchange rates', { error: error.message, component: 'getLatestExchangeRates' });
       return null;
     }
 
@@ -117,7 +121,8 @@ export async function getLatestExchangeRates() {
 
     return rates;
   } catch (error) {
-    console.error('Error in getLatestExchangeRates:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error in getLatestExchangeRates', { error: errorMessage, component: 'getLatestExchangeRates' });
     return null;
   }
 }
@@ -132,7 +137,7 @@ export async function updateExchangeRatesFromAPI() {
     const globalRates = await fetchGlobalExchangeRates();
     
     if (!globalRates) {
-      console.error('❌ Failed to fetch rates from global APIs');
+      logger.error('Failed to fetch rates from global APIs', { component: 'updateExchangeRatesFromAPI' });
       return { success: false, error: 'No API available' };
     }
 
@@ -146,7 +151,7 @@ export async function updateExchangeRatesFromAPI() {
       }));
 
     if (rates.length === 0) {
-      console.error('❌ No supported currencies found in API response');
+      logger.error('No supported currencies found in API response', { component: 'updateExchangeRatesFromAPI' });
       return { success: false, error: 'No supported currencies found' };
     }
 
@@ -157,13 +162,14 @@ export async function updateExchangeRatesFromAPI() {
     });
 
     if (updateError) {
-      console.error('Error updating exchange rates in database:', updateError);
+      logger.error('Error updating exchange rates in database', { error: updateError.message, component: 'updateExchangeRatesFromAPI' });
       return { success: false, error: updateError };
     }
 
     return { success: true, count: updateResult, rates };
   } catch (error) {
-    console.error('Error updating exchange rates:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error updating exchange rates', { error: errorMessage, component: 'updateExchangeRatesFromAPI' });
     return { success: false, error };
   }
 }
@@ -179,13 +185,14 @@ export async function triggerExchangeRatesUpdate() {
     });
 
     if (error) {
-      console.error('Edge Function error:', error);
+      logger.error('Edge Function error', { error: error.message, component: 'triggerExchangeRatesUpdate' });
       return { success: false, error };
     }
 
     return { success: true, data };
   } catch (error) {
-    console.error('Error invoking Edge Function:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error invoking Edge Function', { error: errorMessage, component: 'triggerExchangeRatesUpdate' });
     return { success: false, error };
   }
 }
@@ -202,13 +209,14 @@ export async function updateSingleRate(currency: string, rate: number, source: s
     });
 
     if (error) {
-      console.error('Error updating rate:', error);
+      logger.error('Error updating rate', { error: error.message, component: 'updateSingleRate', currency });
       return { success: false, error };
     }
 
     return { success: true, count: data };
   } catch (error) {
-    console.error('Error in updateSingleRate:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error in updateSingleRate', { error: errorMessage, component: 'updateSingleRate', currency });
     return { success: false, error };
   }
 }
@@ -237,7 +245,8 @@ export async function getExchangeRatesAge() {
       needsUpdate: ageInHours > 24, // تحديث إذا مر أكثر من 24 ساعة
     };
   } catch (error) {
-    console.error('Error getting exchange rates age:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error getting exchange rates age', { error: errorMessage, component: 'getExchangeRatesAge' });
     return null;
   }
 }

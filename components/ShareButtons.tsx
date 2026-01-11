@@ -3,6 +3,7 @@
 import { Share2, MessageCircle, Facebook, Copy, Check, X } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { logger } from '@/lib/logger';
 
 interface ShareButtonsProps {
   productName: string;
@@ -92,7 +93,15 @@ export default function ShareButtons({ productName, productId, productPrice, pro
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error('Failed to copy:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Failed to copy'
+      
+      logger.error('copyToClipboard failed', {
+        error: errorMessage,
+        component: 'ShareButtons',
+        productId,
+      })
     }
   };
 

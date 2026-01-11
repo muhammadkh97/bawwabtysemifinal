@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 /**
  * واجهة العملة
@@ -36,13 +37,14 @@ export async function getCurrencies(): Promise<Currency[]> {
       .order('display_order');
 
     if (error) {
-      console.error('Error fetching currencies:', error);
+      logger.error('Error fetching currencies', { error: error.message, component: 'getCurrencies' });
       return [];
     }
 
     return data || [];
   } catch (error) {
-    console.error('Error in getCurrencies:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error in getCurrencies', { error: errorMessage, component: 'getCurrencies' });
     return [];
   }
 }
@@ -63,13 +65,14 @@ export async function convertCurrency(
     });
 
     if (error) {
-      console.error('Error converting currency:', error);
+      logger.error('Error converting currency', { error: error.message, component: 'convertCurrency', fromCurrency, toCurrency });
       return amount; // إرجاع المبلغ الأصلي في حالة الخطأ
     }
 
     return data || amount;
   } catch (error) {
-    console.error('Error in convertCurrency:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error in convertCurrency', { error: errorMessage, component: 'convertCurrency', fromCurrency, toCurrency });
     return amount;
   }
 }
@@ -90,13 +93,14 @@ export async function getExchangeRate(
       .single();
 
     if (error) {
-      console.error('Error fetching exchange rate:', error);
+      logger.error('Error fetching exchange rate', { error: error.message, component: 'getExchangeRate', fromCurrency, toCurrency });
       return null;
     }
 
     return data?.rate || null;
   } catch (error) {
-    console.error('Error in getExchangeRate:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error in getExchangeRate', { error: errorMessage, component: 'getExchangeRate', fromCurrency, toCurrency });
     return null;
   }
 }
@@ -132,13 +136,14 @@ export async function getUserPreferredCurrency(userId: string): Promise<string |
       .single();
 
     if (error) {
-      console.error('Error fetching user preferred currency:', error);
+      logger.error('Error fetching user preferred currency', { error: error.message, component: 'getUserPreferredCurrency', userId });
       return null;
     }
 
     return data?.preferred_currency || null;
   } catch (error) {
-    console.error('Error in getUserPreferredCurrency:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error in getUserPreferredCurrency', { error: errorMessage, component: 'getUserPreferredCurrency', userId });
     return null;
   }
 }
@@ -157,13 +162,14 @@ export async function updateUserPreferredCurrency(
       .eq('id', userId);
 
     if (error) {
-      console.error('Error updating user preferred currency:', error);
+      logger.error('Error updating user preferred currency', { error: error.message, component: 'updateUserPreferredCurrency', userId, currencyCode });
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Error in updateUserPreferredCurrency:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error in updateUserPreferredCurrency', { error: errorMessage, component: 'updateUserPreferredCurrency', userId, currencyCode });
     return false;
   }
 }
@@ -178,13 +184,14 @@ export async function getProductsWithConvertedPrices() {
       .select('*');
 
     if (error) {
-      console.error('Error fetching products with converted prices:', error);
+      logger.error('Error fetching products with converted prices', { error: error.message, component: 'getProductsWithConvertedPrices' });
       return [];
     }
 
     return data || [];
   } catch (error) {
-    console.error('Error in getProductsWithConvertedPrices:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error in getProductsWithConvertedPrices', { error: errorMessage, component: 'getProductsWithConvertedPrices' });
     return [];
   }
 }

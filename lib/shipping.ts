@@ -3,6 +3,8 @@
  * حساب رسوم التوصيل بناءً على المسافة والوزن
  */
 
+import { logger } from '@/lib/logger';
+
 export interface ShippingLocation {
   lat: number;
   lng: number;
@@ -197,7 +199,8 @@ export async function getDistanceFromGoogle(
 
     return null;
   } catch (error) {
-    console.error('Error fetching distance from Google:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error fetching distance from Google', { error: errorMessage, component: 'getDistanceFromGoogle' });
     return null;
   }
 }

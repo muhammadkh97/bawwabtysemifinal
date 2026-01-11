@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { logger } from '@/lib/logger';
 
 /**
  * تحديد نوع السلة المناسبة للمنتج
@@ -14,7 +15,8 @@ export async function getProductCartType(productId: string): Promise<'restaurant
     if (error) throw error;
     return data as 'restaurant' | 'products';
   } catch (error) {
-    console.error('Error getting product cart type:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error getting product cart type', { error: errorMessage, component: 'getProductCartType', productId });
     return 'products'; // افتراضي
   }
 }
@@ -34,7 +36,8 @@ export async function isRestaurant(vendorId: string): Promise<boolean> {
     if (error) throw error;
     return data?.business_type === 'restaurant';
   } catch (error) {
-    console.error('Error checking if restaurant:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error checking if restaurant', { error: errorMessage, component: 'isRestaurant', vendorId });
     return false;
   }
 }

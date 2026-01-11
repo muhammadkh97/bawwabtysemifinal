@@ -5,6 +5,7 @@ import { Star, ThumbsUp, Shield, ChevronDown } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { logger } from '@/lib/logger';
 
 interface Review {
   id: string;
@@ -72,7 +73,16 @@ export default function ReviewsList({ productId }: ReviewsListProps) {
         setRatingDistribution(dist);
       }
     } catch (error) {
-      console.error('Error fetching reviews:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error fetching reviews'
+      
+      logger.error('fetchReviews failed', {
+        error: errorMessage,
+        component: 'ReviewsList',
+        productId,
+        filter,
+      })
     } finally {
       setIsLoading(false);
     }
@@ -109,7 +119,15 @@ export default function ReviewsList({ productId }: ReviewsListProps) {
 
       fetchReviews();
     } catch (error) {
-      console.error('Error marking helpful:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error marking helpful'
+      
+      logger.error('handleHelpful failed', {
+        error: errorMessage,
+        component: 'ReviewsList',
+        reviewId,
+      })
     }
   };
 

@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { MapPin, Loader2, Navigation } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const containerStyle = {
   width: '100%',
@@ -71,7 +72,11 @@ export default function LocationPicker({
           setGettingLocation(false);
         },
         (error) => {
-          console.error('Error getting location:', error);
+          logger.error('getCurrentLocation failed', {
+            error: error.message || 'Error getting location',
+            component: 'LocationPicker (dashboard)',
+            errorCode: error.code,
+          })
           alert('لم نتمكن من الحصول على موقعك الحالي. يرجى السماح بالوصول للموقع.');
           setGettingLocation(false);
         }

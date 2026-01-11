@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { logger } from '@/lib/logger';
 
 // دالة مساعدة لاستخراج رسائل الأخطاء
 function getErrorMessage(error: unknown): string {
@@ -138,7 +139,7 @@ export async function uploadFile(file: File, options: UploadOptions): Promise<Up
       fullPath: filePath,
     };
   } catch (error: unknown) {
-    console.error('Upload error:', error);
+    logger.error('Upload error', { error: getErrorMessage(error), component: 'uploadFile', bucket });
     return {
       success: false,
       error: getErrorMessage(error),

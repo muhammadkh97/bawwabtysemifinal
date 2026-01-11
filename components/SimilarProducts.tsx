@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import ProductCard from './ProductCard';
 import { Sparkles, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
 
 interface Product {
   id: string;
@@ -120,7 +121,17 @@ export default function SimilarProducts({ currentProductId, category, vendorId }
       
       setSimilarProducts(productsWithVendor);
     } catch (error) {
-      console.error('خطأ في جلب المنتجات المشابهة:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في جلب المنتجات المشابهة'
+      
+      logger.error('fetchSimilarProducts failed', {
+        error: errorMessage,
+        component: 'SimilarProducts',
+        currentProductId,
+        category,
+        vendorId,
+      })
       setSimilarProducts([]);
     } finally {
       setLoading(false);

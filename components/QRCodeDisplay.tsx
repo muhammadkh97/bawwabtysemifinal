@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { QRCodeSVG as QRCode } from 'qrcode.react'
 import { formatOTP, getOTPTimeRemaining, isOTPExpired } from '@/lib/qrOtpUtils'
 import { Download, Copy, Clock, CheckCircle, AlertCircle } from 'lucide-react'
+import { logger } from '@/lib/logger'
 
 interface QRCodeDisplayProps {
   /** QR code data (JSON string) */
@@ -58,7 +59,14 @@ export default function QRCodeDisplay({
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (error) {
-      console.error('Failed to copy:', error)
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Failed to copy'
+      
+      logger.error('handleCopyOTP failed', {
+        error: errorMessage,
+        component: 'QRCodeDisplay',
+      })
     }
   }
 

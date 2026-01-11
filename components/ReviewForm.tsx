@@ -5,6 +5,7 @@ import { Star, Upload, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { logger } from '@/lib/logger';
 
 interface ReviewFormProps {
   productId: string;
@@ -64,7 +65,11 @@ export default function ReviewForm({ productId, orderId, onSuccess }: ReviewForm
         .upload(filePath, image);
 
       if (uploadError) {
-        console.error('Upload error:', uploadError);
+        logger.error('uploadImages failed', {
+          error: uploadError.message,
+          component: 'ReviewForm',
+          fileName: image.name,
+        })
         continue;
       }
 
@@ -122,7 +127,12 @@ export default function ReviewForm({ productId, orderId, onSuccess }: ReviewForm
         });
 
       if (insertError) {
-        console.error('Insert error:', insertError);
+        logger.error('handleSubmit insert failed', {
+          error: insertError.message,
+          component: 'ReviewForm',
+          productId,
+          orderId,
+        })
         setError('حدث خطأ أثناء إضافة التقييم');
         setIsSubmitting(false);
         return;
@@ -139,7 +149,15 @@ export default function ReviewForm({ productId, orderId, onSuccess }: ReviewForm
       
       alert('تم إضافة تقييمك بنجاح! 🎉');
     } catch (error) {
-      console.error('Submit error:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'حدث خطأ غير متوقع'
+      
+      logger.error('handleSubmit failed', {
+        error: errorMessage,
+        component: 'ReviewForm',
+        productId,
+      })
       setError('حدث خطأ غير متوقع');
     } finally {
       setIsSubmitting(false);

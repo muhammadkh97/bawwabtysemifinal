@@ -4,6 +4,7 @@
  */
 
 import { supabase } from './supabase';
+import { logger } from '@/lib/logger';
 
 export interface UploadResult {
   url: string;
@@ -65,7 +66,7 @@ export async function uploadDocument(
       });
 
     if (error) {
-      console.error('Upload error:', error);
+      logger.error('Upload error', { error: error.message, component: 'uploadDocument' });
       return { url: '', path: '', error: 'فشل رفع الملف. الرجاء المحاولة مرة أخرى' };
     }
 
@@ -87,7 +88,8 @@ export async function uploadDocument(
       path: filePath,
     };
   } catch (error) {
-    console.error('Upload error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Upload error', { error: errorMessage, component: 'uploadDocument' });
     return { url: '', path: '', error: 'حدث خطأ أثناء رفع الملف' };
   }
 }
@@ -104,13 +106,14 @@ export async function deleteDocument(path: string): Promise<boolean> {
       .remove([path]);
 
     if (error) {
-      console.error('Delete error:', error);
+      logger.error('Delete error', { error: error.message, component: 'deleteDocument' });
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Delete error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Delete error', { error: errorMessage, component: 'deleteDocument' });
     return false;
   }
 }
@@ -174,13 +177,14 @@ export async function saveDocumentMetadata(
       });
 
     if (error) {
-      console.error('Database error:', error);
+      logger.error('Database error', { error: error.message, component: 'saveDocumentMetadata' });
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Database error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Database error', { error: errorMessage, component: 'saveDocumentMetadata' });
     return false;
   }
 }

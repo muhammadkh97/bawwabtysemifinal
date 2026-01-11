@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '@/lib/logger';
 
 type DbUser = {
   role?: string | null;
@@ -108,7 +109,15 @@ export default function ProtectedRoute({
       setIsAuthorized(true);
       setIsLoading(false);
     } catch (err) {
-      console.error('❌ [ProtectedRoute] خطأ غير متوقع:', err);
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'خطأ غير متوقع'
+      
+      logger.error('checkAuth failed', {
+        error: errorMessage,
+        component: 'ProtectedRoute',
+        allowedRoles,
+      })
       setIsLoading(false);
       router.push(redirectTo);
     }

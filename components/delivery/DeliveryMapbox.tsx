@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { toast } from 'react-hot-toast';
+import { logger } from '@/lib/logger';
 
 // ==========================================
 // Types
@@ -288,7 +289,15 @@ export default function DeliveryMapbox({
         });
       }
     } catch (error) {
-      console.error('خطأ في رسم المسار:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في رسم المسار'
+      
+      logger.error('drawRoute failed', {
+        error: errorMessage,
+        component: 'DeliveryMapbox',
+        orderId,
+      })
       toast.error('فشل في رسم المسار على الخريطة');
     }
   };

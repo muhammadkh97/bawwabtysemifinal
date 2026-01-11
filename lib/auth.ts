@@ -1,5 +1,4 @@
-import { supabase } from './supabase'
-import type { AuthChangeEvent, Session, User, AuthError } from '@supabase/supabase-js'
+import { supabase } from './supabase'import { logger } from '@/lib/logger';import type { AuthChangeEvent, Session, User, AuthError } from '@supabase/supabase-js'
 
 // ============================================
 // TYPE DEFINITIONS
@@ -138,7 +137,7 @@ export async function signUp(
     })
 
     if (authError) {
-      console.error('Auth error:', authError)
+      logger.error('Auth error', { error: authError.message, component: 'signUp', email: userData.email });
       return { user: null, error: authError.message }
     }
 
@@ -154,8 +153,9 @@ export async function signUp(
 
     return { user: extendedUser, error: null }
   } catch (error: unknown) {
-    console.error('SignUp error:', getAuthErrorMessage(error))
-    return { user: null, error: getAuthErrorMessage(error) }
+    const errorMessage = getAuthErrorMessage(error);
+    logger.error('SignUp error', { error: errorMessage, component: 'signUp' });
+    return { user: null, error: errorMessage }
   }
 }
 
@@ -164,7 +164,7 @@ export async function signUp(
  */
 export async function signIn(email: string, password: string): Promise<AuthResponse> {
   try {
-    console.log('🔐 محاولة تسجيل الدخول...', email);
+    logger.debug('Attempting sign in', { email, component: 'signIn' });
     
     // تسجيل الدخول في Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -173,12 +173,12 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
     })
 
     if (authError) {
-      console.error('❌ خطأ في المصادقة:', authError);
+      logger.error('Authentication error', { error: authError.message, component: 'signIn', email });
       return { user: null, error: authError.message }
     }
 
     if (!authData.user || !authData.session) {
-      console.error('❌ لا توجد بيانات مستخدم أو جلسة في الاستجابة');
+      logger.error('No user data or session in response', { component: 'signIn' });
       return { user: null, error: 'فشل تسجيل الدخول' }
     }
 
@@ -193,7 +193,7 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
       .single<DbUser>()
 
     if (userError) {
-      console.warn('⚠️ خطأ في get_current_user، محاولة جلب مباشر:', userError.message);
+      logger.warn('get_current_user error, trying direct fetch', { error: userError.message, component: 'signIn' });
       
       // محاولة جلب مباشرة من الجدول كخطة بديلة
       const { data: directData, error: directError } = await supabase
@@ -203,7 +203,7 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
         .single();
 
       if (directError) {
-        console.error('❌ فشل الجلب المباشر أيضاً:', directError);
+        logger.error('Direct fetch also failed', { error: directError.message, component: 'signIn' });
       }
 
       const user: ExtendedUser = {
@@ -214,7 +214,7 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
         full_name: directData?.full_name || authData.user.user_metadata?.name || authData.user.email?.split('@')[0],
       };
       
-      console.log('✅ تم إنشاء بيانات المستخدم من البديل:', user.role);
+      logger.debug('Created user data from fallback', { role: user.role, component: 'signIn' });
       return { 
         user, 
         error: null 
@@ -232,14 +232,15 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
       name: safeUserData.name || null
     };
     
-    console.log('✅ تم تسجيل الدخول بنجاح، الدور:', user.role);
+    logger.debug('Sign in successful', { role: user.role, component: 'signIn' });
     return { 
       user, 
       error: null 
     }
   } catch (error: unknown) {
-    console.error('❌ خطأ غير متوقع في signIn:', getAuthErrorMessage(error));
-    return { user: null, error: getAuthErrorMessage(error) }
+    const errorMessage = getAuthErrorMessage(error);
+    logger.error('Unexpected error in signIn', { error: errorMessage, component: 'signIn' });
+    return { user: null, error: errorMessage }
   }
 }
 
@@ -250,13 +251,14 @@ export async function signOut(): Promise<{ error: string | null }> {
   try {
     const { error } = await supabase.auth.signOut()
     if (error) {
-      console.error('SignOut error:', error)
+      logger.error('SignOut error', { error: error.message, component: 'signOut' });
       return { error: error.message }
     }
     return { error: null }
   } catch (error: unknown) {
-    console.error('SignOut error:', getAuthErrorMessage(error))
-    return { error: getAuthErrorMessage(error) }
+    const errorMessage = getAuthErrorMessage(error);
+    logger.error('SignOut error', { error: errorMessage, component: 'signOut' });
+    return { error: errorMessage }
   }
 }
 
@@ -269,7 +271,7 @@ export async function getCurrentUser(): Promise<AuthResponse> {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError) {
-      console.log('لا توجد جلسة نشطة:', authError.message);
+      logger.debug('No active session', { error: authError.message, component: 'getCurrentUser' });
       return { user: null, error: authError.message }
     }
 
@@ -277,7 +279,7 @@ export async function getCurrentUser(): Promise<AuthResponse> {
       return { user: null, error: 'لم يتم تسجيل الدخول' }
     }
 
-    console.log('✅ تم العثور على جلسة نشطة للمستخدم:', user.id);
+    logger.debug('Found active session for user', { userId: user.id, component: 'getCurrentUser' });
 
     // جلب بيانات المستخدم من public.users باستخدام دالة آمنة
     const { data: userData, error: userError } = await supabase
@@ -285,7 +287,7 @@ export async function getCurrentUser(): Promise<AuthResponse> {
       .single<DbUser>()
 
     if (userError) {
-      console.warn('⚠️ خطأ في get_current_user، محاولة جلب مباشر:', userError.message);
+      logger.warn('get_current_user error, trying direct fetch', { error: userError.message, component: 'getCurrentUser' });
       
       // محاولة جلب مباشرة من الجدول
       const { data: directData } = await supabase
@@ -313,8 +315,9 @@ export async function getCurrentUser(): Promise<AuthResponse> {
       error: null 
     };
   } catch (error: unknown) {
-    console.error('GetCurrentUser error:', getAuthErrorMessage(error))
-    return { user: null, error: getAuthErrorMessage(error) }
+    const errorMessage = getAuthErrorMessage(error);
+    logger.error('GetCurrentUser error', { error: errorMessage, component: 'getCurrentUser' });
+    return { user: null, error: errorMessage }
   }
 }
 
@@ -328,13 +331,14 @@ export async function getUserData(userId: string): Promise<DbUser | null> {
       .single<DbUser>()
 
     if (error) {
-      console.error('Error fetching user data:', error)
+      logger.error('Error fetching user data', { error: error.message, component: 'getUserData', userId });
       return null
     }
 
     return data
   } catch (error) {
-    console.error('Error in getUserData:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error in getUserData', { error: errorMessage, component: 'getUserData', userId });
     return null
   }
 }
@@ -370,14 +374,15 @@ export async function updateUserProfile(
       .single<DbUser>()
 
     if (error) {
-      console.error('Update profile error:', error)
+      logger.error('Update profile error', { error: error.message, component: 'updateUserProfile', userId });
       return { data: null, error: error.message }
     }
     
     return { data, error: null }
   } catch (error: unknown) {
-    console.error('Update profile error:', getAuthErrorMessage(error))
-    return { data: null, error: getAuthErrorMessage(error) }
+    const errorMessage = getAuthErrorMessage(error);
+    logger.error('Update profile error', { error: errorMessage, component: 'updateUserProfile', userId });
+    return { data: null, error: errorMessage }
   }
 }
 
@@ -391,14 +396,15 @@ export async function changePassword(newPassword: string): Promise<DataResponse<
     })
 
     if (error) {
-      console.error('Change password error:', error)
+      logger.error('Change password error', { error: error.message, component: 'changePassword' });
       return { data: null, error: error.message }
     }
     
     return { data: data.user, error: null }
   } catch (error: unknown) {
-    console.error('Change password error:', getAuthErrorMessage(error))
-    return { data: null, error: getAuthErrorMessage(error) }
+    const errorMessage = getAuthErrorMessage(error);
+    logger.error('Change password error', { error: errorMessage, component: 'changePassword' });
+    return { data: null, error: errorMessage }
   }
 }
 
@@ -412,14 +418,15 @@ export async function resetPassword(email: string): Promise<DataResponse<unknown
     })
 
     if (error) {
-      console.error('Reset password error:', error)
+      logger.error('Reset password error', { error: error.message, component: 'resetPassword', email });
       return { data: null, error: error.message }
     }
     
     return { data, error: null }
   } catch (error: unknown) {
-    console.error('Reset password error:', getAuthErrorMessage(error))
-    return { data: null, error: getAuthErrorMessage(error) }
+    const errorMessage = getAuthErrorMessage(error);
+    logger.error('Reset password error', { error: errorMessage, component: 'resetPassword', email });
+    return { data: null, error: errorMessage }
   }
 }
 
@@ -436,14 +443,15 @@ export async function signInWithOAuth(provider: 'google' | 'facebook' | 'apple')
     })
 
     if (error) {
-      console.error('OAuth error:', error)
+      logger.error('OAuth error', { error: error.message, component: 'signInWithOAuth', provider });
       return { data: null, error: error.message }
     }
     
     return { data, error: null }
   } catch (error: unknown) {
-    console.error('OAuth error:', getAuthErrorMessage(error))
-    return { data: null, error: getAuthErrorMessage(error) }
+    const errorMessage = getAuthErrorMessage(error);
+    logger.error('OAuth error', { error: errorMessage, component: 'signInWithOAuth', provider });
+    return { data: null, error: errorMessage }
   }
 }
 
