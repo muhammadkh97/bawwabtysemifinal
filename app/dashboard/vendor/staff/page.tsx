@@ -295,7 +295,7 @@ export default function VendorStaffPage() {
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'حدث خطأ في إضافة المساعد';
-      logger.error('Error adding staff', { error: errorMessage, component: 'VendorStaffPage', email: newStaffEmail });
+      logger.error('Error adding staff', { error: errorMessage, component: 'VendorStaffPage' });
       
       // رسائل خطأ مخصصة
       if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
