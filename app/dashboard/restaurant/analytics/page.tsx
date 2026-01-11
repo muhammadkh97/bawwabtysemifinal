@@ -130,7 +130,8 @@ export default function RestaurantAnalyticsPage() {
         dailyRevenue: []
       });
     } catch (error) {
-      logger.error('Error fetching analytics:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching analytics:', { error: errorMessage });
     }
   };
 
