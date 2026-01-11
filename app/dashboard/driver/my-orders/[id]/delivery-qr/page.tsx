@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { logger } from '@/lib/logger'
 import { generateDeliveryCodes } from '@/lib/qrOtpUtils'
 import QRCodeDisplay from '@/components/QRCodeDisplay'
 import {
@@ -155,7 +156,8 @@ export default function DriverDeliveryQRPage() {
           .eq('id', params.id)
       }
     } catch (error: any) {
-      console.error('Error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching order and generating QR', { error: errorMessage, component: 'DriverDeliveryQRPage' });
       toast.error(error.message || 'فشل تحميل بيانات الطلب')
     } finally {
       setLoading(false)

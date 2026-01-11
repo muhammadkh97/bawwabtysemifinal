@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { Category } from '@/types';
+import { logger } from '@/lib/logger';
 
 const iconMap: { [key: string]: any } = {
   'Smartphone': Smartphone,
@@ -74,7 +75,7 @@ export default function CategoriesPage() {
 
       setCategories(formattedCategories);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      logger.error('Error fetching categories:', error);
     } finally {
       setLoading(false);
     }

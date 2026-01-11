@@ -12,6 +12,7 @@ import EmptyState from '@/components/EmptyState';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { logger } from '@/lib/logger';
 
 export default function CartPage() {
   const { user } = useAuth();
@@ -41,7 +42,7 @@ export default function CartPage() {
           setUserPoints(userData.loyalty_points || 0);
         }
       } catch (error) {
-        console.error('Error fetching user points:', error);
+        logger.error('Error fetching user points:', error);
       }
     }
 

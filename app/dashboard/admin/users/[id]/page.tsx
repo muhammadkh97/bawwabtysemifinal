@@ -10,6 +10,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
+import { logger } from '@/lib/logger';
 
 export default function UserDetailsPage() {
   const params = useParams();
@@ -77,7 +78,8 @@ export default function UserDetailsPage() {
         }
       }
     } catch (error) {
-      console.error('Error fetching user details:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching user details', { error: errorMessage, component: 'UserDetailsPage' });
     } finally {
       setLoading(false);
     }
@@ -94,7 +96,8 @@ export default function UserDetailsPage() {
       await fetchUserDetails();
       alert('تم تحديث الحالة بنجاح');
     } catch (error) {
-      console.error('Error updating status:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error updating status', { error: errorMessage, component: 'UserDetailsPage' });
       alert('حدث خطأ أثناء تحديث الحالة');
     }
   };

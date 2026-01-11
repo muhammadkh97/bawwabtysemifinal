@@ -6,6 +6,7 @@ import { Mail, Phone, MapPin, Send, CheckCircle, AlertCircle } from 'lucide-reac
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { getCurrentUser } from '@/lib/auth'
+import { logger } from '@/lib/logger'
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -60,7 +61,8 @@ export default function ContactPage() {
       // إخفاء رسالة النجاح بعد 5 ثواني
       setTimeout(() => setSuccess(false), 5000)
     } catch (err: any) {
-      console.error('خطأ في إرسال التذكرة:', err)
+      const errorMessage = err instanceof Error ? err.message : 'خطأ غير معروف';
+      logger.error('خطأ في إرسال التذكرة', { error: errorMessage, component: 'ContactPage' });
       setError('حدث خطأ أثناء إرسال الرسالة. يرجى المحاولة مرة أخرى.')
     } finally {
       setLoading(false)

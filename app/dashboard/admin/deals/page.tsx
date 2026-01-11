@@ -6,6 +6,7 @@ import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import { Zap, Plus, Edit2, Trash2, Clock, Percent, Package, Calendar, X, Loader2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 import toast from 'react-hot-toast';
 
 interface Deal {
@@ -53,7 +54,8 @@ export default function AdminDealsPage() {
       if (error) throw error;
       setDeals(data || []);
     } catch (error) {
-      console.error('Error fetching deals:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching deals', { error: errorMessage, component: 'AdminDealsPage' });
       toast.error('فشل تحميل العروض');
     } finally {
       setLoading(false);
@@ -88,7 +90,8 @@ export default function AdminDealsPage() {
       resetForm();
       fetchDeals();
     } catch (error: any) {
-      console.error('Error saving deal:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error saving deal', { error: errorMessage, component: 'AdminDealsPage' });
       toast.error(error.message || 'حدث خطأ أثناء حفظ العرض');
     }
   };
@@ -106,7 +109,8 @@ export default function AdminDealsPage() {
       toast.success('تم حذف العرض بنجاح');
       fetchDeals();
     } catch (error: any) {
-      console.error('Error deleting deal:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error deleting deal', { error: errorMessage, component: 'AdminDealsPage' });
       toast.error('فشل حذف العرض');
     }
   };

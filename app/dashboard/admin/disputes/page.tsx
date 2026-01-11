@@ -6,6 +6,7 @@ import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import { Scale, Headphones, AlertCircle, MessageSquare, DollarSign, Package, User, Store, Truck, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 interface Dispute {
   id: string;
@@ -127,7 +128,7 @@ export default function AdminDisputesPage() {
       setSupportTickets(formattedTickets);
 
     } catch (error) {
-      console.error('خطأ في جلب البيانات:', error);
+      logger.error('خطأ في جلب البيانات', { error, context: 'AdminDisputesPage.fetchDisputesAndSupport' });
     } finally {
       setLoading(false);
     }
@@ -156,7 +157,7 @@ export default function AdminDisputesPage() {
       setSelectedDispute(null);
       
     } catch (error) {
-      console.error('خطأ في حل النزاع:', error);
+      logger.error('خطأ في حل النزاع', { error, disputeId, action, context: 'AdminDisputesPage.handleResolveDispute' });
       alert('حدث خطأ في حل النزاع');
     }
   };
@@ -177,7 +178,7 @@ export default function AdminDisputesPage() {
       alert('✅ تم إغلاق التذكرة');
       
     } catch (error) {
-      console.error('خطأ في إغلاق التذكرة:', error);
+      logger.error('خطأ في إغلاق التذكرة', { error, ticketId, context: 'AdminDisputesPage.handleCloseTicket' });
       alert('حدث خطأ في إغلاق التذكرة');
     }
   };

@@ -8,6 +8,7 @@ import {
   DollarSign, TrendingUp, Users, Wallet, Clock, CheckCircle, XCircle, Download, Calendar, AlertCircle, FileText
 } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { logger } from '@/lib/logger';
 
 interface PlatformStats {
   total_orders: number;
@@ -85,14 +86,14 @@ export default function AdminFinancialsPage() {
       // 1. Platform Stats
       const { data: statsData, error: statsError } = await supabase.rpc('get_platform_financial_stats');
       if (statsError) {
-        console.error('Error loading platform stats:', statsError);
+        logger.error('Error loading platform stats', { error: statsError, context: 'AdminFinancialsPage.loadFinancialData' });
       }
       if (statsData?.[0]) setStats(statsData[0]);
 
       // 2. Top Vendors
       const { data: vendorsData, error: vendorsError } = await supabase.rpc('get_vendors_earnings_report');
       if (vendorsError) {
-        console.error('Error loading vendors report:', vendorsError);
+        logger.error('Error loading vendors report', { error: vendorsError, context: 'AdminFinancialsPage.loadFinancialData' });
       }
       if (vendorsData) setVendors(vendorsData.slice(0, 10));
 
@@ -106,7 +107,7 @@ export default function AdminFinancialsPage() {
         p_end_date: new Date().toISOString().split('T')[0]
       });
       if (revenueError) {
-        console.error('Error loading daily revenue:', revenueError);
+        logger.error('Error loading daily revenue', { error: revenueError, context: 'AdminFinancialsPage.loadFinancialData' });
       }
       if (revenueData) setDailyRevenue(revenueData);
 
@@ -133,7 +134,7 @@ export default function AdminFinancialsPage() {
         .order('requested_at', { ascending: false });
 
       if (payoutsError) {
-        console.error('Error loading payout requests:', payoutsError);
+        logger.error('Error loading payout requests', { error: payoutsError, context: 'AdminFinancialsPage.loadFinancialData' });
       }
       
       // جلب vendor_wallets بشكل منفصل
@@ -173,7 +174,7 @@ export default function AdminFinancialsPage() {
 
       setConnectionStatus('connected');
     } catch (error) {
-      console.error('Error loading financial data:', error);
+      logger.error('Error loading financial data', { error, context: 'AdminFinancialsPage.loadFinancialData' });
       setConnectionStatus('disconnected');
     } finally {
       setLoading(false);
@@ -218,7 +219,7 @@ export default function AdminFinancialsPage() {
       await loadFinancialData();
       alert(action === 'approve' ? '✅ تم الموافقة على طلب السحب بنجاح' : '❌ تم رفض طلب السحب');
     } catch (error) {
-      console.error('Error processing payout:', error);
+      logger.error('Error processing payout', { error, action, context: 'AdminFinancialsPage.handlePayoutAction' });
       alert('حدث خطأ أثناء معالجة الطلب');
     } finally {
       setProcessingPayout(null);

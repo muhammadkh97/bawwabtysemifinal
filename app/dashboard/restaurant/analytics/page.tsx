@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 import { useRouter } from 'next/navigation';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
@@ -60,7 +61,7 @@ export default function RestaurantAnalyticsPage() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error:', error);
+      logger.error('Error:', error);
       router.push('/auth/login');
     }
   };
@@ -128,7 +129,7 @@ export default function RestaurantAnalyticsPage() {
         dailyRevenue: []
       });
     } catch (error) {
-      console.error('Error fetching analytics:', error);
+      logger.error('Error fetching analytics:', error);
     }
   };
 

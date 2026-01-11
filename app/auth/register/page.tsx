@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { signUp, signInWithGoogle, signInWithFacebook, signInWithApple } from '@/lib/auth';
 import CountryPhoneInput from '@/components/CountryPhoneInput';
+import { logger } from '@/lib/logger';
 
 // Account comparison data
 const accountComparison = {
@@ -182,7 +183,7 @@ function RegisterForm() {
       
       return result.url;
     } catch (error) {
-      console.error('Error uploading file:', error);
+      logger.error('Error uploading file', { error });
       throw new Error('فشل رفع الملف');
     }
   };
@@ -209,7 +210,7 @@ function RegisterForm() {
         setError('حدث خطأ أثناء التسجيل. يرجى المحاولة مرة أخرى.');
       }
     } catch (err) {
-      console.error('خطأ في التسجيل:', err);
+      logger.error('خطأ في التسجيل', { error: err });
       setError('حدث خطأ أثناء التسجيل. يرجى المحاولة مرة أخرى.');
     } finally {
       setLoading(false);
@@ -361,7 +362,7 @@ function RegisterForm() {
             }
           }
         } catch (refError) {
-          console.error('خطأ في معالجة كود الإحالة:', refError);
+          logger.error('خطأ في معالجة كود الإحالة', { error: refError });
           // لا نوقف عملية التسجيل
         }
       }

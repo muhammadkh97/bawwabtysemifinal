@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { uploadFile } from '@/lib/storage';
 import { generateSlug } from '@/lib/slug-utils';
 import toast from 'react-hot-toast';
+import { logger } from '@/lib/logger';
 import { 
   ArrowRight, 
   Upload, 
@@ -91,7 +92,7 @@ export default function NewProductPage() {
         const { data: storeData, error: storeError } = result as { data: { id: string } | null; error: Error | null };
 
         if (storeError || !storeData) {
-          console.error('❌ Store error:', storeError);
+          logger.error('Store error', { error: storeError?.message, component: 'NewProductPage' });
           toast.error('⚠️ لم نتمكن من العثور على متجرك. يرجى تحديث الصفحة أو الاتصال بالدعم');
           setTimeout(() => router.push('/dashboard/vendor'), 2000);
           return;
@@ -99,7 +100,8 @@ export default function NewProductPage() {
 
         setVendorId(storeData.id);
       } catch (error) {
-        console.error('❌ Error loading store data:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        logger.error('Error loading store data', { error: errorMessage, component: 'NewProductPage' });
         toast.error('❌ خطأ في تحميل البيانات. يرجى المحاولة لاحقاً');
         setTimeout(() => router.push('/dashboard/vendor'), 2000);
       }
@@ -283,7 +285,7 @@ export default function NewProductPage() {
       ]);
 
       if (error) {
-        console.error('❌ Error saving product:', error);
+        logger.error('Error saving product', { error: error.message, component: 'NewProductPage' });
         
         // معالجة أخطاء RLS
         if (error.message.includes('new row violates row-level security')) {
@@ -294,7 +296,6 @@ export default function NewProductPage() {
           toast.error(`❌ خطأ في حفظ المنتج: ${error.message}`);
         }
         
-        console.error('Full error:', error);
         setLoading(false);
         return;
       }
@@ -332,7 +333,8 @@ export default function NewProductPage() {
       router.push('/dashboard/vendor/products');
       
     } catch (err) {
-      console.error('Error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      logger.error('Unexpected error', { error: errorMessage, component: 'NewProductPage' });
       toast.error('حدث خطأ غير متوقع');
     } finally {
       setLoading(false);

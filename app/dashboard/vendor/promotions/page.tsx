@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import FloatingAddButton from '@/components/dashboard/FloatingAddButton';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '@/lib/logger';
 import { 
   Tag, Percent, Calendar, TrendingUp, Users, Plus, Edit, Trash2, 
   Gift, DollarSign, Clock, Target, Sparkles, Copy, Check, X, AlertCircle, Eye
@@ -94,7 +95,8 @@ export default function VendorPromotionsPage() {
 
       setCoupons(transformedCoupons);
     } catch (error) {
-      console.error('Error fetching coupons:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching coupons', { error: errorMessage, component: 'VendorPromotionsPage' });
     } finally {
       setLoading(false);
     }
@@ -204,8 +206,8 @@ export default function VendorPromotionsPage() {
       
       alert('✅ تم إنشاء الكوبون بنجاح!');
     } catch (error) {
-      console.error('Error creating coupon:', error);
       const errorMessage = error instanceof Error ? error.message : 'خطأ غير معروف';
+      logger.error('Error creating coupon', { error: errorMessage, component: 'VendorPromotionsPage' });
       alert('حدث خطأ أثناء إنشاء الكوبون: ' + errorMessage);
     } finally {
       setSaving(false);
@@ -226,7 +228,8 @@ export default function VendorPromotionsPage() {
       fetchCoupons();
       alert('✅ تم حذف الكوبون بنجاح!');
     } catch (error) {
-      console.error('Error deleting coupon:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error deleting coupon', { error: errorMessage, component: 'VendorPromotionsPage' });
       alert('حدث خطأ أثناء حذف الكوبون');
     }
   };

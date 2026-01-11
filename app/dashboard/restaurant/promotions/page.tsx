@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 import { useRouter } from 'next/navigation';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
@@ -62,7 +63,8 @@ export default function RestaurantPromotionsPage() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Failed to check authentication in restaurant promotions', { error: errorMessage, context: 'checkAuth' });
       router.push('/auth/login');
     }
   };
@@ -90,7 +92,8 @@ export default function RestaurantPromotionsPage() {
 
       setPromotions(formattedPromotions);
     } catch (error) {
-      console.error('Error fetching promotions:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Failed to fetch promotions', { error: errorMessage, context: 'fetchPromotions' });
     }
   };
 
@@ -131,7 +134,8 @@ export default function RestaurantPromotionsPage() {
         end_date: ''
       });
     } catch (error) {
-      console.error('Error adding promotion:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Failed to add promotion', { error: errorMessage, context: 'handleAddPromotion' });
       alert('حدث خطأ في إضافة العرض');
     }
   };
@@ -148,7 +152,8 @@ export default function RestaurantPromotionsPage() {
       fetchPromotions(vendorId);
       alert(currentStatus ? 'تم تعطيل العرض' : 'تم تفعيل العرض');
     } catch (error) {
-      console.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Failed to toggle promotion status', { error: errorMessage, context: 'togglePromotionStatus' });
       alert('حدث خطأ في تحديث حالة العرض');
     }
   };

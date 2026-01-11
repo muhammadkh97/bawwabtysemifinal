@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FloatingAddButton from '@/components/dashboard/FloatingAddButton';
@@ -79,7 +80,8 @@ export default function VendorCouponsPage() {
 
       setCoupons(couponsData || []);
     } catch (error) {
-      console.error('Error fetching coupons:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching coupons', { error: errorMessage, component: 'VendorCouponsPage' });
       setCoupons([]);
     } finally {
       setLoading(false);
@@ -138,7 +140,8 @@ export default function VendorCouponsPage() {
         end_date: '',
       });
     } catch (error) {
-      console.error('Error creating coupon:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error creating coupon', { error: errorMessage, component: 'VendorCouponsPage' });
       alert('❌ حدث خطأ أثناء إنشاء الكوبون');
     }
   };
@@ -159,7 +162,8 @@ export default function VendorCouponsPage() {
         c.id === id ? { ...c, is_active: !c.is_active } : c
       ));
     } catch (error) {
-      console.error('Error toggling coupon status:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error toggling coupon status', { error: errorMessage, component: 'VendorCouponsPage' });
       alert('❌ حدث خطأ أثناء تحديث حالة الكوبون');
     }
   };
@@ -178,7 +182,8 @@ export default function VendorCouponsPage() {
       setCoupons(coupons.filter(c => c.id !== id));
       alert('✅ تم حذف الكوبون بنجاح');
     } catch (error) {
-      console.error('Error deleting coupon:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error deleting coupon', { error: errorMessage, component: 'VendorCouponsPage' });
       alert('❌ حدث خطأ أثناء حذف الكوبون');
     }
   };
@@ -236,7 +241,8 @@ export default function VendorCouponsPage() {
         end_date: '',
       });
     } catch (error) {
-      console.error('Error updating coupon:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error updating coupon', { error: errorMessage, component: 'VendorCouponsPage' });
       alert('❌ حدث خطأ أثناء تحديث الكوبون');
     }
   };

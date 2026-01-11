@@ -18,6 +18,7 @@ import {
   User,
   DollarSign
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 export default function CreatePackagePage() {
   const router = useRouter();
@@ -66,7 +67,7 @@ export default function CreatePackagePage() {
       
       setAvailableOrders(transformedOrders);
     } catch (error: any) {
-      console.error('Error loading orders:', error);
+      logger.error('Error loading orders', { error, selectedZone, scheduledDate, context: 'CreatePackagePage.loadAvailableOrders' });
       toast.error('فشل في تحميل الطلبات');
     } finally {
       setLoading(false);
@@ -116,7 +117,7 @@ export default function CreatePackagePage() {
         router.push(`/dashboard/admin/delivery-packages/${pkg.id}`);
       }
     } catch (error: any) {
-      console.error('Error creating package:', error);
+      logger.error('Error creating package', { error, selectedZone, selectedOrders: Array.from(selectedOrders), context: 'CreatePackagePage.handleCreate' });
       toast.error('فشل في إنشاء البكج');
     } finally {
       setCreating(false);

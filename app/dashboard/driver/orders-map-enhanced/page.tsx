@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { logger } from '@/lib/logger';
 import { 
   MapPin, Navigation, Package, Phone, Clock, DollarSign, 
   User, TrendingUp, Activity, Zap, CheckCircle, AlertCircle,
@@ -135,7 +136,8 @@ export default function EnhancedOrdersMapPage() {
       });
 
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching orders', { error: errorMessage, component: 'EnhancedOrdersMapPage' });
     } finally {
       setLoading(false);
     }
@@ -162,7 +164,8 @@ export default function EnhancedOrdersMapPage() {
           updateDriverLocationInDB(newLocation);
         },
         (error) => {
-          console.error('Location error:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Unknown location error';
+          logger.error('Location error', { error: errorMessage, component: 'EnhancedOrdersMapPage' });
           setTrackingEnabled(false);
         },
         {
@@ -200,7 +203,8 @@ export default function EnhancedOrdersMapPage() {
           onConflict: 'driver_id'
         });
     } catch (error) {
-      console.error('Error updating location:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error updating driver location in DB', { error: errorMessage, component: 'EnhancedOrdersMapPage' });
     }
   };
 

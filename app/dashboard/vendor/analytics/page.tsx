@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { logger } from '@/lib/logger';
 import { useRouter } from 'next/navigation';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
@@ -160,7 +161,8 @@ export default function VendorAnalyticsPage() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching analytics:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching analytics', { error: errorMessage, component: 'VendorAnalyticsPage' });
       setLoading(false);
     }
   };

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 import { useRouter } from 'next/navigation';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
@@ -46,7 +47,7 @@ export default function RestaurantOrdersPage() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching orders:', error);
+        logger.error('Error fetching orders:', error);
         return;
       }
       
@@ -57,7 +58,7 @@ export default function RestaurantOrdersPage() {
         })));
       }
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      logger.error('Error fetching orders:', error);
     }
   }, []);
 
@@ -83,7 +84,7 @@ export default function RestaurantOrdersPage() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error:', error);
+      logger.error('Error:', error);
       router.push('/auth/login');
     }
   }, [router, fetchOrders]);
@@ -132,7 +133,7 @@ export default function RestaurantOrdersPage() {
       await fetchOrders(vendorId);
       alert('✅ تم تحديث الطلب - جاهز للاستلام');
     } catch (error) {
-      console.error('Error:', error);
+      logger.error('Error:', error);
       alert('حدث خطأ');
     }
   };

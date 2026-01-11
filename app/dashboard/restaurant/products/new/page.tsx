@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 import { toast } from 'react-hot-toast';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
@@ -154,7 +155,8 @@ export default function NewMealPage() {
         .upload(fileName, file);
       
       if (uploadError) {
-        console.error('Upload error:', uploadError);
+        const errorMessage = uploadError instanceof Error ? uploadError.message : 'Unknown error';
+        logger.error('Failed to upload product image', { error: errorMessage, context: 'uploadImage' });
         return null;
       }
       
@@ -164,7 +166,8 @@ export default function NewMealPage() {
       
       return publicUrl;
     } catch (error) {
-      console.error('Error uploading image:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Failed to upload image in catch block', { error: errorMessage, context: 'uploadImage' });
       return null;
     }
   };
@@ -258,7 +261,8 @@ export default function NewMealPage() {
         .single();
       
       if (error) {
-        console.error('Error saving meal:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        logger.error('Failed to save meal', { error: errorMessage, context: 'handleSubmit' });
         toast.error(`خطأ في حفظ الوجبة: ${error.message}`);
         setLoading(false);
         return;
@@ -273,7 +277,8 @@ export default function NewMealPage() {
       
       router.push('/dashboard/restaurant/products');
     } catch (error) {
-      console.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Failed to submit meal form', { error: errorMessage, context: 'handleSubmit' });
       toast.error('حدث خطأ غير متوقع');
       setLoading(false);
     }

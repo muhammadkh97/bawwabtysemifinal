@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { logger } from '@/lib/logger';
 import { User, Phone, Save, Settings as SettingsIcon, Car, FileText, CheckCircle } from 'lucide-react';
 
 export default function DriverSettingsPage() {
@@ -56,7 +57,8 @@ export default function DriverSettingsPage() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error loading driver data', { error: errorMessage, component: 'DriverSettingsPage' });
       setLoading(false);
     }
   };
@@ -87,7 +89,8 @@ export default function DriverSettingsPage() {
 
       toast.success('✅ تم حفظ التغييرات بنجاح!');
     } catch (error) {
-      console.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error saving driver settings', { error: errorMessage, component: 'DriverSettingsPage' });
       toast.error('حدث خطأ في حفظ التغييرات');
     }
     

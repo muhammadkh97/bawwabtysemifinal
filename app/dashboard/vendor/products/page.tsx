@@ -8,6 +8,7 @@ import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import PermissionGuard from '@/components/PermissionGuard';
 import { Package, Plus, Search, Edit, TrendingUp, Trash2, FileUp, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -63,12 +64,12 @@ export default function VendorProductsPage() {
         .maybeSingle();
 
       if (storeError) {
-        console.error('❌ [VendorProducts] Error fetching store:', storeError);
+        logger.error('Error fetching store', { error: storeError.message, component: 'VendorProductsPage', userId });
         throw storeError;
       }
 
       if (!storeData) {
-        console.error('❌ [VendorProducts] Store not found for user:', userId);
+        logger.error('Store not found', { component: 'VendorProductsPage', userId });
         setLoading(false);
         return;
       }
@@ -83,13 +84,14 @@ export default function VendorProductsPage() {
         .order('created_at', { ascending: false });
 
       if (productsError) {
-        console.error('❌ [VendorProducts] Error fetching products:', productsError);
+        logger.error('Error fetching products', { error: productsError.message, component: 'VendorProductsPage', vendorId: storeData.id });
         throw productsError;
       }
 
       setProducts(productsData || []);
     } catch (error) {
-      console.error('❌ [VendorProducts] Unexpected error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Unexpected error in products page', { error: errorMessage, component: 'VendorProductsPage' });
       setProducts([]);
     } finally {
       setLoading(false);

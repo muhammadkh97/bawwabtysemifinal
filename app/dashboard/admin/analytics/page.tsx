@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 interface Analytics {
   totalRevenue: number;
@@ -169,7 +170,8 @@ export default function AdminAnalyticsPage() {
       });
 
     } catch (error) {
-      console.error('خطأ في جلب الإحصائيات:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching analytics', { error: errorMessage, component: 'AdminAnalyticsPage' });
     } finally {
       setLoading(false);
     }

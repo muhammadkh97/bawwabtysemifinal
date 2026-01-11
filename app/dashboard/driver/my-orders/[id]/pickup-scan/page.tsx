@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { logger } from '@/lib/logger'
 import { verifyPickupWithQR, verifyPickupWithOTP } from '@/lib/qrOtpUtils'
 import QRScanner from '@/components/QRScanner'
 import {
@@ -107,7 +108,8 @@ export default function DriverPickupScanPage() {
 
       setOrder(orderData)
     } catch (error: any) {
-      console.error('Error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching order and driver', { error: errorMessage, component: 'DriverPickupScanPage' });
       toast.error(error.message || 'فشل تحميل بيانات الطلب')
     } finally {
       setLoading(false)
@@ -134,7 +136,8 @@ export default function DriverPickupScanPage() {
         toast.error(result.message || 'فشل التحقق من الرمز')
       }
     } catch (error: any) {
-      console.error('Error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error scanning QR', { error: errorMessage, component: 'DriverPickupScanPage' });
       toast.error(error.message || 'حدث خطأ أثناء التحقق')
     } finally {
       setVerifying(false)
@@ -169,7 +172,8 @@ export default function DriverPickupScanPage() {
         toast.error(result.message || 'رمز OTP غير صحيح')
       }
     } catch (error: any) {
-      console.error('Error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error verifying manual OTP', { error: errorMessage, component: 'DriverPickupScanPage' });
       toast.error(error.message || 'حدث خطأ أثناء التحقق')
     } finally {
       setVerifying(false)

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getCurrentUser } from '@/lib/auth';
 import { toast } from 'react-hot-toast';
+import { logger } from '@/lib/logger';
 import {
   MapPin,
   Navigation,
@@ -109,7 +110,8 @@ export default function DriverLocationPage() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error initializing driver', { error: errorMessage, component: 'DriverLocationPage' });
       toast.error('حدث خطأ في تحميل البيانات');
       setLoading(false);
     }
@@ -158,7 +160,8 @@ export default function DriverLocationPage() {
           }
         },
         (error) => {
-          console.error('Geolocation error:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Unknown location error';
+          logger.error('Geolocation error', { error: errorMessage, component: 'DriverLocationPage' });
           if (error.code === error.PERMISSION_DENIED) {
             setPermissionStatus('denied');
             toast.error('تم رفض صلاحيات الموقع. يرجى تفعيلها من إعدادات المتصفح');
@@ -182,7 +185,8 @@ export default function DriverLocationPage() {
       // Update online status
       await updateDriverStatus(true);
     } catch (error) {
-      console.error('Error starting tracking:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error starting tracking', { error: errorMessage, component: 'DriverLocationPage' });
       toast.error('حدث خطأ في بدء التتبع');
     }
   };
@@ -251,7 +255,8 @@ export default function DriverLocationPage() {
           .eq('id', driverData.id);
       }
     } catch (error) {
-      console.error('Error saving location:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error saving location', { error: errorMessage, component: 'DriverLocationPage' });
     }
   };
 
@@ -284,7 +289,8 @@ export default function DriverLocationPage() {
         }));
       }
     } catch (error) {
-      console.error('Error updating status:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error updating status', { error: errorMessage, component: 'DriverLocationPage' });
     }
   };
 

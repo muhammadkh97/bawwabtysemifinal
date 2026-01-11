@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { logger } from '@/lib/logger';
 import { Package, MapPin, DollarSign, Check, Zap, Clock } from 'lucide-react';
 
 interface Order {
@@ -88,7 +89,8 @@ export default function AvailableOrdersPage() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error loading available orders', { error: errorMessage, component: 'AvailableOrdersPage' });
       setLoading(false);
     }
   };
@@ -112,7 +114,7 @@ export default function AvailableOrdersPage() {
 
 
       if (error) {
-        console.error('❌ [Accept Order] Error:', error);
+        logger.error('Accept order error', { error: error.message, component: 'AvailableOrdersPage' });
         toast.error(`فشل قبول الطلب: ${error.message}`);
         return;
       }
@@ -128,7 +130,8 @@ export default function AvailableOrdersPage() {
         loadAvailableOrders();
       }
     } catch (err) {
-      console.error('❌ [Accept Order] Exception:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      logger.error('Accept order exception', { error: errorMessage, component: 'AvailableOrdersPage' });
       toast.error('حدث خطأ أثناء قبول الطلب');
     }
   };

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 import { useRouter } from 'next/navigation';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
@@ -50,7 +51,7 @@ export default function RestaurantMessagesPage() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error:', error);
+      logger.error('Error:', error);
       router.push('/auth/login');
     }
   };
@@ -79,7 +80,7 @@ export default function RestaurantMessagesPage() {
 
       setMessages(formattedMessages);
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      logger.error('Error fetching messages:', error);
     }
   };
 

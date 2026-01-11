@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 import ModernDashboardLayoutLuxury, { ModernStatCardLuxury, ModernSectionLuxury } from '@/components/dashboard/ModernDashboardLayoutLuxury';
 import FuturisticSidebarLuxury from '@/components/dashboard/FuturisticSidebarLuxury';
 import FuturisticNavbarLuxury from '@/components/dashboard/FuturisticNavbarLuxury';
@@ -80,7 +81,7 @@ function RestaurantDashboardContent() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error checking auth:', error);
+      logger.error('Error checking auth:', error);
       router.push('/auth/login');
     }
   };
@@ -126,7 +127,7 @@ function RestaurantDashboardContent() {
         pendingOrders,
       });
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      logger.error('Error fetching stats:', error);
     }
   };
 
@@ -144,7 +145,7 @@ function RestaurantDashboardContent() {
 
       setRecentOrders(data || []);
     } catch (error) {
-      console.error('Error fetching recent orders:', error);
+      logger.error('Error fetching recent orders:', error);
     }
   };
 
@@ -161,7 +162,7 @@ function RestaurantDashboardContent() {
 
       setIsOnline(newStatus);
     } catch (error) {
-      console.error('Error toggling online status:', error);
+      logger.error('Error toggling online status:', error);
     }
   };
 

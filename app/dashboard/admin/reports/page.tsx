@@ -5,6 +5,7 @@ import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import { supabase } from '@/lib/supabase';
 import { FileText, FileSpreadsheet } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface ReportData {
   totalSales: number;
@@ -72,7 +73,8 @@ export default function AdminReportsPage() {
       });
 
     } catch (error) {
-      console.error('خطأ في جلب بيانات التقرير:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('خطأ في جلب بيانات التقرير', { error: errorMessage, component: 'ReportsPage' });
     } finally {
       setLoading(false);
     }

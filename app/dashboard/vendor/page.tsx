@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -144,7 +145,8 @@ function VendorDashboardContent() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching dashboard data', { error: errorMessage, component: 'VendorDashboard' });
       setLoading(false);
     }
   };

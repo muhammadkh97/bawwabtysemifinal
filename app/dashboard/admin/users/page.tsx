@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 export default function AdminUsersPage() {
   const router = useRouter();
@@ -55,7 +56,8 @@ export default function AdminUsersPage() {
 
       setStats({ total, customers, vendors, drivers, restaurants });
     } catch (error) {
-      console.error('Error fetching users:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching users', { error: errorMessage, component: 'AdminUsersPage' });
       setUsers([]);
     } finally {
       setLoading(false);

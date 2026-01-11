@@ -114,7 +114,8 @@ export default function VendorReviewsPage() {
       setReviews(formattedReviews);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching reviews:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching reviews', { error: errorMessage, component: 'VendorReviewsPage' });
       setLoading(false);
     }
   };

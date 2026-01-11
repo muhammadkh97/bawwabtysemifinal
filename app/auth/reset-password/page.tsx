@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Lock, Eye, EyeOff, CheckCircle, ArrowRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function ResetPasswordPage() {
         setError('الرابط غير صالح أو منتهي الصلاحية');
       }
     } catch (err) {
-      console.error('Session check error:', err);
+      logger.error('Session check error:', err);
       setError('حدث خطأ في التحقق من الرابط');
     }
   };
@@ -67,7 +68,7 @@ export default function ResetPasswordPage() {
         router.push('/auth/login?message=password-reset-success');
       }, 2000);
     } catch (err: any) {
-      console.error('Reset password error:', err);
+      logger.error('Reset password error:', err);
       setError(err.message || 'حدث خطأ أثناء إعادة تعيين كلمة المرور');
     } finally {
       setLoading(false);

@@ -7,6 +7,7 @@ import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import FuturisticProductCard from '@/components/dashboard/FuturisticProductCard';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 export default function TopProductsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -81,7 +82,8 @@ export default function TopProductsPage() {
       setTotalSales(totalSalesCount);
 
     } catch (error) {
-      console.error('Error fetching top products:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching top products', { error: errorMessage, component: 'TopProductsPage' });
       setTopProducts([]);
     } finally {
       setLoading(false);

@@ -7,6 +7,7 @@ import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import { CheckCircle, XCircle, Store, Package, Truck, FileText, Phone, Mail, Calendar, Eye } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 export default function ApprovalsPage() {
   const searchParams = useSearchParams();
@@ -153,7 +154,8 @@ export default function ApprovalsPage() {
       }
       
     } catch (error) {
-      console.error('Error fetching pending items:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching pending items', { error: errorMessage, component: 'ApprovalsPage' });
     } finally {
       setLoading(false);
     }
@@ -267,7 +269,8 @@ export default function ApprovalsPage() {
         fetchPendingItems();
       }
     } catch (error) {
-      console.error('Error approving:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error approving', { error: errorMessage, component: 'ApprovalsPage' });
       alert('❌ حدث خطأ أثناء الموافقة');
     }
   };
@@ -385,7 +388,8 @@ export default function ApprovalsPage() {
         fetchPendingItems();
       }
     } catch (error) {
-      console.error('Error rejecting:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error rejecting', { error: errorMessage, component: 'ApprovalsPage' });
       alert('❌ حدث خطأ أثناء الرفض');
     }
   };

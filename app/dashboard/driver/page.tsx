@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { logger } from '@/lib/logger';
 import ModernDashboardLayoutLuxury, { ModernStatCardLuxury, ModernSectionLuxury } from '@/components/dashboard/ModernDashboardLayoutLuxury';
 import FuturisticSidebarLuxury from '@/components/dashboard/FuturisticSidebarLuxury';
 import FuturisticNavbarLuxury from '@/components/dashboard/FuturisticNavbarLuxury';
@@ -75,7 +76,10 @@ function DriverDashboardContent() {
             lng: position.coords.longitude,
           });
         },
-        (error) => console.error('Location error:', error)
+        (error) => {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown location error';
+          logger.error('Location error', { error: errorMessage, component: 'DriverDashboardContent' });
+        }
       );
     }
   }, []);
@@ -192,7 +196,8 @@ function DriverDashboardContent() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error loading dashboard data', { error: errorMessage, component: 'DriverDashboardContent' });
       toast.error('حدث خطأ غير متوقع');
       setLoading(false);
     }
@@ -214,7 +219,8 @@ function DriverDashboardContent() {
       setIsAvailable(newStatus);
       toast.success(newStatus ? '✅ أنت الآن متاح لاستقبال الطلبات' : '⚠️ تم إيقاف استقبال الطلبات');
     } catch (error) {
-      console.error('Error toggling availability:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error toggling availability', { error: errorMessage, component: 'DriverDashboardContent' });
       toast.error('فشل تحديث الحالة');
     }
   };

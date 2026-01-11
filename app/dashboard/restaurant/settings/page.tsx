@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 import { useRouter } from 'next/navigation';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
@@ -87,7 +88,8 @@ export default function RestaurantSettingsPage() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Failed to check authentication in restaurant settings', { error: errorMessage, context: 'checkAuth' });
       router.push('/auth/login');
     }
   };
@@ -116,7 +118,8 @@ export default function RestaurantSettingsPage() {
       alert('تم حفظ التغييرات بنجاح');
       await checkAuth();
     } catch (error) {
-      console.error('Error saving:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Failed to save restaurant settings', { error: errorMessage, context: 'handleSave' });
       alert('حدث خطأ في حفظ التغييرات');
     } finally {
       setSaving(false);
@@ -142,7 +145,8 @@ export default function RestaurantSettingsPage() {
         throw new Error('فشل رفع الصورة');
       }
     } catch (error) {
-      console.error('Error uploading cover:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Failed to upload cover image', { error: errorMessage, context: 'handleCoverUpload' });
       alert('حدث خطأ في رفع الصورة');
     } finally {
       setUploadingCover(false);
@@ -168,7 +172,8 @@ export default function RestaurantSettingsPage() {
         throw new Error('فشل رفع الصورة');
       }
     } catch (error) {
-      console.error('Error uploading logo:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Failed to upload logo image', { error: errorMessage, context: 'handleLogoUpload' });
       alert('حدث خطأ في رفع الصورة');
     } finally {
       setUploadingLogo(false);
@@ -203,7 +208,8 @@ export default function RestaurantSettingsPage() {
       setGalleryImages([...galleryImages, ...uploadedUrls]);
       alert(`تم رفع ${uploadedUrls.length} صورة بنجاح`);
     } catch (error) {
-      console.error('Error uploading gallery:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Failed to upload gallery images', { error: errorMessage, context: 'handleGalleryUpload' });
       alert('حدث خطأ في رفع الصور');
     } finally {
       setUploadingGallery(false);
@@ -228,7 +234,8 @@ export default function RestaurantSettingsPage() {
       setFormData({ ...formData, is_online: newStatus });
       alert(newStatus ? 'المطعم الآن متاح للطلبات' : 'المطعم الآن غير متاح للطلبات');
     } catch (error) {
-      console.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Failed to toggle online status', { error: errorMessage, context: 'toggleOnlineStatus' });
       alert('حدث خطأ في تحديث الحالة');
     }
   };

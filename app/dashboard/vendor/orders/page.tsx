@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { logger } from '@/lib/logger';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import FloatingAddButton from '@/components/dashboard/FloatingAddButton';
@@ -74,7 +75,8 @@ export default function VendorOrdersPageImproved() {
         .eq('vendor_id', vendorData.id);
 
       if (error) {
-        console.error('Error fetching order items:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        logger.error('Error fetching order items', { error: errorMessage, component: 'VendorOrdersPage' });
         throw error;
       }
 
@@ -138,7 +140,8 @@ export default function VendorOrdersPageImproved() {
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       ));
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching orders', { error: errorMessage, component: 'VendorOrdersPage' });
       toast.error('فشل تحميل الطلبات');
     } finally {
       setLoading(false);
@@ -165,7 +168,8 @@ export default function VendorOrdersPageImproved() {
         toast.error(result.error || 'فشل تحديث حالة الطلب');
       }
     } catch (error: any) {
-      console.error('Error updating order status:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error updating order status', { error: errorMessage, component: 'VendorOrdersPage' });
       toast.error('حدث خطأ غير متوقع');
     } finally {
       setUpdatingOrderId(null);

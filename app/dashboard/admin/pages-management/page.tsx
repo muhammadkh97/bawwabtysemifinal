@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar'
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar'
 import { FileText, PlusCircle, Edit, Trash2, Eye, EyeOff, Save, X } from 'lucide-react'
+import { logger } from '@/lib/logger'
 
 interface Page {
   id: string
@@ -74,7 +75,8 @@ export default function PagesManagementPage() {
       if (heroesError) throw heroesError
       setHeroes(heroesData || [])
     } catch (error) {
-      console.error('Error loading data:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      logger.error('Error loading data', { error: errorMessage, component: 'PagesManagementPage' })
     } finally {
       setLoading(false)
     }
@@ -103,7 +105,8 @@ export default function PagesManagementPage() {
       setEditingPage(null)
       loadData()
     } catch (error) {
-      console.error('Error saving page:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      logger.error('Error saving page', { error: errorMessage, component: 'PagesManagementPage' })
       alert('حدث خطأ أثناء الحفظ')
     }
   }
@@ -139,7 +142,8 @@ export default function PagesManagementPage() {
       setEditingHero(null)
       loadData()
     } catch (error) {
-      console.error('Error saving hero:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error saving hero', { error: errorMessage, component: 'PagesManagementPage' });
       alert('حدث خطأ أثناء الحفظ')
     }
   }
@@ -154,7 +158,8 @@ export default function PagesManagementPage() {
       if (error) throw error
       loadData()
     } catch (error) {
-      console.error('Error toggling status:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error toggling page status', { error: errorMessage, component: 'PagesManagementPage' });
     }
   }
 
@@ -168,7 +173,8 @@ export default function PagesManagementPage() {
       if (error) throw error
       loadData()
     } catch (error) {
-      console.error('Error toggling status:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error toggling hero status', { error: errorMessage, component: 'PagesManagementPage' });
     }
   }
 

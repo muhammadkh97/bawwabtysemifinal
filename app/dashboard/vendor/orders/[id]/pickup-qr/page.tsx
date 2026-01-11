@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { logger } from '@/lib/logger'
 import { supabase } from '@/lib/supabase'
 import { generatePickupCodes } from '@/lib/qrOtpUtils'
 import QRCodeDisplay from '@/components/QRCodeDisplay'
@@ -121,7 +122,8 @@ export default function VendorPickupQRPage() {
 
       setQrData(codes)
     } catch (error: any) {
-      console.error('Error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching order and generating QR', { error: errorMessage, component: 'VendorPickupQRPage' });
       toast.error(error.message || 'فشل تحميل بيانات الطلب')
     } finally {
       setLoading(false)

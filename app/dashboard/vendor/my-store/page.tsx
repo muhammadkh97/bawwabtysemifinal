@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { logger } from '@/lib/logger';
 import FloatingAddButton from '@/components/dashboard/FloatingAddButton';
 import { Store, Upload, Save, Eye, MapPin, Phone, Mail, Globe, Image as ImageIcon, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -72,7 +73,8 @@ export default function VendorMyStorePage() {
         }
       }
     } catch (error) {
-      console.error('Error fetching store data:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching store data', { error: errorMessage, component: 'VendorMyStorePage' });
     } finally {
       setLoading(false);
     }
@@ -246,9 +248,10 @@ export default function VendorMyStorePage() {
       await fetchStoreData();
       
     } catch (error) {
-      console.error('Error saving store:', error);
-      const errorMessage = error instanceof Error ? error.message : 'حدث خطأ غير متوقع';
-      alert('❌ حدث خطأ في حفظ التغييرات: ' + errorMessage);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error saving store', { error: errorMessage, component: 'VendorMyStorePage' });
+      const userMessage = error instanceof Error ? error.message : 'حدث خطأ غير متوقع';
+      alert('❌ حدث خطأ في حفظ التغييرات: ' + userMessage);
     } finally {
       setSaving(false);
     }

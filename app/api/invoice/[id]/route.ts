@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 export async function GET(
   request: NextRequest,
@@ -258,7 +259,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Error generating invoice:', error);
+    logger.error('Error generating invoice:', error);
     return NextResponse.json(
       { error: 'Failed to generate invoice' },
       { status: 500 }

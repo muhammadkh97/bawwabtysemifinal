@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, LogIn, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
 import { signIn, getCurrentUser, signInWithGoogle, signInWithFacebook, signInWithApple } from '@/lib/auth';
+import { logger } from '@/lib/logger';
 
 function LoginForm() {
   const router = useRouter();
@@ -47,7 +48,7 @@ function LoginForm() {
       }
     } catch (error) {
       // User not logged in, stay on login page
-      console.log('User not authenticated');
+      logger.info('User not authenticated');
     }
   };
 
@@ -152,7 +153,7 @@ function LoginForm() {
       const { user, error: signInError } = await signIn(email, password);
 
       if (signInError) {
-        console.error('❌ خطأ في تسجيل الدخول:', signInError);
+        logger.error('❌ خطأ في تسجيل الدخول:', { error: signInError });
         
         // رسائل خطأ واضحة ومحددة
         const errorMessage = typeof signInError === 'string' ? signInError : (signInError as any)?.message || 'حدث خطأ أثناء تسجيل الدخول';
@@ -174,7 +175,7 @@ function LoginForm() {
       }
 
       if (!user) {
-        console.error('❌ لم يتم إرجاع بيانات المستخدم');
+        logger.error('❌ لم يتم إرجاع بيانات المستخدم');
         setError('❌ فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.');
         setLoading(false);
         return;
@@ -190,7 +191,7 @@ function LoginForm() {
       // رسالة نجاح
       setSuccess('✅ تم تسجيل الدخول بنجاح! جاري التوجيه...');
       
-      console.log('✅ تسجيل الدخول ناجح، التوجيه حسب الدور:', (user as any).role);
+      logger.info('✅ تسجيل الدخول ناجح، التوجيه حسب الدور:', (user as any).role);
       
       // انتظار قليلاً للتأكد من حفظ الجلسة في الـ cookies قبل التوجيه
       await new Promise(resolve => setTimeout(resolve, 200));
@@ -200,11 +201,11 @@ function LoginForm() {
       const redirectPath = searchParams.get('redirect');
       
       if (redirectPath) {
-        console.log('🔄 التوجيه إلى:', redirectPath);
+        logger.info('🔄 التوجيه إلى:', redirectPath);
         // استخدام window.location للتأكد من إعادة تحميل الصفحة وتحديث الجلسة
         window.location.href = redirectPath;
       } else {
-        console.log('🔄 التوجيه حسب الدور:', userRole);
+        logger.info('🔄 التوجيه حسب الدور:', userRole);
         // استخدام window.location للتأكد من إعادة تحميل الصفحة
         switch (userRole) {
           case 'admin':
@@ -225,7 +226,7 @@ function LoginForm() {
       }
 
     } catch (err: any) {
-      console.error('❌ خطأ غير متوقع:', err);
+      logger.error('❌ خطأ غير متوقع:', err);
       setError('❌ حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى لاحقاً.');
       setLoading(false);
     }
@@ -263,7 +264,7 @@ function LoginForm() {
         setSuccess(`✅ تم تسجيل الدخول عبر ${provider === 'google' ? 'Google' : provider === 'facebook' ? 'Facebook' : 'Apple'} بنجاح!`);
       }
     } catch (err: any) {
-      console.error('خطأ في تسجيل الدخول:', err);
+      logger.error('خطأ في تسجيل الدخول:', err);
       setError('❌ حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى.');
     } finally {
       setLoading(false);

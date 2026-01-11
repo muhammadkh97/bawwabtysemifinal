@@ -21,6 +21,7 @@ import {
   XCircle,
   Truck
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface Transaction {
   id: string;
@@ -102,7 +103,7 @@ export default function DriverWalletPage() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error:', error);
+      logger.error('Error in checkAuth', { error, context: 'DriverWalletPage.checkAuth' });
       router.push('/auth/login');
     }
   }, [router]);
@@ -203,7 +204,7 @@ export default function DriverWalletPage() {
         setPayoutRequests(payoutsData);
       }
     } catch (error) {
-      console.error('Error fetching wallet data:', error);
+      logger.error('Error fetching wallet data', { error, driverId: dId, context: 'DriverWalletPage.fetchWalletData' });
     }
   };
 
@@ -252,7 +253,7 @@ export default function DriverWalletPage() {
       });
       fetchWalletData(driverId);
     } catch (error) {
-      console.error('Error requesting payout:', error);
+      logger.error('Error requesting payout', { error, driverId, payoutAmount, context: 'DriverWalletPage.handleRequestPayout' });
       alert('حدث خطأ في إرسال الطلب');
     }
   };

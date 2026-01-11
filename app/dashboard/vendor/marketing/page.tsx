@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { logger } from '@/lib/logger';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import { Tag, Percent, Calendar, TrendingUp, Package, Users, Plus, Edit, Trash2, Loader2 } from 'lucide-react';
@@ -82,7 +83,8 @@ export default function VendorMarketingPage() {
 
       setCoupons(updatedCoupons);
     } catch (error) {
-      console.error('Error fetching coupons:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching coupons', { error: errorMessage, component: 'VendorMarketingPage' });
       setCoupons([]);
     } finally {
       setLoading(false);

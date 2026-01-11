@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 import AdminLayout from '@/components/AdminLayout';
@@ -110,7 +111,8 @@ export default function AdminCategoriesPage() {
 
       setCategories(rootCategories);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching categories', { error: errorMessage, component: 'AdminCategoriesPage' });
     } finally {
       setLoading(false);
     }
@@ -138,7 +140,8 @@ export default function AdminCategoriesPage() {
       
       setPendingCategories(formattedData);
     } catch (error) {
-      console.error('Error fetching pending categories:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching pending categories', { error: errorMessage, component: 'AdminCategoriesPage' });
     }
   }, []);
 
@@ -197,7 +200,8 @@ export default function AdminCategoriesPage() {
       fetchCategories();
       fetchPendingCategories();
     } catch (error: any) {
-      console.error('Error saving category:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error saving category', { error: errorMessage, component: 'AdminCategoriesPage' });
       alert(`حدث خطأ أثناء الحفظ: ${error.message || 'خطأ غير معروف'}`);
     }
   };
@@ -220,7 +224,8 @@ export default function AdminCategoriesPage() {
       fetchCategories();
       fetchPendingCategories();
     } catch (error: any) {
-      console.error('Error approving category:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error approving category', { error: errorMessage, component: 'AdminCategoriesPage' });
       alert(`حدث خطأ: ${error.message}`);
     }
   };
@@ -250,7 +255,8 @@ export default function AdminCategoriesPage() {
       fetchCategories();
       fetchPendingCategories();
     } catch (error: any) {
-      console.error('Error rejecting category:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error rejecting category', { error: errorMessage, component: 'AdminCategoriesPage' });
       alert(`حدث خطأ: ${error.message}`);
     }
   };
@@ -262,7 +268,8 @@ export default function AdminCategoriesPage() {
       if (error) throw error;
       fetchCategories();
     } catch (error) {
-      console.error('Error deleting category:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error deleting category', { error: errorMessage, component: 'AdminCategoriesPage' });
       alert('حدث خطأ أثناء الحذف');
     }
   };

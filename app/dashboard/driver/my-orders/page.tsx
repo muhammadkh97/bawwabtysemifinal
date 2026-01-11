@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { logger } from '@/lib/logger';
 import { Package, MapPin, Check } from 'lucide-react';
 
 interface Order {
@@ -72,7 +73,8 @@ export default function MyOrdersPage() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error loading my orders', { error: errorMessage, component: 'MyOrdersPage' });
       setLoading(false);
     }
   };
@@ -85,7 +87,7 @@ export default function MyOrdersPage() {
       });
 
       if (error) {
-        console.error('❌ Error updating order:', error);
+        logger.error('Error updating order', { error: error.message, component: 'MyOrdersPage' });
         toast.error('فشل تحديث حالة الطلب: ' + (error.message || 'خطأ غير معروف'));
         return;
       }
@@ -94,11 +96,12 @@ export default function MyOrdersPage() {
         toast.success('✅ تم إتمام التوصيل!');
         loadMyOrders();
       } else {
-        console.error('❌ Function returned error:', data);
+        logger.error('Function returned error', { error: data?.error, component: 'MyOrdersPage' });
         toast.error(data?.error || 'حدث خطأ أثناء تحديث الطلب');
       }
     } catch (error) {
-      console.error('❌ Exception:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Exception in completeDelivery', { error: errorMessage, component: 'MyOrdersPage' });
       toast.error('حدث خطأ غير متوقع');
     }
   };

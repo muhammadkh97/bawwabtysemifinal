@@ -14,6 +14,7 @@ import {
 } from '@/lib/exchange-rates';
 import toast from 'react-hot-toast';
 import { SUPPORTED_CURRENCIES, CurrencyCode } from '@/contexts/CurrencyContext';
+import { logger } from '@/lib/logger';
 
 interface RateInfo {
   currency: string;
@@ -62,7 +63,7 @@ export default function ExchangeRatesPage() {
         setRates(ratesList);
       }
     } catch (error) {
-      console.error('Error loading rates:', error);
+      logger.error('Error loading rates', { error, context: 'ExchangeRatesPage.loadRates' });
       toast.error('فشل تحميل أسعار الصرف');
     } finally {
       setLoading(false);
@@ -83,7 +84,7 @@ export default function ExchangeRatesPage() {
         toast.error('فشل التحديث من API', { id: 'update-rates' });
       }
     } catch (error) {
-      console.error('Update error:', error);
+      logger.error('Update error', { error, context: 'ExchangeRatesPage.handleUpdateFromAPI' });
       toast.error('حدث خطأ أثناء التحديث', { id: 'update-rates' });
     } finally {
       setUpdating(false);
@@ -104,7 +105,7 @@ export default function ExchangeRatesPage() {
         toast.error('فشل تشغيل Edge Function', { id: 'edge-update' });
       }
     } catch (error) {
-      console.error('Edge Function error:', error);
+      logger.error('Edge Function error', { error, context: 'ExchangeRatesPage.handleTriggerEdgeFunction' });
       toast.error('حدث خطأ', { id: 'edge-update' });
     } finally {
       setUpdating(false);
@@ -136,7 +137,7 @@ export default function ExchangeRatesPage() {
         toast.error('فشل الحفظ', { id: 'save-rate' });
       }
     } catch (error) {
-      console.error('Save error:', error);
+      logger.error('Save error', { error, context: 'ExchangeRatesPage.handleSaveRate' });
       toast.error('حدث خطأ', { id: 'save-rate' });
     }
   };

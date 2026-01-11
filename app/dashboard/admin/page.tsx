@@ -6,6 +6,7 @@ import FuturisticSidebarLuxury from '@/components/dashboard/FuturisticSidebarLux
 import FuturisticNavbarLuxury from '@/components/dashboard/FuturisticNavbarLuxury';
 import ModernDashboardLayoutLuxury, { ModernStatCardLuxury, ModernSectionLuxury } from '@/components/dashboard/ModernDashboardLayoutLuxury';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 import {
   Users,
   ShoppingCart,
@@ -187,7 +188,8 @@ function AdminDashboardContent() {
 
       setLoading(false);
     } catch (error) {
-      console.error('خطأ في جلب البيانات:', error instanceof Error ? error.message : 'Unknown error');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('خطأ في جلب البيانات', { error: errorMessage, component: 'AdminDashboardPage' });
       setLoading(false);
     }
   };

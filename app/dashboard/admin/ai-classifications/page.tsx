@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 import { motion } from 'framer-motion';
 import { 
   Brain, 
@@ -67,7 +68,8 @@ export default function AIClassificationsPage() {
 
       setProducts(data || []);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching products', { error: errorMessage, component: 'AIClassificationsPage' });
       toast.error('فشل تحميل المنتجات');
     } finally {
       setLoading(false);
@@ -92,7 +94,8 @@ export default function AIClassificationsPage() {
       fetchProductsNeedReview();
       setSelectedProduct(null);
     } catch (error) {
-      console.error('Error approving:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error approving', { error: errorMessage, component: 'AIClassificationsPage' });
       toast.error('فشل الموافقة على التصنيف');
     }
   };
@@ -114,7 +117,8 @@ export default function AIClassificationsPage() {
       fetchProductsNeedReview();
       setSelectedProduct(null);
     } catch (error) {
-      console.error('Error rejecting:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error rejecting', { error: errorMessage, component: 'AIClassificationsPage' });
       toast.error('فشل رفض المنتج');
     }
   };

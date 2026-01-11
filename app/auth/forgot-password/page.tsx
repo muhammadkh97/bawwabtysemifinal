@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Mail, ArrowRight, ArrowLeft, CheckCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -42,7 +43,7 @@ export default function ForgotPasswordPage() {
       
       setSuccess(true);
     } catch (err: any) {
-      console.error('Reset password error:', err);
+      logger.error('Reset password error', { error: err });
       setError(err.message || 'حدث خطأ أثناء إرسال رابط إعادة التعيين');
     } finally {
       setLoading(false);

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { logger } from '@/lib/logger';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import { MessageCircle, Send, Search, User, Clock, CheckCheck, Loader2 } from 'lucide-react';
@@ -82,7 +83,8 @@ export default function VendorMessagesPage() {
 
       setChats(formattedChats);
     } catch (error) {
-      console.error('Error fetching chats:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching chats', { error: errorMessage, component: 'VendorMessagesPage' });
       setChats([]);
     } finally {
       setLoading(false);
@@ -109,7 +111,8 @@ export default function VendorMessagesPage() {
 
       setMessages(prev => ({ ...prev, [chatId]: formattedMessages }));
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching messages', { error: errorMessage, component: 'VendorMessagesPage' });
     }
   };
 
@@ -143,7 +146,8 @@ export default function VendorMessagesPage() {
       await fetchMessages(selectedChat);
       setMessageText('');
     } catch (error) {
-      console.error('Error sending message:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error sending message', { error: errorMessage, component: 'VendorMessagesPage' });
       alert('❌ حدث خطأ أثناء إرسال الرسالة');
     }
   };

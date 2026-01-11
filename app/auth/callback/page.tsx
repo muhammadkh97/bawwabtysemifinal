@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 export default function AuthCallbackPage() {
   const router = useRouter();
@@ -13,7 +14,7 @@ export default function AuthCallbackPage() {
         const { data: { session }, error } = await supabase.auth.getSession();
 
         if (error) {
-          console.error('خطأ في استرجاع الجلسة:', error);
+          logger.error('خطأ في استرجاع الجلسة', { error: error.message, component: 'AuthCallbackPage' });
           router.push('/auth/login?error=auth_failed');
           return;
         }
@@ -42,7 +43,7 @@ export default function AuthCallbackPage() {
               });
 
             if (insertError) {
-              console.error('خطأ في إنشاء سجل المستخدم:', insertError);
+              logger.error('خطأ في إنشاء سجل المستخدم', { error: insertError.message, component: 'AuthCallbackPage' });
             }
           }
 
@@ -66,7 +67,8 @@ export default function AuthCallbackPage() {
           router.push('/auth/login');
         }
       } catch (error) {
-        console.error('خطأ في معالجة callback:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        logger.error('خطأ في معالجة callback', { error: errorMessage, component: 'AuthCallbackPage' });
         router.push('/auth/login?error=unexpected');
       }
     };

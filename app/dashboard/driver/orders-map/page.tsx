@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { logger } from '@/lib/logger';
 import { MapPin, Package, Clock, DollarSign, User, Phone, Navigation, Calendar } from 'lucide-react';
 import OrdersMapComponent from '@/components/OrdersMapComponent';
 import { DriverOrder } from '@/types';
@@ -62,7 +63,10 @@ export default function OrdersMapPage() {
             lng: position.coords.longitude,
           });
         },
-        (error) => console.error('Location error:', error),
+        (error) => {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown location error';
+          logger.error('Location error', { error: errorMessage, component: 'OrdersMapPage' });
+        },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     }
@@ -141,7 +145,8 @@ export default function OrdersMapPage() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error loading orders and location', { error: errorMessage, component: 'OrdersMapPage' });
       toast.error('حدث خطأ في تحميل الطلبات');
       setLoading(false);
     }

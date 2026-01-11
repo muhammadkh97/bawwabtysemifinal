@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { logger } from '@/lib/logger';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import PremiumCategorySelect from '@/components/PremiumCategorySelect';
@@ -78,7 +79,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       setExistingImages(product.images || []);
 
     } catch (error) {
-      console.error('Error fetching product:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching product', { error: errorMessage, component: 'VendorEditProductPage' });
       toast.error('حدث خطأ أثناء تحميل بيانات المنتج');
     } finally {
       setLoading(false);
@@ -96,7 +98,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       if (error) throw error;
       setCategories(data || []);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching categories', { error: errorMessage, component: 'VendorEditProductPage' });
     }
   };
 
@@ -167,7 +170,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       router.push('/dashboard/vendor/products');
       
     } catch (error) {
-      console.error('Error updating product:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error updating product', { error: errorMessage, component: 'VendorEditProductPage' });
       toast.error('حدث خطأ أثناء تحديث المنتج');
     } finally {
       setSaving(false);

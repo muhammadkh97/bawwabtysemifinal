@@ -7,6 +7,7 @@ import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import { Gift, Plus, Edit2, Trash2, Users, Trophy, Settings, X, Save, Eye, TrendingUp, Star, Crown, Award, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
+import { logger } from '@/lib/logger';
 
 interface LuckyBox {
   id: string;
@@ -98,7 +99,7 @@ export default function AdminLuckyBoxesPage() {
         await fetchLoyaltyTiers();
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      logger.error('Error fetching data', { error, context: 'AdminLuckyBoxesPage.fetchData' });
     } finally {
       setLoading(false);
     }
@@ -111,7 +112,7 @@ export default function AdminLuckyBoxesPage() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching lucky boxes:', error);
+      logger.error('Error fetching lucky boxes', { error, context: 'AdminLuckyBoxesPage.fetchLuckyBoxes' });
       return;
     }
 
@@ -125,7 +126,7 @@ export default function AdminLuckyBoxesPage() {
       .order('tier_order', { ascending: true });
 
     if (error) {
-      console.error('Error fetching loyalty tiers:', error);
+      logger.error('Error fetching loyalty tiers', { error, context: 'AdminLuckyBoxesPage.fetchLoyaltyTiers' });
       return;
     }
 
@@ -158,7 +159,7 @@ export default function AdminLuckyBoxesPage() {
       resetBoxForm();
       fetchLuckyBoxes();
     } catch (error: any) {
-      console.error('Error saving lucky box:', error);
+      logger.error('Error saving lucky box', { error, context: 'AdminLuckyBoxesPage.handleSaveBox' });
       toast.error(error.message || 'حدث خطأ أثناء حفظ صندوق الحظ');
     }
   };
@@ -189,7 +190,7 @@ export default function AdminLuckyBoxesPage() {
       resetTierForm();
       fetchLoyaltyTiers();
     } catch (error: any) {
-      console.error('Error saving tier:', error);
+      logger.error('Error saving tier', { error, context: 'AdminLuckyBoxesPage.handleSaveTier' });
       toast.error(error.message || 'حدث خطأ أثناء حفظ المستوى');
     }
   };
@@ -207,7 +208,7 @@ export default function AdminLuckyBoxesPage() {
       toast.success('تم حذف الصندوق بنجاح');
       fetchLuckyBoxes();
     } catch (error: any) {
-      console.error('Error deleting box:', error);
+      logger.error('Error deleting box', { error, context: 'AdminLuckyBoxesPage.handleDeleteBox' });
       toast.error('فشل حذف الصندوق');
     }
   };
@@ -225,7 +226,7 @@ export default function AdminLuckyBoxesPage() {
       toast.success('تم حذف المستوى بنجاح');
       fetchLoyaltyTiers();
     } catch (error: any) {
-      console.error('Error deleting tier:', error);
+      logger.error('Error deleting tier', { error, context: 'AdminLuckyBoxesPage.handleDeleteTier' });
       toast.error('فشل حذف المستوى');
     }
   };

@@ -7,6 +7,7 @@ import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import { MessageSquare, Clock, CheckCircle, XCircle, AlertCircle, User, Mail, Calendar, Tag, Send } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '@/lib/logger';
 
 interface Ticket {
   id: string;
@@ -80,7 +81,8 @@ export default function TicketsPage() {
 
       setTickets(formattedTickets);
     } catch (error) {
-      console.error('Error fetching tickets:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching tickets', { error: errorMessage, component: 'AdminTicketsPage' });
       setTickets([]);
     } finally {
       setLoading(false);
@@ -112,7 +114,8 @@ export default function TicketsPage() {
 
       setReplies(formattedReplies);
     } catch (error) {
-      console.error('Error fetching replies:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching replies', { error: errorMessage, component: 'AdminTicketsPage' });
       setReplies([]);
     }
   };
@@ -152,7 +155,8 @@ export default function TicketsPage() {
       await fetchReplies(selectedTicket.id);
       setReplyText('');
     } catch (error) {
-      console.error('Error sending reply:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error sending reply', { error: errorMessage, component: 'AdminTicketsPage' });
       alert('❌ حدث خطأ في إرسال الرد');
     } finally {
       setSendingReply(false);
@@ -231,7 +235,8 @@ export default function TicketsPage() {
       alert(`✅ تم تحديث حالة التذكرة إلى: ${statusTexts[newStatus]}`);
       setSelectedTicket(null);
     } catch (error) {
-      console.error('Error updating ticket:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error updating ticket', { error: errorMessage, component: 'AdminTicketsPage' });
       alert('❌ حدث خطأ في تحديث حالة التذكرة');
     }
   };

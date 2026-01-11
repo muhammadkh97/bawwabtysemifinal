@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 import { useRouter } from 'next/navigation';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
@@ -41,7 +42,8 @@ export default function RestaurantProductsPage() {
       if (error) throw error;
       setProducts(data || []);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Failed to fetch products', { error: errorMessage, context: 'fetchProducts' });
     }
   }, []);
 
@@ -68,7 +70,8 @@ export default function RestaurantProductsPage() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Failed to check authentication in restaurant products', { error: errorMessage, context: 'checkAuth' });
       router.push('/auth/login');
     }
   }, [router, fetchProducts]);
@@ -93,7 +96,8 @@ export default function RestaurantProductsPage() {
 
       alert(currentStatus ? 'تم إخفاء المنتج' : 'تم تفعيل المنتج');
     } catch (error) {
-      console.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Failed to toggle product status', { error: errorMessage, context: 'toggleProductStatus' });
       alert('حدث خطأ في تحديث حالة المنتج');
     }
   };

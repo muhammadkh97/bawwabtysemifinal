@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 import { useRouter, useParams } from 'next/navigation';
 import FuturisticSidebar from '@/components/dashboard/FuturisticSidebar';
 import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
@@ -105,7 +106,7 @@ export default function EditRestaurantProductPage() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error:', error);
+      logger.error('Error:', error);
       router.push('/auth/login');
     }
   };
@@ -138,7 +139,7 @@ export default function EditRestaurantProductPage() {
         setVariantGroups(data.variant_groups || []);
       }
     } catch (error) {
-      console.error('Error fetching product:', error);
+      logger.error('Error fetching product:', error);
       alert('حدث خطأ في جلب بيانات المنتج');
       router.push('/dashboard/restaurant/products');
     }
@@ -154,7 +155,7 @@ export default function EditRestaurantProductPage() {
 
       setCategories(data || []);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      logger.error('Error fetching categories:', error);
     }
   };
 
@@ -319,7 +320,7 @@ export default function EditRestaurantProductPage() {
       alert('✅ تم تحديث الوجبة بنجاح!');
       router.push('/dashboard/restaurant/products');
     } catch (error) {
-      console.error('Error updating product:', error);
+      logger.error('Error updating product:', error);
       alert('حدث خطأ في تحديث الوجبة');
       setSaving(false);
     }
@@ -341,7 +342,7 @@ export default function EditRestaurantProductPage() {
       alert('تم حذف الوجبة بنجاح');
       router.push('/dashboard/restaurant/products');
     } catch (error) {
-      console.error('Error deleting product:', error);
+      logger.error('Error deleting product:', error);
       alert('حدث خطأ في حذف الوجبة');
     }
   };

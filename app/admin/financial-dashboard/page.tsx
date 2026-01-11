@@ -9,6 +9,7 @@ import {
   RefreshCw, Eye, CheckCircle, Clock, AlertCircle
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 interface FinancialData {
   total_revenue: number;
@@ -76,7 +77,7 @@ export default function FinancialDashboardPage() {
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching financial data:', error);
+        logger.error('Error fetching financial data', { error });
       }
 
       // If view doesn't exist, calculate manually
@@ -128,7 +129,7 @@ export default function FinancialDashboardPage() {
       }
 
     } catch (error) {
-      console.error('Error fetching financial data:', error);
+      logger.error('Error fetching financial data', { error });
     } finally {
       setLoading(false);
     }
@@ -155,7 +156,7 @@ export default function FinancialDashboardPage() {
       
       alert(`تم تصدير التقرير بصيغة ${format}`);
     } catch (error) {
-      console.error('Export error:', error);
+      logger.error('Export error', { error });
       alert('حدث خطأ أثناء التصدير');
     }
   };

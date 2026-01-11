@@ -7,6 +7,7 @@ import FuturisticNavbar from '@/components/dashboard/FuturisticNavbar';
 import { Trophy, Users, Gift, TrendingUp, Settings, DollarSign, Award, Star, Zap, UserPlus, ShoppingCart, Calendar, Eye, Edit2, Save } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
+import { logger } from '@/lib/logger';
 
 interface LoyaltySettings {
   signup_bonus: number;
@@ -72,7 +73,7 @@ export default function AdminLoyaltyPage() {
         fetchRecentTransactions(),
       ]);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      logger.error('Error fetching data', { error, context: 'AdminLoyaltyPage.fetchData' });
     } finally {
       setLoading(false);
     }
@@ -85,7 +86,7 @@ export default function AdminLoyaltyPage() {
       .single();
 
     if (error) {
-      console.error('Error fetching settings:', error);
+      logger.error('Error fetching settings', { error, context: 'AdminLoyaltyPage.fetchSettings' });
       return;
     }
 
@@ -130,7 +131,7 @@ export default function AdminLoyaltyPage() {
       .limit(10);
 
     if (error) {
-      console.error('Error fetching top users:', error);
+      logger.error('Error fetching top users', { error, context: 'AdminLoyaltyPage.fetchTopUsers' });
       return;
     }
 
@@ -180,7 +181,7 @@ export default function AdminLoyaltyPage() {
       .limit(20);
 
     if (error) {
-      console.error('Error fetching transactions:', error);
+      logger.error('Error fetching transactions', { error, context: 'AdminLoyaltyPage.fetchRecentTransactions' });
       return;
     }
 
@@ -212,7 +213,7 @@ export default function AdminLoyaltyPage() {
       toast.success('تم تحديث الإعدادات بنجاح');
       setEditingSettings(false);
     } catch (error: any) {
-      console.error('Error updating settings:', error);
+      logger.error('Error updating settings', { error, context: 'AdminLoyaltyPage.updateSettings' });
       toast.error('فشل تحديث الإعدادات');
     }
   };

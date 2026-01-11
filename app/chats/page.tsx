@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { motion, AnimatePresence } from 'framer-motion';
+import { logger } from '@/lib/logger';
 import {
   MessageCircle,
   Search,
@@ -140,7 +141,8 @@ function ChatsContent() {
       setMessage('');
       setReplyToMessage(null);
     } catch (error) {
-      console.error('Error sending message:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error sending message', { error: errorMessage, component: 'ChatsPage' });
     } finally {
       setIsSending(false);
     }
@@ -150,7 +152,8 @@ function ChatsContent() {
     try {
       await editMessage(messageId, newContent);
     } catch (error) {
-      console.error('Error editing message:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error editing message', { error: errorMessage, component: 'ChatsPage' });
     }
   };
 
@@ -158,7 +161,8 @@ function ChatsContent() {
     try {
       await deleteMessage(messageId);
     } catch (error) {
-      console.error('Error deleting message:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error deleting message', { error: errorMessage, component: 'ChatsPage' });
     }
   };
 
@@ -174,7 +178,8 @@ function ChatsContent() {
       await archiveChat(chatId);
       setCurrentChatId(null);
     } catch (error) {
-      console.error('Error archiving chat:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error archiving chat', { error: errorMessage, component: 'ChatsPage' });
     }
   };
 
@@ -182,7 +187,8 @@ function ChatsContent() {
     try {
       await unarchiveChat(chatId);
     } catch (error) {
-      console.error('Error unarchiving chat:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error unarchiving chat', { error: errorMessage, component: 'ChatsPage' });
     }
   };
 

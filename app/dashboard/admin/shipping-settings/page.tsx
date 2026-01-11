@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Truck, Save, DollarSign, Gift, RefreshCw } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
+import { logger } from '@/lib/logger';
 
 export default function ShippingSettingsPage() {
   const [loading, setLoading] = useState(true);
@@ -40,7 +41,8 @@ export default function ShippingSettingsPage() {
         });
       }
     } catch (error: any) {
-      console.error('Error fetching shipping settings:', error);
+      const errorMessage = error?.message || 'Unknown error';
+      logger.error('Error fetching shipping settings', { error: errorMessage, component: 'ShippingSettingsPage' });
       setMessage({ type: 'error', text: 'فشل جلب إعدادات الشحن' });
     } finally {
       setLoading(false);
@@ -89,7 +91,8 @@ export default function ShippingSettingsPage() {
       
       setTimeout(() => setMessage(null), 3000);
     } catch (error: any) {
-      console.error('Error saving shipping settings:', error);
+      const errorMessage = error?.message || 'Unknown error';
+      logger.error('Error saving shipping settings', { error: errorMessage, component: 'ShippingSettingsPage' });
       setMessage({ type: 'error', text: `❌ فشل حفظ الإعدادات: ${error.message}` });
     } finally {
       setSaving(false);
