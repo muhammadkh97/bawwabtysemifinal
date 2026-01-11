@@ -105,7 +105,27 @@ export default function LoyaltyCard() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchLoyaltyData();
+
+    // الاستماع لتحديثات النقاط من صناديق الحظ أو أي مصدر آخر
+    const handlePointsUpdate = () => {
+      logger.debug('Loyalty points updated, refreshing data');
+      fetchLoyaltyData();
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('loyaltyPointsUpdated', handlePointsUpdate);
+      
+      // ✅ Cleanup
+      return () => {
+        window.removeEventListener('loyaltyPointsUpdated', handlePointsUpdate);
+        logger.debug('LoyaltyCard event listener removed');
+      };
+    }
+  }, [fetchLoyaltyData]);
 
   const getTierInfo = (tier: string) => {
     const tiers = {
