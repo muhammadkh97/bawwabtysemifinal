@@ -10,7 +10,6 @@ import { getCurrentUser } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { logger } from '@/lib/logger';
 import Link from 'next/link';
-import { logger } from '@/lib/logger';
 
 interface Ticket {
   id: string;

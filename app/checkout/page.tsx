@@ -134,8 +134,11 @@ export default function CheckoutPage() {
           });
         }
       } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.error('Error fetching shipping settings', { error: errorMessage, component: 'CheckoutPage' });
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        logger.error('Error fetching shipping settings', { error: errorMessage, component: 'CheckoutPage' });
+      }
+    };
+
     fetchShippingSettings();
   }, []);
 

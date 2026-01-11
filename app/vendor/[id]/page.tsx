@@ -16,7 +16,6 @@ import Footer from '@/components/Footer';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCart } from '@/contexts/CartContext';
 import { useRestaurantCart } from '@/contexts/RestaurantCartContext';
-import { logger } from '@/lib/logger';
 
 interface Vendor {
   id: string;

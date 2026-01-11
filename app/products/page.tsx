@@ -13,7 +13,6 @@ import EmptyState from '@/components/EmptyState';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
-import { logger } from '@/lib/logger';
 
 interface Product {
   id: string;
