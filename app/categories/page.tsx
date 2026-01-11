@@ -75,7 +75,8 @@ export default function CategoriesPage() {
 
       setCategories(formattedCategories);
     } catch (error) {
-      logger.error('Error fetching categories:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching categories:', { error: errorMessage });
     } finally {
       setLoading(false);
     }

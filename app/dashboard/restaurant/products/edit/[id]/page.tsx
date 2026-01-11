@@ -155,7 +155,8 @@ export default function EditRestaurantProductPage() {
 
       setCategories(data || []);
     } catch (error) {
-      logger.error('Error fetching categories:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching categories:', { error: errorMessage });
     }
   };
 
