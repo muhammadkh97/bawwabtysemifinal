@@ -1,31 +1,57 @@
 'use client';
 
-import React, { Component, ReactNode } from 'react';
+import React, { Component, ReactNode, ErrorInfo } from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { motion } from 'framer-motion';
+import logger from '@/lib/logger';
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
 interface State {
   hasError: boolean;
   error: Error | null;
+  errorInfo: ErrorInfo | null;
 }
 
 export default class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { 
+      hasError: false, 
+      error: null,
+      errorInfo: null 
+    };
   }
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): Partial<State> {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('❌ Error Boundary caught an error:', error, errorInfo);
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // استخدام logger بدلاً من console.log
+    logger.error('Error Boundary caught an error', {
+      error: error.toString(),
+      componentStack: errorInfo.componentStack,
+    });
+
+    this.setState({
+      error,
+      errorInfo,
+    });
+
+    // استدعاء callback إذا وُجد
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
+
+    // في Production، أرسل للـ error tracking
+    if (process.env.NODE_ENV === 'production') {
+      // TODO: Send to Sentry or error tracking service
+    }
   }
 
   handleReset = () => {
