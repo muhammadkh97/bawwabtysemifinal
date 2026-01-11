@@ -17,26 +17,6 @@ export default function LoyaltyCard() {
   const [loyaltyData, setLoyaltyData] = useState<LoyaltyData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchLoyaltyData();
-
-    // الاستماع لتحديثات النقاط من صناديق الحظ أو أي مصدر آخر
-    const handlePointsUpdate = () => {
-      logger.debug('Loyalty points updated, refreshing data');
-      fetchLoyaltyData();
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('loyaltyPointsUpdated', handlePointsUpdate);
-      
-      // ✅ Cleanup
-      return () => {
-        window.removeEventListener('loyaltyPointsUpdated', handlePointsUpdate);
-        logger.debug('LoyaltyCard event listener removed');
-      };
-    }
-  }, [fetchLoyaltyData]);
-
   const fetchLoyaltyData = useCallback(async () => {
     try {
       
