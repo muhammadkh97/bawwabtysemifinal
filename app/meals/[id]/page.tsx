@@ -189,7 +189,7 @@ export default function MealDetailsPage() {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.error('Error fetching meal', { error: errorMessage, component: 'MealPage', mealId: id });
+      logger.error('Error fetching meal', { error: errorMessage, component: 'MealPage' });
       toast.error('حدث خطأ في تحميل تفاصيل الوجبة');
       router.push('/restaurants');
     } finally {
