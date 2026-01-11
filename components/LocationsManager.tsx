@@ -5,6 +5,7 @@ import { MapPin, Plus, Edit, Trash2, Star, Home, Briefcase, Loader2 } from 'luci
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
+import { logger } from '@/lib/logger';
 
 /**
  * Strict Types for Location Management
@@ -73,7 +74,15 @@ export default function LocationsManager({ userId }: LocationsManagerProps) {
       if (error) throw error;
       setLocations((data as UserLocation[]) || []);
     } catch (error: any) {
-      console.error('Error fetching locations:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'فشل تحميل المواقع'
+      
+      logger.error('fetchLocations failed', {
+        error: errorMessage,
+        component: 'LocationsManager',
+        userId,
+      })
       toast.error('فشل تحميل المواقع');
     } finally {
       setLoading(false);
@@ -116,7 +125,13 @@ export default function LocationsManager({ userId }: LocationsManagerProps) {
         }
       },
       (error) => {
-        console.error('Geolocation error:', error);
+        const errorMessage = error.message || 'فشل الوصول للموقع. يرجى تفعيل الصلاحيات.'
+        
+        logger.error('handleGetCurrentLocation failed', {
+          error: errorMessage,
+          component: 'LocationsManager',
+          errorCode: error.code,
+        })
         toast.error('فشل الوصول للموقع. يرجى تفعيل الصلاحيات.');
         setGettingLocation(false);
       },
@@ -167,7 +182,16 @@ export default function LocationsManager({ userId }: LocationsManagerProps) {
       setEditingLocation(null);
       setFormData(INITIAL_FORM_DATA);
     } catch (error: any) {
-      console.error('Save error:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'حدث خطأ أثناء الحفظ'
+      
+      logger.error('handleSubmit failed', {
+        error: errorMessage,
+        component: 'LocationsManager',
+        userId,
+        isEditing: !!editingLocation,
+      })
       toast.error('حدث خطأ أثناء الحفظ');
     }
   };

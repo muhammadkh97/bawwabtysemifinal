@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   isNotificationSupported,
   getNotificationPermission,
@@ -13,6 +13,7 @@ import {
   showToast,
   setupNotificationServiceWorker,
 } from '@/lib/notifications';
+import { logger } from '@/lib/logger';
 
 interface NotificationSettings {
   enabled: boolean;
@@ -108,7 +109,15 @@ export default function NotificationSettingsPage() {
         showToast('تم رفض إذن الإشعارات', 'error');
       }
     } catch (error) {
-      console.error('Error enabling notifications:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في تفعيل الإشعارات';
+      
+      logger.error('handleEnableNotifications failed', {
+        error: errorMessage,
+        component: 'NotificationSettingsPage',
+      });
+      
       showToast('حدث خطأ أثناء تفعيل الإشعارات', 'error');
     } finally {
       setLoading(false);
@@ -126,7 +135,15 @@ export default function NotificationSettingsPage() {
         showToast('تم إيقاف الإشعارات', 'info');
       }
     } catch (error) {
-      console.error('Error disabling notifications:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في إيقاف الإشعارات';
+      
+      logger.error('handleDisableNotifications failed', {
+        error: errorMessage,
+        component: 'NotificationSettingsPage',
+      });
+      
       showToast('حدث خطأ أثناء إيقاف الإشعارات', 'error');
     } finally {
       setLoading(false);

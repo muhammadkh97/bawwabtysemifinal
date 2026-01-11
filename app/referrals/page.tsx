@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { logger } from '@/lib/logger';
 
 interface ReferralStats {
   totalReferrals: number;
@@ -52,7 +53,7 @@ export default function ReferralPage() {
     }
   }, [authUser]);
 
-  const loadData = async (currentUser: any) => {
+  const loadData = useCallback(async (currentUser: any) => {
     try {
       setUser(currentUser);
       setReferralCode(currentUser.referral_code || '');
@@ -62,11 +63,18 @@ export default function ReferralPage() {
         fetchReferrals(currentUser.id),
       ]);
     } catch (error) {
-      console.error('Error loading data:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في تحميل البيانات';
+      
+      logger.error('loadData failed', {
+        error: errorMessage,
+        component: 'ReferralPage',
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const fetchStats = async (userId: string) => {
     // جلب إعدادات النظام
@@ -113,8 +121,7 @@ export default function ReferralPage() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching referrals:', error);
-      return;
+      throw new Error(`فشل جلب الإحالات: ${error.message}`);
     }
 
     const formattedReferrals = (data || []).map((r: any) => ({
@@ -128,6 +135,17 @@ export default function ReferralPage() {
     }));
 
     setReferrals(formattedReferrals);
+  } catch (error) {
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : 'خطأ في جلب الإحالات';
+    
+    logger.error('fetchReferrals failed', {
+      error: errorMessage,
+      component: 'ReferralPage',
+      userId,
+    });
+  }
   };
 
   const copyReferralLink = () => {

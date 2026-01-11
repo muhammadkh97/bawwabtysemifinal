@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, TrendingUp, Eye, ShoppingCart, Star, ArrowRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
 
 interface Product {
   id: string;
@@ -109,7 +110,16 @@ export default function AIRecommendations({
       }
 
     } catch (error) {
-      console.error('Error fetching recommendations:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error fetching recommendations'
+      
+      logger.error('fetchRecommendations failed', {
+        error: errorMessage,
+        component: 'AIRecommendations',
+        userId,
+        recommendationType,
+      })
     } finally {
       setLoading(false);
     }
@@ -129,7 +139,17 @@ export default function AIRecommendations({
         }
       });
     } catch (error) {
-      console.error('Error tracking interaction:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error tracking interaction'
+      
+      logger.error('trackInteraction failed', {
+        error: errorMessage,
+        component: 'AIRecommendations',
+        userId,
+        productId,
+        interactionType,
+      })
     }
   };
 

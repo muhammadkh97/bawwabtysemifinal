@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { TrendingUp, Package, DollarSign, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 interface SalesData {
   day: string;
@@ -60,7 +61,15 @@ export function SalesChart() {
       
       setData(dates);
     } catch (error) {
-      console.error('Error fetching sales data:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error fetching sales data'
+      
+      logger.error('fetchSalesData failed', {
+        error: errorMessage,
+        component: 'SalesChart',
+        period,
+      })
     } finally {
       setIsLoading(false);
     }
@@ -209,7 +218,14 @@ export function OrdersStatusChart() {
         ]);
       }
     } catch (error) {
-      console.error('Error fetching orders status:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error fetching orders status'
+      
+      logger.error('fetchOrdersStatus failed', {
+        error: errorMessage,
+        component: 'OrdersStatusChart',
+      })
     } finally {
       setIsLoading(false);
     }
@@ -329,7 +345,14 @@ export function TopProductsChart() {
         setData(sortedProducts);
       }
     } catch (error) {
-      console.error('Error fetching top products:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error fetching top products'
+      
+      logger.error('fetchTopProducts failed', {
+        error: errorMessage,
+        component: 'TopProductsChart',
+      })
     } finally {
       setIsLoading(false);
     }

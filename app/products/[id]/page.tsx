@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -18,6 +18,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import EmptyState from '@/components/EmptyState';
+import { logger } from '@/lib/logger';
 
 interface Product {
   id: string;
@@ -128,7 +129,7 @@ export default function ProductDetailPage() {
     );
   };
 
-  const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -143,9 +144,7 @@ export default function ProductDetailPage() {
         .single();
 
       if (fetchError) {
-        console.error('Error fetching product:', fetchError);
-        setError('فشل تحميل المنتج. يرجى المحاولة مرة أخرى.');
-        return;
+        throw new Error(`فشل تحميل المنتج: ${fetchError.message}`);
       }
       
       if (!data) {
@@ -155,12 +154,21 @@ export default function ProductDetailPage() {
       
       setProduct(data);
     } catch (error) {
-      console.error('Error fetching product:', error);
-      setError('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.');
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في تحميل المنتج';
+      
+      logger.error('fetchProduct failed', {
+        error: errorMessage,
+        component: 'ProductDetailPage',
+        productId,
+      });
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
-  };
+  }, [productId]);
 
   const handleAddToCart = async () => {
     if (product) {

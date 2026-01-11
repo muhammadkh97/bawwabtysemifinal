@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { logger } from '@/lib/logger';
 
 export default function ReviewOrderPage() {
   const params = useParams();
@@ -22,7 +23,7 @@ export default function ReviewOrderPage() {
     fetchOrderDetails();
   }, []);
 
-  const fetchOrderDetails = async () => {
+  const fetchOrderDetails = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('orders')
@@ -33,7 +34,9 @@ export default function ReviewOrderPage() {
         .eq('id', params.id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(`فشل جلب تفاصيل الطلب: ${error.message}`);
+      }
 
       // Check if already reviewed
       const { data: existingReview } = await supabase
@@ -50,12 +53,21 @@ export default function ReviewOrderPage() {
 
       setOrder(data);
     } catch (error) {
-      console.error('Error fetching order:', error);
-      toast.error('حدث خطأ في تحميل تفاصيل الطلب');
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في تحميل تفاصيل الطلب';
+      
+      logger.error('fetchOrderDetails failed', {
+        error: errorMessage,
+        component: 'ReviewOrderPage',
+        orderId: params.id,
+      });
+      
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,8 +127,17 @@ export default function ReviewOrderPage() {
       toast.success('✅ تم إرسال التقييم بنجاح!');
       router.push(`/orders/${params.id}`);
     } catch (error) {
-      console.error('Error submitting review:', error);
-      toast.error('حدث خطأ في إرسال التقييم');
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في إرسال التقييم';
+      
+      logger.error('handleSubmit review failed', {
+        error: errorMessage,
+        component: 'ReviewOrderPage',
+        orderId: params.id,
+      });
+      
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }

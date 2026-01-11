@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Star, ShoppingCart, Heart, Loader2 } from 'lucide-react';
@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
+import { logger } from '@/lib/logger';
 
 interface Product {
   id: string;
@@ -64,7 +65,14 @@ export default function FeaturedProducts() {
 
       setProducts(productsWithVendors);
     } catch (error) {
-      console.error('Error fetching featured products:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error fetching featured products'
+      
+      logger.error('fetchFeaturedProducts failed', {
+        error: errorMessage,
+        component: 'FeaturedProducts',
+      })
       setProducts([]);
     } finally {
       setLoading(false);

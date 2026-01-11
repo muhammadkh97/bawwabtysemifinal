@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { hasPermission, hasAnyPermission } from '@/lib/permissions';
 import { getDashboardTheme, DashboardRole } from '@/lib/dashboardThemes';
+import { logger } from '@/lib/logger';
 import {
   LayoutDashboard,
   Users,
@@ -112,7 +113,16 @@ export default function FuturisticSidebarLuxury({ role }: FuturisticSidebarLuxur
         setOrdersCount(ordersCountData || 0);
       }
     } catch (error) {
-      console.error('Error fetching counts:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error fetching counts'
+      
+      logger.error('fetchCounts failed', {
+        error: errorMessage,
+        component: 'FuturisticSidebarLuxury',
+        role,
+        userId,
+      })
     }
   };
 
@@ -162,7 +172,16 @@ export default function FuturisticSidebarLuxury({ role }: FuturisticSidebarLuxur
         tickets: openTickets || 0,
       });
     } catch (error) {
-      console.error('Error fetching admin notifications:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error fetching admin notifications'
+      
+      logger.error('fetchAdminNotifications failed', {
+        error: errorMessage,
+        component: 'FuturisticSidebarLuxury',
+        role,
+        userId,
+      })
     }
   };
 
@@ -176,7 +195,16 @@ export default function FuturisticSidebarLuxury({ role }: FuturisticSidebarLuxur
 
       setDriverAvailableOrders(availableOrders || 0);
     } catch (error) {
-      console.error('Error fetching driver notifications:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error fetching driver notifications'
+      
+      logger.error('fetchDriverNotifications failed', {
+        error: errorMessage,
+        component: 'FuturisticSidebarLuxury',
+        role,
+        userId,
+      })
     }
   };
 
@@ -186,7 +214,15 @@ export default function FuturisticSidebarLuxury({ role }: FuturisticSidebarLuxur
       router.push('/auth/login');
       router.refresh();
     } catch (error) {
-      console.error('خطأ في تسجيل الخروج:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في تسجيل الخروج'
+      
+      logger.error('handleLogout failed', {
+        error: errorMessage,
+        component: 'FuturisticSidebarLuxury',
+        role,
+      })
     }
   };
 

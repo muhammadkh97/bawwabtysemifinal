@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,6 +9,7 @@ import NotificationBell from '@/components/NotificationBell';
 import { signOut } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/contexts/ThemeContext';
+import { logger } from '@/lib/logger';
 
 interface FuturisticNavbarProps {
   userName?: string;
@@ -49,7 +50,14 @@ export default function FuturisticNavbar({
         }
       }
     } catch (error) {
-      console.error('Error fetching user name:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error fetching user name'
+      
+      logger.error('fetchUserName failed', {
+        error: errorMessage,
+        component: 'FuturisticNavbar',
+      })
     }
   };
 
@@ -59,7 +67,14 @@ export default function FuturisticNavbar({
       router.push('/auth/login');
       router.refresh();
     } catch (error) {
-      console.error('خطأ في تسجيل الخروج:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في تسجيل الخروج'
+      
+      logger.error('handleLogout failed', {
+        error: errorMessage,
+        component: 'FuturisticNavbar',
+      })
     }
   };
 

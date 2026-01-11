@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { MapPin, Phone, Mail, CheckCircle } from 'lucide-react'
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { logger } from '@/lib/logger'
 
 export default function Footer() {
   const [email, setEmail] = useState('')
@@ -54,7 +55,15 @@ export default function Footer() {
       // إخفاء رسالة النجاح بعد 5 ثواني
       setTimeout(() => setSuccess(false), 5000)
     } catch (err: unknown) {
-      console.error('خطأ في الاشتراك:', err)
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'حدث خطأ. حاول مرة أخرى'
+      
+      logger.error('handleNewsletterSubmit failed', {
+        error: errorMessage,
+        component: 'Footer',
+        email,
+      })
       setError('حدث خطأ. حاول مرة أخرى')
     } finally {
       setLoading(false)

@@ -1,10 +1,11 @@
 // components/customer/TrackOrderMap.tsx
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 // ==========================================
 // Types
@@ -83,7 +84,15 @@ export default function TrackOrderMap({
         });
       }
     } catch (error) {
-      console.error('خطأ في جلب بيانات التتبع:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في جلب بيانات التتبع'
+      
+      logger.error('fetchTrackingData failed', {
+        error: errorMessage,
+        component: 'TrackOrderMap',
+        orderId,
+      })
     }
   };
 

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { ShoppingCart, Heart, User, Search, Menu, Phone, Mail, Globe, LayoutDashboard, LogOut, MessageCircle, ChevronRight, ChevronDown, Package, Zap, Star, Sparkles, AlertTriangle, LifeBuoy, ChefHat, UtensilsCrossed } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import CurrencySelector from './CurrencySelector'
 import SmartSearch from './SmartSearch'
@@ -14,6 +14,7 @@ import { useRestaurantCart } from '@/contexts/RestaurantCartContext'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
+import { logger } from '@/lib/logger'
 
 interface CategoryWithSubs {
   id: string;
@@ -63,9 +64,11 @@ export default function Header() {
         .is('parent_id', null)
         .order('display_order', { ascending: true });
 
-
       if (mainError) {
-        console.error('❌ [Header] خطأ في جلب التصنيفات:', mainError);
+        logger.error('fetchCategories main failed', {
+          error: mainError.message,
+          component: 'Header',
+        })
         throw mainError;
       }
 
@@ -112,7 +115,14 @@ export default function Header() {
 
       setCategories(categoriesWithSubs);
     } catch (error) {
-      console.error('❌ خطأ في جلب التصنيفات:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في جلب التصنيفات'
+      
+      logger.error('fetchCategories failed', {
+        error: errorMessage,
+        component: 'Header',
+      })
       setCategories([]);
     }
   };
@@ -156,7 +166,16 @@ export default function Header() {
         setUnreadChatsCount(totalUnread);
       }
     } catch (error) {
-      console.error('خطأ في جلب عدد الرسائل غير المقروءة:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في جلب عدد الرسائل غير المقروءة'
+      
+      logger.error('fetchUnreadChatsCount failed', {
+        error: errorMessage,
+        component: 'Header',
+        userId,
+        role,
+      })
     }
   };
 
@@ -171,7 +190,14 @@ export default function Header() {
       router.push('/auth/login');
       router.refresh();
     } catch (error) {
-      console.error('خطأ في تسجيل الخروج:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في تسجيل الخروج'
+      
+      logger.error('handleLogout failed', {
+        error: errorMessage,
+        component: 'Header',
+      })
     }
   };
 

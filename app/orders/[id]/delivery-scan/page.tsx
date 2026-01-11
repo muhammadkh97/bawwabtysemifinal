@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { verifyDeliveryWithQR, verifyDeliveryWithOTP } from '@/lib/qrOtpUtils'
@@ -18,6 +18,7 @@ import {
   MessageSquare
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { logger } from '@/lib/logger'
 
 interface Order {
   id: string
@@ -49,7 +50,7 @@ export default function CustomerDeliveryScanPage() {
     fetchOrderAndCustomer()
   }, [params.id])
 
-  const fetchOrderAndCustomer = async () => {
+  const fetchOrderAndCustomer = useCallback(async () => {
     try {
       setLoading(true)
 
@@ -81,7 +82,9 @@ export default function CustomerDeliveryScanPage() {
         .eq('id', params.id)
         .single()
 
-      if (error) throw error
+      if (error) {
+        throw new Error(`فشل تحميل بيانات الطلب: ${error.message}`)
+      }
 
       // التحقق من أن العميل هو صاحب الطلب
       if (orderData.customer_id !== user.id) {
@@ -105,12 +108,21 @@ export default function CustomerDeliveryScanPage() {
 
       setOrder(orderData)
     } catch (error: any) {
-      console.error('Error:', error)
-      toast.error(error.message || 'فشل تحميل بيانات الطلب')
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'فشل تحميل بيانات الطلب'
+      
+      logger.error('fetchOrderAndCustomer failed', {
+        error: errorMessage,
+        component: 'CustomerDeliveryScanPage',
+        orderId: params.id,
+      })
+      
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }
-  }
+  }, [params.id, router])
 
   const handleQRScan = async (qrData: string) => {
     if (!customerId) return
@@ -132,8 +144,18 @@ export default function CustomerDeliveryScanPage() {
         toast.error(result.message || 'فشل التحقق من الرمز')
       }
     } catch (error: any) {
-      console.error('Error:', error)
-      toast.error(error.message || 'حدث خطأ أثناء التحقق')
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'حدث خطأ أثناء التحقق'
+      
+      logger.error('handleQRScan failed', {
+        error: errorMessage,
+        component: 'CustomerDeliveryScanPage',
+        orderId: params.id,
+        customerId,
+      })
+      
+      toast.error(errorMessage)
     } finally {
       setVerifying(false)
     }
@@ -167,8 +189,19 @@ export default function CustomerDeliveryScanPage() {
         toast.error(result.message || 'رمز OTP غير صحيح')
       }
     } catch (error: any) {
-      console.error('Error:', error)
-      toast.error(error.message || 'حدث خطأ أثناء التحقق')
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'حدث خطأ أثناء التحقق'
+      
+      logger.error('handleManualOTPSubmit failed', {
+        error: errorMessage,
+        component: 'CustomerDeliveryScanPage',
+        orderId: params.id,
+        customerId,
+        otpLength: manualOTP.length,
+      })
+      
+      toast.error(errorMessage)
     } finally {
       setVerifying(false)
     }

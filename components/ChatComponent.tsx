@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, Send, Image as ImageIcon, X, Smile, Paperclip } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Image from 'next/image';
+import { logger } from '@/lib/logger';
 
 interface Message {
   id: string;
@@ -154,7 +155,16 @@ export default function ChatComponent({ vendorId, vendorName, vendorAvatar }: Ch
         setImagePreview(null);
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error sending message'
+      
+      logger.error('sendMessage failed', {
+        error: errorMessage,
+        component: 'ChatComponent',
+        chatId,
+        vendorId,
+      })
     } finally {
       setIsLoading(false);
     }

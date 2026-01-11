@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { MessageCircle, X, Send, Loader2, User, Store, CheckCheck, Check, ArrowLeft, Move } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useChats } from '@/contexts/ChatsContext';
 import { useRouter } from 'next/navigation';
+import { logger } from '@/lib/logger';
 
 export default function FloatingChatWidget() {
   const { user, userId, userRole } = useAuth();
@@ -115,7 +116,12 @@ export default function FloatingChatWidget() {
   const prevUnreadCount = useRef(unreadCount);
   useEffect(() => {
     if (unreadCount > prevUnreadCount.current && !isOpen && audioRef.current && hasInteracted.current) {
-      audioRef.current.play().catch(console.error);
+      audioRef.current.play().catch((error) => {
+        logger.error('Audio play failed', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          component: 'FloatingChatWidget',
+        })
+      });
     }
     prevUnreadCount.current = unreadCount;
   }, [unreadCount, isOpen]);
@@ -132,7 +138,15 @@ export default function FloatingChatWidget() {
       await sendMessage(currentChatId, newMessage);
       setNewMessage('');
     } catch (error) {
-      console.error('Error sending message:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error sending message'
+      
+      logger.error('handleSendMessage failed', {
+        error: errorMessage,
+        component: 'FloatingChatWidget',
+        chatId: currentChatId,
+      })
     } finally {
       setSending(false);
     }

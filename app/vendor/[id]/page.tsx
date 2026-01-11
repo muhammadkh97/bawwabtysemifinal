@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
@@ -15,6 +15,7 @@ import Footer from '@/components/Footer';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCart } from '@/contexts/CartContext';
 import { useRestaurantCart } from '@/contexts/RestaurantCartContext';
+import { logger } from '@/lib/logger';
 
 interface Vendor {
   id: string;
@@ -74,7 +75,7 @@ export default function VendorDetailsPage() {
     }
   }, [vendorId]);
 
-  const fetchVendorDetails = async () => {
+  const fetchVendorDetails = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('stores')
@@ -83,16 +84,28 @@ export default function VendorDetailsPage() {
         .eq('approval_status', 'approved')
         .single();
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(`فشل جلب بيانات البائع: ${error.message}`);
+      }
+      
       setVendor(data);
       setIsRestaurant(data?.business_type === 'restaurant');
     } catch (error) {
-      console.error('Error fetching vendor:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في جلب بيانات البائع';
+      
+      logger.error('fetchVendorDetails failed', {
+        error: errorMessage,
+        component: 'VendorDetailsPage',
+        vendorId,
+      });
+      
       router.push('/404');
     } finally {
       setLoading(false);
     }
-  };
+  }, [vendorId, router]);
 
   const fetchVendorProducts = async () => {
     try {
