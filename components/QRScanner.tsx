@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
 import { Camera, X, AlertCircle, CheckCircle, Keyboard } from 'lucide-react'
 import { validateQRData } from '@/lib/qrOtpUtils'
+import { logger } from '@/lib/logger'
 
 interface QRScannerProps {
   /** Callback when QR code is successfully scanned */
@@ -58,8 +59,12 @@ export default function QRScanner({
         }
       })
       .catch((err: unknown) => {
-        console.error('Error getting cameras:', err)
-        setError('لم يتم العثور على كاميرا')
+        const errorMessage = err instanceof Error ? err.message : 'خطأ غير معروف';
+        logger.error('Error getting cameras', {
+          error: errorMessage,
+          component: 'QRScanner',
+        });
+        setError('لم يتم العثور على كاميرا');
       })
   }, [])
 
@@ -95,17 +100,26 @@ export default function QRScanner({
 
       setIsScanning(true)
     } catch (err: unknown) {
-      console.error('Error starting scanner:', err)
-      const errorMessage = err instanceof Error ? err.message : 'خطأ غير معروف'
-      setError('فشل تشغيل الكاميرا: ' + errorMessage)
+      const errorMessage = err instanceof Error ? err.message : 'خطأ غير معروف';
+      logger.error('Error starting scanner', {
+        error: errorMessage,
+        component: 'QRScanner',
+        selectedCamera,
+      });
+      setError('فشل تشغيل الكاميرا: ' + errorMessage);
     }
   }
 
   // Stop scanning
   const stopScanning = async () => {
     if (scannerRef.current) {
-      try {
-        await scannerRef.current.stop()
+        logger.debug('QR Scanner stopped successfully')
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'خطأ غير معروف';
+        logger.error('Error stopping scanner', {
+          error: errorMessage,
+          component: 'QRScanner',
+        });
         scannerRef.current = null
         setIsScanning(false)
       } catch (err) {

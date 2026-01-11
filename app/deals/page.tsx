@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Clock, Zap, Tag, TrendingUp, Percent, ArrowRight, Filter, 
@@ -68,7 +69,7 @@ export default function DealsPage() {
     fetchDeals();
   }, []);
 
-  const fetchDeals = async () => {
+  const fetchDeals = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -81,9 +82,7 @@ export default function DealsPage() {
         .order('created_at', { ascending: false });
 
       if (fetchError) {
-        console.error('Error fetching deals:', fetchError);
-        setError('فشل تحميل العروض. يرجى المحاولة مرة أخرى.');
-        return;
+        throw new Error(`فشل جلب العروض: ${fetchError.message}`);
       }
 
       // تحويل البيانات إلى الشكل المطلوب
@@ -121,13 +120,25 @@ export default function DealsPage() {
 
       setDeals(formattedDeals);
       setFilteredDeals(formattedDeals);
+      
     } catch (error) {
-      console.error('Error fetching deals:', error);
-      setError('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.');
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'حدث خطأ غير متوقع';
+      
+      logger.error('fetchDeals failed', {
+        error: errorMessage,
+        timestamp: new Date().toISOString(),
+      });
+      
+      setError(errorMessage);
+      setDeals([]);
+      setFilteredDeals([]);
+      
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const calculateTimeRemaining = (endDate: string) => {
     const now = new Date().getTime();
@@ -143,6 +154,9 @@ export default function DealsPage() {
 
   // تحديث العد التنازلي
   useEffect(() => {
+    // لا تبدأ countdown إذا لم يكن هناك deals
+    if (deals.length === 0) return;
+    
     const interval = setInterval(() => {
       setDeals(prevDeals => 
         prevDeals.map(deal => {
@@ -172,8 +186,12 @@ export default function DealsPage() {
       );
     }, 1000);
 
-    return () => clearInterval(interval);
-  }, []);
+    // ✅ Cleanup - إيقاف interval عند unmount
+    return () => {
+      clearInterval(interval);
+      logger.debug('Countdown interval cleared');
+    };
+  }, [deals.length]);
 
   // Apply filters and sorting
   useEffect(() => {

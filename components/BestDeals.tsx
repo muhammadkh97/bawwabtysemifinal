@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 import ProductCard from './ProductCard';
 import { Zap, Flame, TrendingUp, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
@@ -33,11 +34,7 @@ export default function BestDeals() {
   const [deals, setDeals] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchBestDeals();
-  }, []);
-
-  const fetchBestDeals = async () => {
+  const fetchBestDeals = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -52,7 +49,9 @@ export default function BestDeals() {
         .order('rating', { ascending: false })
         .limit(8);
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(`فشل جلب العروض: ${error.message}`);
+      }
 
       // تحويل البيانات لإضافة vendor_name
       const productsWithVendor = (data || []).map(p => ({
@@ -68,13 +67,27 @@ export default function BestDeals() {
       });
 
       setDeals(sortedDeals);
+      
     } catch (error) {
-      console.error('خطأ في جلب أفضل العروض:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في جلب أفضل العروض';
+      
+      logger.error('fetchBestDeals failed', {
+        error: errorMessage,
+        component: 'BestDeals',
+      });
+      
       setDeals([]);
+      
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchBestDeals();
+  }, [fetchBestDeals]);
 
   if (loading) {
     return (

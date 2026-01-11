@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Gift, Star, Crown, TrendingUp, Award, Sparkles, CreditCard, User, Shield, Zap } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
+import { logger } from '@/lib/logger';
 
 interface LoyaltyData {
   points: number;
@@ -21,18 +22,22 @@ export default function LoyaltyCard() {
 
     // الاستماع لتحديثات النقاط من صناديق الحظ أو أي مصدر آخر
     const handlePointsUpdate = () => {
+      logger.debug('Loyalty points updated, refreshing data');
       fetchLoyaltyData();
     };
 
     if (typeof window !== 'undefined') {
       window.addEventListener('loyaltyPointsUpdated', handlePointsUpdate);
+      
+      // ✅ Cleanup
       return () => {
         window.removeEventListener('loyaltyPointsUpdated', handlePointsUpdate);
+        logger.debug('LoyaltyCard event listener removed');
       };
     }
-  }, []);
+  }, [fetchLoyaltyData]);
 
-  const fetchLoyaltyData = async () => {
+  const fetchLoyaltyData = useCallback(async () => {
     try {
       
       const { data: { user } } = await supabase.auth.getUser();
@@ -49,7 +54,8 @@ export default function LoyaltyCard() {
         .single();
 
       if (error) {
-        console.error('❌ [LoyaltyCard] خطأ في جلب النقاط:', error);
+        throw new Error(`فشل جلب بيانات الولاء: ${error.message}`);
+      }
         // حتى لو حدث خطأ، أظهر البطاقة مع نقاط 0
         setLoyaltyData({
           points: 0,
@@ -86,7 +92,14 @@ export default function LoyaltyCard() {
         memberSince: data?.created_at || new Date().toISOString()
       });
     } catch (error) {
-      console.error('❌ [LoyaltyCard] خطأ غير متوقع:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في جلب بيانات الولاء';
+      
+      logger.error('fetchLoyaltyData failed', {
+        error: errorMessage,
+        component: 'LoyaltyCard',
+      });
       
       // محاولة الحصول على معلومات المستخدم من auth
       const { data: { user } } = await supabase.auth.getUser();

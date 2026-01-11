@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 import { Star, MapPin, Package, Loader2, Search, Filter, X, Phone, Mail, Globe, Clock, Award, TrendingUp, Users, Heart, Calendar, ShoppingBag, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 interface Vendor {
   id: string;
@@ -71,11 +72,7 @@ export default function VendorsPage() {
     { value: 'jericho', label: 'أريحا' },
   ];
 
-  useEffect(() => {
-    fetchVendors();
-  }, []);
-
-  async function fetchVendors() {
+  const fetchVendors = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -105,7 +102,9 @@ export default function VendorsPage() {
         .order('is_featured', { ascending: false })
         .order('rating', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(`فشل جلب بيانات البائعين: ${error.message}`);
+      }
 
       // Fetch additional data for each vendor
       const vendorsWithData = await Promise.all(
@@ -141,12 +140,24 @@ export default function VendorsPage() {
 
       setVendors(vendorsWithData);
     } catch (error) {
-      console.error('Error fetching vendors:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في جلب بيانات البائعين';
+      
+      logger.error('fetchVendors failed', {
+        error: errorMessage,
+        component: 'VendorsPage',
+      });
+      
       setVendors([]);
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    fetchVendors();
+  }, [fetchVendors]);
 
   const filteredVendors = vendors
     .filter(vendor => {

@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 interface Order {
   id: string;
@@ -44,12 +45,22 @@ export default function OrdersPage() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching orders:', error);
-        throw error;
+        throw new Error(`فشل جلب الطلبات: ${error.message}`);
       }
+      
       setOrders(data || []);
+      
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'خطأ في جلب الطلبات';
+      
+      logger.error('fetchOrders failed', {
+        error: errorMessage,
+        component: 'OrdersPage',
+      });
+      
+      setOrders([]);
     } finally {
       setLoading(false);
     }
