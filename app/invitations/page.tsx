@@ -225,7 +225,7 @@ export default function InvitationsPage() {
 
     } catch (error: any) {
       const errorMessage = error instanceof Error ? error.message : error?.message || 'Unknown error';
-      logger.error('Error accepting invitation', { error: errorMessage, component: 'InvitationsPage', invitationId });
+      logger.error('Error accepting invitation', { error: errorMessage, component: 'InvitationsPage' });
       toast.error(error.message || 'حدث خطأ في قبول الدعوة');
     } finally {
       setProcessing(null);
