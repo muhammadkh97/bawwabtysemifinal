@@ -28,6 +28,7 @@ interface Product {
   original_currency?: string;
   images: string[];
   category: string;
+  category_id: string;
   stock: number;
   rating: number;
   reviews_count: number;
@@ -555,7 +556,7 @@ export default function ProductDetailPage() {
       {/* قسم المنتجات المشابهة */}
       <SimilarProducts 
         currentProductId={product.id} 
-        category={product.category}
+        category={product.category_id}
         vendorId={product.vendor_id}
       />
 

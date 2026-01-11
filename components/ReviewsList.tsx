@@ -42,7 +42,7 @@ export default function ReviewsList({ productId }: ReviewsListProps) {
     try {
       let query = supabase
         .from('reviews')
-        .select('*, users(name, avatar_url)')
+        .select('*, users:user_id(name, avatar_url)')
         .eq('product_id', productId)
         .order('created_at', { ascending: false });
 

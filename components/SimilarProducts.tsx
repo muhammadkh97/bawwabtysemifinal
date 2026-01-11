@@ -51,7 +51,7 @@ export default function SimilarProducts({ currentProductId, category, vendorId }
       let query = supabase
         .from('products')
         .select('*, vendor:stores(store_name)')
-        .eq('category', category)
+        .eq('category_id', category)
         .neq('id', currentProductId)
         .gt('stock', 0)
         .eq('is_active', true)
@@ -83,7 +83,7 @@ export default function SimilarProducts({ currentProductId, category, vendorId }
           const { data: categoryProducts, error: categoryError } = await supabase
             .from('products')
             .select('*, vendor:stores(store_name)')
-            .eq('category', category)
+            .eq('category_id', category)
             .neq('id', currentProductId)
             .neq('vendor_id', vendorId)
             .gt('stock', 0)
